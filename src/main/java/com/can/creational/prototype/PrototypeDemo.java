@@ -1,57 +1,40 @@
 package com.can.creational.prototype;
 
+import java.util.List;
+
 public class PrototypeDemo {
 
-    interface Prototype<T> {
-        T copy();
-    }
-
-    static class Resume implements Prototype<Resume> {
-        private final String fullName;
-        private final String position;
-        private final String template;
-
-        Resume(String fullName, String position, String template) {
-            this.fullName = fullName;
-            this.position = position;
-            this.template = template;
-        }
-
-        private Resume(Resume source) {
-            this.fullName = source.fullName;
-            this.position = source.position;
-            this.template = source.template;
-        }
-
-        Resume withName(String name) {
-            return new Resume(name, this.position, this.template);
-        }
-
-        @Override
-        public Resume copy() {
-            return new Resume(this);
-        }
-
-        @Override
-        public String toString() {
-            return "Resume{" +
-                    "fullName='" + fullName + '\'' +
-                    ", position='" + position + '\'' +
-                    ", template='" + template + '\'' +
-                    '}';
-        }
+    public static void main(String[] args) {
+        run();
     }
 
     public static void run() {
         System.out.println("4) Prototype");
 
-        Resume baseTemplate = new Resume("Şablon Aday", "Java Developer", "Minimal CV V1");
-        Resume ahmetResume = baseTemplate.copy().withName("Ahmet Yılmaz");
-        Resume elifResume = baseTemplate.copy().withName("Elif Kaya");
+        CandidateProfileRegistry registry = new CandidateProfileRegistry();
 
-        System.out.println("Template: " + baseTemplate);
-        System.out.println("Clone-1: " + ahmetResume);
-        System.out.println("Clone-2: " + elifResume);
+        CandidateProfile javaTemplate = new CandidateProfile(
+                "Template Candidate",
+                "Java Developer",
+                "Ready to adapt fast.",
+                new Address("Istanbul", "TR"),
+                List.of("Java", "Spring Boot", "SQL")
+        );
+
+        registry.register("java-default", javaTemplate);
+
+        CandidateProfile ahmet = registry.cloneOf("java-default")
+                .personalize("Ahmet Yılmaz", "Backend-focused developer with 5 years of experience.")
+                .addSkill("Kafka")
+                .relocateTo("Ankara", "TR");
+
+        CandidateProfile elif = registry.cloneOf("java-default")
+                .personalize("Elif Kaya", "Cloud-native projects and microservice architecture.")
+                .addSkill("Docker");
+
+        System.out.println("Template : " + javaTemplate.exportCard());
+        System.out.println("Clone-1  : " + ahmet.exportCard());
+        System.out.println("Clone-2  : " + elif.exportCard());
         System.out.println();
     }
 }
