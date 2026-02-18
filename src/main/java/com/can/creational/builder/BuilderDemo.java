@@ -1,75 +1,27 @@
 package com.can.creational.builder;
 
-import java.util.List;
-
 public class BuilderDemo {
-
-    static class Report {
-        private final String title;
-        private final String summary;
-        private final List<String> sections;
-        private final boolean includeChart;
-
-        private Report(Builder builder) {
-            this.title = builder.title;
-            this.summary = builder.summary;
-            this.sections = List.copyOf(builder.sections);
-            this.includeChart = builder.includeChart;
-        }
-
-        @Override
-        public String toString() {
-            return "Report{" +
-                    "title='" + title + '\'' +
-                    ", summary='" + summary + '\'' +
-                    ", sections=" + sections +
-                    ", includeChart=" + includeChart +
-                    '}';
-        }
-
-        static class Builder {
-            private String title;
-            private String summary;
-            private List<String> sections = List.of();
-            private boolean includeChart;
-
-            Builder title(String title) {
-                this.title = title;
-                return this;
-            }
-
-            Builder summary(String summary) {
-                this.summary = summary;
-                return this;
-            }
-
-            Builder sections(List<String> sections) {
-                this.sections = sections;
-                return this;
-            }
-
-            Builder includeChart(boolean includeChart) {
-                this.includeChart = includeChart;
-                return this;
-            }
-
-            Report build() {
-                return new Report(this);
-            }
-        }
-    }
 
     public static void run() {
         System.out.println("3) Builder");
 
-        Report report = new Report.Builder()
-                .title("Q1 Satış Raporu")
-                .summary("İlk çeyrek satış performansı")
-                .sections(List.of("Özet", "Bölgesel Dağılım", "Riskler"))
+        ReportDirector director = new ReportDirector();
+        Report quarterly = director.createQuarterlySalesReport();
+
+        Report custom = Report.builder("Aylık Operasyon Raporu")
+                .summary("Operasyon ekibinin KPI sonuçları")
+                .addSection("SLA")
+                .addSection("Major Incidents")
+                .addSection("Capacity Planning")
                 .includeChart(true)
+                .author("Can Demir")
                 .build();
 
-        System.out.println(report);
+        Report postmortem = director.createIncidentPostmortemReport("INC-2026-14");
+
+        System.out.println("Director (Quarterly) : " + quarterly.exportCard());
+        System.out.println("Custom Builder       : " + custom.exportCard());
+        System.out.println("Director (Incident)  : " + postmortem.exportCard());
         System.out.println();
     }
 }
