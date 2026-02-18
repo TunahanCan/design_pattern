@@ -68,7 +68,7 @@ pandoc BOOK.md -o design-patterns.pdf --pdf-engine=pdflatex
 Bu bölüm artık tek bir kitap dosyasında tutulmuyor.
 Factory Method içeriği, desenin kendi klasörüne taşındı:
 
-- `src/main/java/com/can/creational/factorymethod/factorymethod.md`
+- `src/main/java/com/can/creational/factorymethod/explain/factorymethod.md`
 
 > Not: Böylece her pattern kendi paketinde, ilgili kodla birlikte versiyonlanabilir.
 
@@ -76,50 +76,12 @@ Factory Method içeriği, desenin kendi klasörüne taşındı:
 
 ## 2) Abstract Factory
 
-### Amaç
-Birbiriyle ilişkili ürün ailelerini, somut sınıflara bağlanmadan üretmek.
+Bu bölüm artık tek bir kitap dosyasında tutulmuyor.
+Abstract Factory içeriği, desenin kendi klasörüne taşındı:
 
-### Problem
-Uyumlu ürün setleri (örn. UI tema bileşenleri) farklı somut sınıflarla temsil edildiğinde, tüm birleşenlerin birlikte değiştirilmesi zorlaşır.
+- `src/main/java/com/can/creational/abstractfactory/explain/abstractfactory.md`
 
-### Çözüm
-Bir `AbstractFactory` arayüzü tanımla; somut fabrikalar (örn. `LightThemeFactory`, `DarkThemeFactory`) uyumlu ürünleri üretir.
-
-### Yapı
-- AbstractFactory (`GuiFactory`) — `createButton()`, `createCheckbox()` metodları.
-- ConcreteFactory (`LightThemeFactory`, `DarkThemeFactory`).
-- AbstractProduct (örn. `Button`, `Checkbox`).
-- ConcreteProduct (örn. `LightButton`, `DarkButton`).
-
-Mermaid örneği:
-
-```mermaid
-classDiagram
-    class GuiFactory {
-        +createButton()
-        +createCheckbox()
-    }
-    class LightThemeFactory
-    class DarkThemeFactory
-    class Button
-    class Checkbox
-    LightThemeFactory <|-- GuiFactory
-    DarkThemeFactory <|-- GuiFactory
-    Button <|-- LightButton
-    Button <|-- DarkButton
-    Checkbox <|-- LightCheckbox
-    Checkbox <|-- DarkCheckbox
-```
-
-### Örnek
-Projede ilgili dosya: `src/main/java/com/can/creational/abstractfactory/AbstractFactoryDemo.java`.
-
-### Ne zaman kullanılır?
-- Bir uygulamanın birbirleriyle uyumlu ürün ailelerini birlikte değiştirme ihtiyacı olduğunda.
-
-### Artılar / Eksiler
-- Artı: Ürün aileleri arası tutarlılık sağlar.
-- Eksi: Yeni ürün türü eklemek zor olabilir (factory ve tüm concrete product sınıfları güncellenmeli).
+> Not: Böylece her pattern kendi paketinde, ilgili kodla birlikte versiyonlanabilir.
 
 ---
 
