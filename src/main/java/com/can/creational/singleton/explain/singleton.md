@@ -92,3 +92,37 @@ sequenceDiagram
 
 ## Kısa özet
 Singleton doğru yerde güçlü bir araçtır; ama “kolay erişim” uğruna global state’i yaygınlaştırmak uzun vadede bakım maliyetini artırır.
+
+## Gerçek Hayattan ve Yaygın Kullanılan Singleton Pattern Örnekleri
+
+### 1. Uygulama Konfigürasyonu (Spring, Android, .NET)
+Tüm uygulama genelinde tek bir konfigürasyon nesnesi kullanılır:
+
+```java
+AppConfig config = AppConfig.getInstance();
+String apiUrl = config.getApiBaseUrl();
+```
+
+### 2. Logger (Log4j, SLF4J, java.util.logging)
+Tüm loglama işlemleri için tek bir logger nesnesi kullanılır:
+
+```java
+Logger logger = Logger.getInstance();
+logger.info("Başlatıldı");
+```
+
+### 3. Database Connection Pool (JDBC, HikariCP, DBCP)
+Veritabanı bağlantı havuzu uygulama boyunca tek örnek olarak yönetilir:
+
+```java
+ConnectionPool pool = ConnectionPool.getInstance();
+Connection conn = pool.getConnection();
+```
+
+### 4. Cache/Registry (Ehcache, Guava Cache)
+Tüm uygulama genelinde merkezi bir cache veya registry nesnesi kullanılır:
+
+```java
+Cache cache = Cache.getInstance();
+cache.put("user:1", user);
+```

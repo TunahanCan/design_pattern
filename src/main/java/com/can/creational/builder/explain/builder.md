@@ -108,3 +108,52 @@ sequenceDiagram
 
 ## Kısa özet
 Builder, parametre kalabalığını yönetilebilir hale getirir; özellikle domain nesnesi doğruluğu ve okunabilirliğin kritik olduğu projelerde ciddi kalite artışı sağlar.
+
+## Gerçek Hayattan ve Yaygın Kullanılan Builder Pattern Örnekleri
+
+### 1. Pizza Siparişi (Domino's, Pizza Hut vb.)
+Bir pizza siparişinde hamur tipi, sos, peynir, ek malzeme gibi adımlar zincirleme eklenir:
+
+```java
+Pizza pizza = new Pizza.Builder("Orta Boy")
+    .sos("Barbekü")
+    .peynir("Mozzarella")
+    .ekMalzeme("Sucuk")
+    .ekMalzeme("Mantar")
+    .build();
+```
+
+### 2. Araba Üretimi (Otomotiv Sektörü)
+Farklı donanım paketleri, motor, renk, opsiyonel özellikler adım adım eklenir:
+
+```java
+Car car = new Car.Builder("Sedan")
+    .motor("1.6 Turbo")
+    .renk("Kırmızı")
+    .sunroof(true)
+    .navigasyon(true)
+    .build();
+```
+
+### 3. SQL Sorgusu Oluşturucu (Jooq, QueryDSL, Hibernate Criteria)
+SQL sorguları zincirleme metotlarla güvenli ve okunabilir şekilde kurulur:
+
+```java
+String sql = new SqlBuilder()
+    .select("name", "age")
+    .from("users")
+    .where("age > 18")
+    .orderBy("name")
+    .build();
+```
+
+### 4. HTTP İsteği Oluşturucu (OkHttp, Apache HttpClient)
+HTTP istekleri için builder ile header, parametre, body adım adım eklenir:
+
+```java
+Request request = new Request.Builder()
+    .url("https://api.example.com/data")
+    .header("Authorization", "Bearer ...")
+    .post(body)
+    .build();
+```

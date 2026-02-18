@@ -1,5 +1,6 @@
 package com.can.creational.abstractfactory;
 
-public interface Checkbox {
+public interface Checkbox
+{
     String render();
 }

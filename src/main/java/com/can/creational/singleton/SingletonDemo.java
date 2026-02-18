@@ -2,6 +2,10 @@ package com.can.creational.singleton;
 
 public class SingletonDemo {
 
+    public static void main(String[] args) {
+        run();
+    }
+
     public static void run() {
         System.out.println("5) Singleton");
 

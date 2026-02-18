@@ -102,3 +102,41 @@ sequenceDiagram
 
 ## Kısa özet
 Prototype, özellikle hazır şablondan varyasyon üretiminin yoğun olduğu sistemlerde hız ve esneklik sağlar; ancak kopyalama kuralları net tasarlanmazsa ciddi yan etki üretir.
+
+## Gerçek Hayattan ve Yaygın Kullanılan Prototype Pattern Örnekleri
+
+### 1. Grafik Editörlerinde Şekil Kopyalama (Photoshop, Figma, PowerPoint)
+Bir şekil, metin kutusu veya obje kopyalanıp farklı özelliklerle çoğaltılır:
+
+```java
+Shape template = new Rectangle(100, 50, Color.RED);
+Shape copy = template.copy();
+copy.setColor(Color.BLUE);
+```
+
+### 2. Oyunlarda Karakter/Item Şablonları
+Farklı karakter veya item şablonları kopyalanıp kişiselleştirilir:
+
+```java
+Character warriorTemplate = registry.get("warrior");
+Character player1 = warriorTemplate.copy();
+player1.setName("Player1");
+```
+
+### 3. Ofis Belge Şablonları (Word, Google Docs)
+Hazır bir belge şablonu kopyalanıp başlık, içerik gibi alanlar özelleştirilir:
+
+```java
+Document invoiceTemplate = registry.get("invoice");
+Document myInvoice = invoiceTemplate.copy();
+myInvoice.setCustomer("Ali Veli");
+```
+
+### 4. Web Uygulamalarında Form/Component Kopyalama
+Bir form veya UI component şablonu kopyalanıp farklı sayfalarda kullanılır:
+
+```java
+Form loginFormTemplate = registry.get("loginForm");
+Form customLoginForm = loginFormTemplate.copy();
+customLoginForm.setTheme("dark");
+```
