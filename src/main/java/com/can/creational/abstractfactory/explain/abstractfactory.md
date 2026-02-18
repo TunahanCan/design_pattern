@@ -21,6 +21,27 @@ Tema/platform bazlı UI veya entegrasyon katmanında:
 `LightThemeFactory` ve `DarkThemeFactory` bu aileyi tema bazında üretir.
 Client (`UiScreen`) sadece factory sözleşmesini bilir.
 
+## Zihinde Kalıcı Görsel (Hafıza Kartı)
+
+<table>
+  <tr>
+    <td align="center"><b>🎯 Amaç</b><br/>Uyumlu ürün ailesi üretmek</td>
+    <td align="center"><b>🧠 Mnemonic</b><br/>"Tema seç, tüm parçalar uyumlu gelsin"</td>
+    <td align="center"><b>⚠️ Risk</b><br/>Aile sayısı arttıkça sınıf sayısı büyür</td>
+  </tr>
+</table>
+
+```text
+Theme = DARK
+     │
+     ▼
+DarkThemeFactory
+   ├── createButton()   -> DarkButton
+   └── createCheckbox() -> DarkCheckbox
+
+Aynı aile = uyumlu kombinasyon ✅
+```
+
 ## Yapı
 
 ```mermaid

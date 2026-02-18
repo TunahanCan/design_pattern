@@ -20,6 +20,26 @@ Doğrudan `new` kullanımı iş katmanına yayıldığında:
 - `Email/Sms/Push` gibi farklı ürünler ayrı creator sınıflarıyla eklenir.
 - `NotificationService` yalnızca kanal→creator eşlemesini yönetir.
 
+## Zihinde Kalıcı Görsel (Hafıza Kartı)
+
+<table>
+  <tr>
+    <td align="center"><b>🎯 Amaç</b><br/>Üretim kararını akıştan ayırmak</td>
+    <td align="center"><b>🧠 Mnemonic</b><br/>"Sipariş akışı aynı, usta değişir"</td>
+    <td align="center"><b>⚠️ Risk</b><br/>Küçük projede sınıf sayısı artar</td>
+  </tr>
+</table>
+
+```text
+Client --> NotificationService.send(channel)
+                      │
+                      ├─ EMAIL -> EmailCreator -> EmailNotification
+                      ├─ SMS   -> SmsCreator   -> SmsNotification
+                      └─ PUSH  -> PushCreator  -> PushNotification
+
+Akış sabit, ürün genişler ✅
+```
+
 ## Yapı
 
 ```mermaid

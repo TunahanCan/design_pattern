@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creational Pattern - Visual Guide</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22d3ee;
+      --good: #34d399;
+      --warn: #fbbf24;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top, #1e293b, var(--bg));
+      line-height: 1.5;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; }
+    .subtitle { color: var(--muted); margin-bottom: 18px; }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .pill {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+    }
+
+    .card h2 { margin: 0 0 6px; font-size: 20px; }
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      color: #001018;
+      background: var(--accent);
+      border-radius: 999px;
+      padding: 3px 8px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .row { margin: 6px 0; }
+    .title { color: var(--muted); font-size: 13px; }
+
+    pre {
+      margin: 8px 0 0;
+      padding: 10px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #cbd5e1;
+      overflow: auto;
+      font-size: 12px;
+    }
+
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Creational Pattern - Hafıza Panosu</h1>
+    <p class="subtitle">Amacın: "Hızlıca hatırla, doğru pattern'i seç, kolay unutma".</p>
+
+    <div class="legend">
+      <div class="pill">Singleton → <b>Tek instance</b></div>
+      <div class="pill">Factory Method → <b>Ürünü alt sınıf seçer</b></div>
+      <div class="pill">Abstract Factory → <b>Uyumlu ürün ailesi</b></div>
+      <div class="pill">Builder → <b>Adım adım kurulum</b></div>
+      <div class="pill">Prototype → <b>Kopyala & özelleştir</b></div>
+    </div>
+
+    <section class="grid">
+      <article class="card">
+        <span class="tag">Singleton</span>
+        <h2>"Bina yöneticisi tek olur"</h2>
+        <div class="row"><div class="title">Ne zaman?</div> Global config, cache, registry.</div>
+        <div class="row good">✅ Güçlü taraf: Tek kaynak gerçeği.</div>
+        <div class="row warn">⚠️ Dikkat: Gizli global bağımlılık.</div>
+        <pre>Client A ─┐
+          ├─ getInstance() → AppConfig #1
+Client B ─┘</pre>
+      </article>
+
+      <article class="card">
+        <span class="tag">Factory Method</span>
+        <h2>"Akış sabit, ürün değişken"</h2>
+        <div class="row"><div class="title">Ne zaman?</div> Kanal/tip bazlı üretim artıyorsa.</div>
+        <div class="row good">✅ Güçlü taraf: If-else şişmesini azaltır.</div>
+        <div class="row warn">⚠️ Dikkat: Sınıf sayısı artabilir.</div>
+        <pre>send(channel)
+  EMAIL → EmailCreator → EmailNotification
+  SMS   → SmsCreator   → SmsNotification</pre>
+      </article>
+
+      <article class="card">
+        <span class="tag">Abstract Factory</span>
+        <h2>"Aileyi birlikte üret"</h2>
+        <div class="row"><div class="title">Ne zaman?</div> Tema/platform uyumu şartsa.</div>
+        <div class="row good">✅ Güçlü taraf: Uyumlu kombinasyon garantisi.</div>
+        <div class="row warn">⚠️ Dikkat: Her tema için yeni factory gerekir.</div>
+        <pre>DARK theme
+  DarkFactory
+   ├─ DarkButton
+   └─ DarkCheckbox</pre>
+      </article>
+
+      <article class="card">
+        <span class="tag">Builder</span>
+        <h2>"Lego gibi adım adım"</h2>
+        <div class="row"><div class="title">Ne zaman?</div> Çok parametre + opsiyonel alan varsa.</div>
+        <div class="row good">✅ Güçlü taraf: Okunabilir ve güvenli kurulum.</div>
+        <div class="row warn">⚠️ Dikkat: Basit modelde fazla mühendislik olabilir.</div>
+        <pre>Report.builder("Q1")
+  .summary(...)
+  .author(...)
+  .build()</pre>
+      </article>
+
+      <article class="card">
+        <span class="tag">Prototype</span>
+        <h2>"Fotokopi + düzenle"</h2>
+        <div class="row"><div class="title">Ne zaman?</div> Oluşturma maliyeti yüksekse.</div>
+        <div class="row good">✅ Güçlü taraf: Hızlı çoğaltma.</div>
+        <div class="row warn">⚠️ Dikkat: Deep copy unutulursa bug üretir.</div>
+        <pre>template.copy()
+  → clone.personalize(...)
+  → clone.addSkill(...)</pre>
+      </article>
+    </section>
+
+    <footer>İpucu: Seçemiyorsan önce şu soruyu sor: "Ben tek obje mi istiyorum, adım adım kurulum mu, yoksa ürün ailesi mi?"</footer>
+  </div>
+</body>
+</html>

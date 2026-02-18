@@ -18,6 +18,26 @@ Bazı nesneler:
 Somut sınıf (`CandidateProfile`) copy-constructor ile güvenli klon üretir.
 `CandidateProfileRegistry` sık kullanılan şablonları merkezi saklar.
 
+## Zihinde Kalıcı Görsel (Hafıza Kartı)
+
+<table>
+  <tr>
+    <td align="center"><b>🎯 Amaç</b><br/>Sıfırdan kurmak yerine kopyalayıp özelleştirmek</td>
+    <td align="center"><b>🧠 Mnemonic</b><br/>"Şablonu fotokopi çek, üstünü düzenle"</td>
+    <td align="center"><b>⚠️ Risk</b><br/>Shallow copy hataları veri sızdırır</td>
+  </tr>
+</table>
+
+```text
+[Template Profile]
+      │ copy()
+      ▼
+[Cloned Profile] -- personalize() --> "Can - Backend"
+                -- addSkill()    --> "Kafka"
+
+Template değişmeden kalır ✅
+```
+
 ## Yapı
 
 ```mermaid
