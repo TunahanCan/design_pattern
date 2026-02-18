@@ -21,6 +21,25 @@ Kısa versiyon: **"Nesneyi bir kerede değil, kontrollü adımlarla kur."**
 - `build()` ile immutable `Report` üret.
 - Tekrarlayan tarifleri `ReportDirector` ile merkezileştir.
 
+## Zihinde Kalıcı Görsel (Hafıza Kartı)
+
+<table>
+  <tr>
+    <td align="center"><b>🎯 Amaç</b><br/>Adım adım güvenli nesne kurmak</td>
+    <td align="center"><b>🧠 Mnemonic</b><br/>"Lego gibi parçaları sırayla tak"</td>
+    <td align="center"><b>⚠️ Risk</b><br/>Basit nesnede gereksiz karmaşıklık</td>
+  </tr>
+</table>
+
+```text
+[Builder başlar]
+   ├─ title("Q1")   (zorunlu)
+   ├─ summary(...)
+   ├─ sections(...)
+   ├─ author(...)
+   └─ build() ----> [Immutable Report]
+```
+
 ## Yapı
 
 ```mermaid

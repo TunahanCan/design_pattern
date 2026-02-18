@@ -26,6 +26,24 @@ Birden fazla instance oluşursa:
 - Erişim `getInstance()`
 - Thread-safe lazy initialization için double-checked locking
 
+## Zihinde Kalıcı Görsel (Hafıza Kartı)
+
+<table>
+  <tr>
+    <td align="center"><b>🎯 Amaç</b><br/>Tek ve paylaşılan instance</td>
+    <td align="center"><b>🧠 Mnemonic</b><br/>"Bina yöneticisi tek olur"</td>
+    <td align="center"><b>⚠️ Risk</b><br/>Global state'i gizli bağımlılık yapma</td>
+  </tr>
+</table>
+
+```text
+Client A ──┐
+           ├── getInstance() ──> [ AppConfig #1 ]
+Client B ──┘
+
+Not: Her yol aynı objeye çıkar.
+```
+
 ## Yapı
 
 ```mermaid
