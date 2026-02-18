@@ -3,25 +3,22 @@
 > Diğer adı: **Virtual Constructor (Sanal Kurucu)**
 
 ## Niyet (Intent)
-Factory Method, üst sınıfta nesne üretmek için bir arayüz tanımlar; alt sınıflar hangi somut ürünün oluşturulacağını belirler.
+Factory Method, nesne üretim kararını client akışından ayırır. Üst sınıf ortak iş akışını korurken, hangi somut ürünün üretileceğini alt sınıflar belirler.
 
-Kısa versiyon: **"Neyi üreteceğini bana bırak, nasıl kullanacağını sen belirle."**
+Kısa versiyon: **"Akış sabit, ürün seçimi genişletilebilir."**
 
 ## Problem
-Doğrudan `new` kullanımı farklı katmanlara dağıldığında:
-- Somut sınıflara bağımlılık artar.
-- Yeni ürün eklendikçe `if/else` veya `switch` blokları büyür.
-- Test yazmak zorlaşır (mock/stub enjekte etmek güçleşir).
-- Bakım maliyeti yükselir.
-
-Örneğin bir bildirim servisinde e-posta, SMS, push ve WhatsApp desteği geldiğinde; her yeni kanal için ana iş akışını değiştirmek zorunda kalmak kırılgan bir tasarıma neden olur.
+Doğrudan `new` kullanımı iş katmanına yayıldığında:
+- Somut sınıflara bağımlılık büyür.
+- Kanal/ürün sayısı arttıkça `if-else` veya `switch` şişer.
+- Yeni tip eklemek mevcut akışı değiştirmeyi zorunlu kılar.
+- Testte mock/stub enjekte etmek zorlaşır.
 
 ## Çözüm
-Nesne oluşturma sorumluluğunu **factory method** içine taşı:
-- Client kodu yalnızca `Product` arayüzünü bilir.
-- Somut ürün kararı `ConcreteCreator` tarafından verilir.
-- Yeni ürün tipi eklemek için yeni creator sınıfı yazmak yeterli olur.
-- Üretim kararı tek noktada olduğu için konfigürasyon, loglama ve telemetry gibi çapraz ihtiyaçlar daha kolay yönetilir.
+Üretim sorumluluğunu `NotificationCreator#createNotification()` metoduna taşı:
+- Client sadece `Notification` kontratını bilir.
+- `Email/Sms/Push` gibi farklı ürünler ayrı creator sınıflarıyla eklenir.
+- `NotificationService` yalnızca kanal→creator eşlemesini yönetir.
 
 ## Yapı
 
@@ -41,13 +38,10 @@ classDiagram
       +notifyUser(request)
     }
 
-    class EmailNotificationCreator
-    class SmsNotificationCreator
-    class PushNotificationCreator
-
-    class EmailNotification
-    class SmsNotification
-    class PushNotification
+    class NotificationService {
+      -creators: Map~NotificationChannel, NotificationCreator~
+      +send(channel, request)
+    }
 
     NotificationCreator <|-- EmailNotificationCreator
     NotificationCreator <|-- SmsNotificationCreator
@@ -56,57 +50,57 @@ classDiagram
     Notification <|.. EmailNotification
     Notification <|.. SmsNotification
     Notification <|.. PushNotification
+
+    NotificationService --> NotificationCreator
+```
+
+## Runtime akışı
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as NotificationService
+    participant CR as NotificationCreator
+    participant N as Notification
+
+    C->>S: send(channel, request)
+    S->>S: creators.get(channel)
+    S->>CR: notifyUser(request)
+    CR->>CR: createNotification()
+    CR->>N: send(request)
 ```
 
 ## Bu projedeki model
-
 - `Notification` → Product
 - `EmailNotification`, `SmsNotification`, `PushNotification` → Concrete Product
 - `NotificationCreator` → Creator
 - `EmailNotificationCreator`, `SmsNotificationCreator`, `PushNotificationCreator` → Concrete Creator
-- `NotificationService` → Client tarafı orkestrasyon
+- `NotificationService` → Client orkestrasyonu
 
-## Gerçek hayattan analoji
-Bir kargo şirketini düşün:
-- "Gönderiyi ilet" süreci sabit.
-- Teslimat aracı (motosiklet, kamyonet, drone) bölge ve gönderi tipine göre değişir.
-- Operasyon ekibi teslimat sürecini bilir, ama "hangi araç oluşturulacak" kararını ayrı bir lojistik kuralı verir.
+## Teknik notlar
+- `NotificationService` constructor’ında `Map.copyOf(...)` kullanımı runtime mutasyonu engeller.
+- Creator katmanı, üretim anına loglama/telemetry/policy eklemek için doğal extension noktasıdır.
+- Yeni kanal eklemek için mevcut client kodunu kırmadan yeni creator + product eklemek yeterlidir (OCP).
 
-Buradaki lojistik kuralı = **Factory Method**, araçlar = **Concrete Product**.
+## Ne zaman kullanılır?
+- Ürün tipleri düzenli artıyorsa.
+- Üretim kararını iş akışından ayırmak istiyorsan.
+- Client kodunun sadece arayüzü görmesini hedefliyorsan.
 
-## Developer kullanım senaryoları
-- **Bildirim sistemleri:** kanal bazlı gönderim (email/sms/push).
-- **Ödeme entegrasyonları:** `IyzicoPayment`, `StripePayment`, `PaypalPayment` gibi sağlayıcıların aynı kontratla çağrılması.
-- **Dosya dışa aktarma:** `PdfExporter`, `ExcelExporter`, `CsvExporter` üretimi.
-- **Bulut sürücüleri:** ortama göre `S3StorageClient`, `GCSStorageClient`, `AzureBlobClient` yaratılması.
-
-## Ne zaman Factory Method, ne zaman Simple Factory?
-- Ürün ailesi küçük ve değişmeyecekse Simple Factory yeterli olabilir.
-- Ürün türleri zamanla artacak, her biri farklı davranış/bağımlılık taşıyacaksa Factory Method daha sürdürülebilir olur.
-
-## OOP / SOLID katkısı
-- **OCP:** Yeni kanal eklemek için mevcut çalışan client koduna dokunmadan yeni creator + product eklenir.
-- **DIP:** Üst seviye akış, somut sınıflara değil `Notification` gibi soyutlamalara bağımlı kalır.
-- **SRP:** "Ne zaman gönder?" ile "hangi kanal nesnesini üret?" sorumlulukları ayrışır.
-
-## Uygulanabilirlik
-- Çalışma zamanında ürün türü değişebiliyorsa.
-- Yeni ürün ekleme sıklığı yüksekse.
-- Oluşturma kodunu iş mantığından ayırmak istiyorsan.
-- Testlerde farklı ürün implementasyonlarını kolayca enjekte etmek istiyorsan.
+## Ne zaman kullanma?
+- Tek ürün tipi varsa ve değişim beklenmiyorsa.
+- Ek soyutlama maliyeti faydadan yüksekse.
 
 ## Artılar / Eksiler
 
 **Artılar**
-- Gevşek bağlılık
-- Open/Closed Principle uyumu
-- Ürün üretimini tek noktada toplama
-- Test edilebilirlik artışı
+- OCP dostu genişleme
+- Client kodunda somut tipe bağımlılık azalması
+- Testte izolasyon kolaylığı
 
 **Eksiler**
 - Sınıf sayısını artırır
-- Basit senaryolarda fazla soyutlama olabilir
-- Yanlış kullanılırsa "çok küçük sınıflar" ile gereksiz parçalanma yaratabilir
+- Basit senaryolarda gereksiz soyutlama olabilir
 
 ## Kısa özet
-Factory Method, uygulamanın "iş akışını" sabit tutarken "hangi somut nesnenin üretileceğini" esnekleştirir. Bu sayede büyüyen projelerde değişiklik maliyetini düşürür ve yeni özellikleri daha güvenli eklersin.
+Factory Method, özellikle kanal/ürün çeşitliliği büyüyen sistemlerde üretim kararını yönetilebilir hale getirir ve ana iş akışını sade tutar.
