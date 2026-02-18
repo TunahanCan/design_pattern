@@ -2,11 +2,11 @@ package com.can.creational.factorymethod;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,60 +14,85 @@ import org.junit.jupiter.api.Test;
 class FactoryMethodDemoTest {
 
     @Nested
-    class ProductImplementations {
-
-        // Bu test, her ürünün gönderim çıktısında kendi kanal etiketini kullandığını doğrular.
-        @Test
-        void shouldPrintCorrectChannelPrefixForEachProduct() {
-            String emailOutput = captureOutput(() -> new FactoryMethodDemo.EmailNotification().send("hello"));
-            String smsOutput = captureOutput(() -> new FactoryMethodDemo.SmsNotification().send("hello"));
-            String pushOutput = captureOutput(() -> new FactoryMethodDemo.PushNotification().send("hello"));
-
-            assertTrue(emailOutput.contains("[Email] hello"));
-            assertTrue(smsOutput.contains("[SMS] hello"));
-            assertTrue(pushOutput.contains("[Push] hello"));
-        }
-    }
-
-    @Nested
     class CreatorFactoryMethod {
 
-        // Bu test, her creator sınıfının doğru product türünü ürettiğini doğrular.
+        // Bu test, her creator sınıfının doğru product nesnesini ürettiğini doğrular.
         @Test
-        void shouldCreateExpectedNotificationType() {
-            FactoryMethodDemo.NotificationCreator emailCreator = new FactoryMethodDemo.EmailNotificationCreator();
-            FactoryMethodDemo.NotificationCreator smsCreator = new FactoryMethodDemo.SmsNotificationCreator();
-            FactoryMethodDemo.NotificationCreator pushCreator = new FactoryMethodDemo.PushNotificationCreator();
+        void shouldCreateExpectedNotificationImplementation() {
+            NotificationSender sender = payload -> {
+            };
 
-            assertInstanceOf(FactoryMethodDemo.EmailNotification.class, emailCreator.createNotification());
-            assertInstanceOf(FactoryMethodDemo.SmsNotification.class, smsCreator.createNotification());
-            assertInstanceOf(FactoryMethodDemo.PushNotification.class, pushCreator.createNotification());
+            NotificationCreator emailCreator = new EmailNotificationCreator(sender);
+            NotificationCreator smsCreator = new SmsNotificationCreator(sender);
+            NotificationCreator pushCreator = new PushNotificationCreator(sender);
+
+            assertInstanceOf(EmailNotification.class, emailCreator.createNotification());
+            assertInstanceOf(SmsNotification.class, smsCreator.createNotification());
+            assertInstanceOf(PushNotification.class, pushCreator.createNotification());
         }
     }
 
     @Nested
-    class CreatorBusinessFlow {
+    class NotificationFormatting {
 
-        // Bu test, creator içindeki iş akışının createNotification + send zincirini doğru çalıştırdığını doğrular.
+        // Bu test, ürünlerin beklenen formatta payload ürettiğini doğrular.
         @Test
-        void shouldNotifyUserWithExpectedMessage() {
-            FactoryMethodDemo.NotificationCreator creator = new FactoryMethodDemo.EmailNotificationCreator();
+        void shouldFormatPayloadByChannel() {
+            InMemoryNotificationSender sender = new InMemoryNotificationSender();
+            NotificationRequest request = new NotificationRequest("can@example.com", "Order", "Ready");
 
-            String output = captureOutput(() -> creator.notifyUser("order-ready"));
+            new EmailNotification(sender).send(request);
+            new SmsNotification(sender).send(request);
+            new PushNotification(sender).send(request);
 
-            assertEquals("[Email] order-ready", output.trim());
+            assertEquals("[EMAIL] To:can@example.com | Subject:Order | Body:Ready", sender.payloads().get(0));
+            assertEquals("[SMS] To:can@example.com | Order - Ready", sender.payloads().get(1));
+            assertEquals("[PUSH] User:can@example.com | Order -> Ready", sender.payloads().get(2));
         }
     }
 
-    private String captureOutput(Runnable action) {
-        PrintStream originalOut = System.out;
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            System.setOut(new PrintStream(outputStream, true, StandardCharsets.UTF_8));
-            action.run();
-            return outputStream.toString(StandardCharsets.UTF_8);
-        } finally {
-            System.setOut(originalOut);
+    @Nested
+    class ServiceFlow {
+
+        // Bu test, servis katmanının doğru creator ile bildirimi gönderdiğini doğrular.
+        @Test
+        void shouldRouteRequestToMatchingCreator() {
+            InMemoryNotificationSender sender = new InMemoryNotificationSender();
+
+            NotificationService service = new NotificationService(Map.of(
+                    NotificationChannel.EMAIL, new EmailNotificationCreator(sender),
+                    NotificationChannel.SMS, new SmsNotificationCreator(sender)
+            ));
+
+            service.send(NotificationChannel.EMAIL, new NotificationRequest("a@b.com", "Subject", "Body"));
+
+            assertEquals(1, sender.payloads().size());
+            assertEquals("[EMAIL] To:a@b.com | Subject:Subject | Body:Body", sender.payloads().getFirst());
+        }
+
+        // Bu test, creator tanımlı olmayan kanal için anlamlı hata fırlatıldığını doğrular.
+        @Test
+        void shouldThrowWhenCreatorIsMissing() {
+            NotificationService service = new NotificationService(Map.of());
+
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.send(NotificationChannel.PUSH,
+                            new NotificationRequest("user-1", "Campaign", "Discount")));
+
+            assertEquals("No creator found for channel: PUSH", error.getMessage());
+        }
+    }
+
+    private static final class InMemoryNotificationSender implements NotificationSender {
+        private final List<String> payloads = new ArrayList<>();
+
+        @Override
+        public void send(String payload) {
+            payloads.add(payload);
+        }
+
+        List<String> payloads() {
+            return payloads;
         }
     }
 }

@@ -1,73 +1,33 @@
 package com.can.creational.factorymethod;
 
+import java.util.Map;
+
 public class FactoryMethodDemo {
-
-    interface Notification {
-        void send(String message);
-    }
-
-    static class EmailNotification implements Notification {
-        @Override
-        public void send(String message) {
-            System.out.println("[Email] " + message);
-        }
-    }
-
-    static class SmsNotification implements Notification {
-        @Override
-        public void send(String message) {
-            System.out.println("[SMS] " + message);
-        }
-    }
-
-    static class PushNotification implements Notification {
-        @Override
-        public void send(String message) {
-            System.out.println("[Push] " + message);
-        }
-    }
-
-    static abstract class NotificationCreator {
-        public abstract Notification createNotification();
-
-        public void notifyUser(String message) {
-            Notification notification = createNotification();
-            notification.send(message);
-        }
-    }
-
-    static class EmailNotificationCreator extends NotificationCreator {
-        @Override
-        public Notification createNotification() {
-            return new EmailNotification();
-        }
-    }
-
-    static class SmsNotificationCreator extends NotificationCreator {
-        @Override
-        public Notification createNotification() {
-            return new SmsNotification();
-        }
-    }
-
-    static class PushNotificationCreator extends NotificationCreator {
-        @Override
-        public Notification createNotification() {
-            return new PushNotification();
-        }
-    }
 
     public static void run() {
         System.out.println("1) Factory Method");
 
-        NotificationCreator creator = new EmailNotificationCreator();
-        creator.notifyUser("Siparişin hazırlandı.");
+        NotificationSender sender = new ConsoleNotificationSender();
+        NotificationService notificationService = new NotificationService(Map.of(
+                NotificationChannel.EMAIL, new EmailNotificationCreator(sender),
+                NotificationChannel.SMS, new SmsNotificationCreator(sender),
+                NotificationChannel.PUSH, new PushNotificationCreator(sender)
+        ));
 
-        creator = new SmsNotificationCreator();
-        creator.notifyUser("Kargon yola çıktı.");
+        notificationService.send(
+                NotificationChannel.EMAIL,
+                new NotificationRequest("can@example.com", "Order Ready", "Your order has been prepared.")
+        );
 
-        creator = new PushNotificationCreator();
-        creator.notifyUser("Yeni kampanya seni bekliyor.");
+        notificationService.send(
+                NotificationChannel.SMS,
+                new NotificationRequest("+905551112233", "Shipping Update", "Your cargo is now in transit.")
+        );
+
+        notificationService.send(
+                NotificationChannel.PUSH,
+                new NotificationRequest("user-42", "Campaign", "A special discount is waiting for you.")
+        );
 
         System.out.println();
     }
