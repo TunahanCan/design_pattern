@@ -1,28 +1,25 @@
 # Builder (Creational Pattern)
 
-> Diğer adı: **Step-by-Step Object Construction**
+> Diğer adı: **Step-by-Step Construction**
 
 ## Niyet (Intent)
-Builder, karmaşık bir nesnenin oluşturulma sürecini adımlara böler. Böylece aynı inşa sürecinden farklı temsil/konfigürasyonlar üretilebilir.
+Builder, karmaşık nesneleri adım adım oluşturur; okunabilir, doğrulanabilir ve esnek kurulum akışı sağlar.
 
-Kısa versiyon: **"Parametre kalabalığını yönet, nesneyi adım adım kur."**
+Kısa versiyon: **"Nesneyi bir kerede değil, kontrollü adımlarla kur."**
 
 ## Problem
-Çok sayıda opsiyonel alana sahip nesnelerde:
-- Constructor sayısı hızla artar (constructor telescoping).
-- Parametre sırası karışır, okunabilirlik düşer.
-- Zorunlu/opsiyonel alan ayrımı bulanıklaşır.
-- Geçersiz veya eksik nesne üretme riski artar.
-
-Özellikle rapor, kampanya, request payload gibi veri yapılarında bu durum bakımı zorlaştırır.
+Çok parametreli nesnelerde:
+- Constructor patlaması (telescoping constructors) olur.
+- Parametre sırası karışır.
+- Zorunlu/opsiyonel ayrımı belirsizleşir.
+- Geçersiz nesne oluşturma riski yükselir.
 
 ## Çözüm
-Nesnenin inşasını ayrı bir `Builder` sınıfına taşı:
-- Builder adım adım alanları toplar.
-- `build()` ile final immutable nesne üretilir.
-- İstersen `Director` ile tekrar eden tarifleri merkezileştirirsin.
-
-Bu projede `Report` immutable product, `Report.Builder` adım adım kurucu, `ReportDirector` ise hazır tarif sağlayıcıdır.
+Üretim adımlarını `Report.Builder` içine taşı:
+- Zorunlu alanı başlangıçta al (`builder(title)`).
+- Opsiyonelleri zincirli metotlarla kur.
+- `build()` ile immutable `Report` üret.
+- Tekrarlayan tarifleri `ReportDirector` ile merkezileştir.
 
 ## Yapı
 
@@ -37,67 +34,77 @@ classDiagram
       -includeChart
       -author
       +exportCard()
+      +builder(title)
     }
 
     class ReportBuilder {
-      +summary(summary)
-      +sections(sections)
-      +addSection(section)
-      +includeChart(include)
-      +author(author)
+      +summary(value)
+      +sections(values)
+      +addSection(value)
+      +includeChart(flag)
+      +author(name)
       +build() Report
     }
 
     class ReportDirector {
-      +createQuarterlySalesReport() Report
-      +createIncidentPostmortemReport(incidentId) Report
+      +createQuarterlySalesReport()
+      +createIncidentPostmortemReport(incidentId)
     }
 
-    Report o-- ReportBuilder
+    Report --> ReportBuilder
     ReportDirector --> ReportBuilder
 ```
 
-## Bu projedeki model
+## Runtime akışı
 
-- `Report` → Product
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant D as ReportDirector
+    participant B as Report.Builder
+    participant R as Report
+
+    C->>D: createQuarterlySalesReport()
+    D->>B: builder("Q1 Satış Raporu")
+    D->>B: summary(...)
+    D->>B: sections(...)
+    D->>B: includeChart(true)
+    D->>B: author(...)
+    D->>B: build()
+    B-->>D: Report
+    D-->>C: Report
+```
+
+## Bu projedeki model
+- `Report` → Product (immutable)
 - `Report.Builder` → Concrete Builder
 - `ReportDirector` → Director
-- `BuilderDemo` → Client akışı
+- `BuilderDemo` → Client
 
-## Gerçek hayattan analoji
-Araba siparişi düşün:
-- Temel model sabit (`Report`).
-- Renk, paket, jant, multimedya gibi alanlar adım adım seçiliyor (`Builder`).
-- Filonun standart araç konfigürasyonlarını merkezi bir ekip belirliyor (`Director`).
+## Teknik notlar
+- `normalize(...)` ile null/blank validasyonları tek yerde toplanır.
+- `sections` için defensive copy uygulanır (`new ArrayList`, `List.copyOf`).
+- Immutable final ürün sayesinde inşa sonrası state değişim riskleri azalır.
 
-## Developer kullanım senaryoları
-- API request/payload üretimi (opsiyonel alan çoksa)
-- Rapor ve doküman nesneleri
-- Test fixture üretimi
-- UI component konfigürasyonları
+## Ne zaman kullanılır?
+- Opsiyonel alan sayısı fazlaysa.
+- Aynı ürünün farklı reçeteleri tekrar ediyorsa.
+- Kod okunabilirliği ve API ergonomisi önemliyse.
 
-## OOP / SOLID katkısı
-- **SRP:** Nesnenin davranışı (`Report`) ile inşa süreci (`Builder`) ayrılır.
-- **Encapsulation:** Geçerli nesne üretim kuralları builder içinde toplanır.
-- **Readability:** Zincirli çağrılarla kod okunabilirliği artar.
-
-## Uygulanabilirlik
-- Çok sayıda opsiyonel parametre varsa.
-- Nesne immutable tasarlanacaksa.
-- Aynı ürün farklı kombinasyonlarla sıkça üretilecekse.
-- Hazır tariflere ihtiyaç varsa (`Director` ile).
+## Ne zaman kullanma?
+- Çok basit DTO/VO yapılarında.
+- Üretim adımı zaten tek satır ve kararlıysa.
 
 ## Artılar / Eksiler
 
 **Artılar**
-- Okunabilir ve akıcı API
-- Constructor karmaşasını azaltır
-- Zorunlu alan doğrulamalarını merkezileştirir
-- Immutable model ile uyumlu
+- Okunabilir, akıcı kurulum
+- Geçerlilik kurallarını merkezileştirme
+- Immutable modelle iyi uyum
 
 **Eksiler**
-- Basit nesnelerde ek sınıf maliyeti
-- Aşırı kullanılırsa gereksiz soyutlama
+- Basit nesnelerde ek sınıf/method yükü
+- Yanlış tasarımda aşırı fluent API karmaşası
 
 ## Kısa özet
-Builder, özellikle opsiyonel alanları fazla olan nesnelerde hem okunabilirliği hem doğruluğu yükseltir. Director ile birlikte kullanıldığında tekrar eden inşa şablonlarını da temizce yönetirsin.
+Builder, parametre kalabalığını yönetilebilir hale getirir; özellikle domain nesnesi doğruluğu ve okunabilirliğin kritik olduğu projelerde ciddi kalite artışı sağlar.

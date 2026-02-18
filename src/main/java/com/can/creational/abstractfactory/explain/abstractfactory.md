@@ -1,43 +1,25 @@
 # Abstract Factory (Creational Pattern)
 
-> Diğer adı: **Kit of Factories / Families of Products**
+> Diğer adı: **Kit of Factories / Family Factory**
 
 ## Niyet (Intent)
-Abstract Factory, birbiriyle ilişkili veya bağımlı nesne ailelerini, somut sınıflara doğrudan bağlanmadan üretmeyi amaçlar.
+Abstract Factory, birbiriyle ilişkili ürün ailesini (ör. Button + Checkbox) tek noktadan ve tutarlı şekilde üretir.
 
-Kısa versiyon: **"Aynı ailenin parçalarını birlikte üret, uyumluluğu garanti et."**
+Kısa versiyon: **"Ürünleri tek tek değil, uyumlu aile olarak üret."**
 
 ## Problem
-Sistemde birden fazla ürün türü vardır ve bu ürünler **aile** halinde birlikte kullanılmalıdır.
-
-Örneğin UI tarafında:
-- `Button`
-- `Checkbox`
-
-Eğer tema "Light" ise her iki bileşen de light olmalı;
-Eğer tema "Dark" ise her iki bileşen de dark olmalı.
-
-Doğrudan `new` ile üretim yaparsan:
-- Ekranda yanlış kombinasyon riski oluşur (`DarkButton + LightCheckbox`).
-- Tema değiştirme kodu farklı katmanlara dağılır.
-- Yeni aile ekledikçe (`HighContrast`, `CorporateTheme`) `if/else` zinciri büyür.
-- Üretim detayları client koduna sızdığı için bakım maliyeti artar.
+Tema/platform bazlı UI veya entegrasyon katmanında:
+- Ürünler birbiriyle uyumlu olmalıdır.
+- Yanlış kombinasyonlar (DarkButton + LightCheckbox) kalite sorununa yol açar.
+- Client kodu somut sınıflara bağımlı olursa tema değişimi maliyetli olur.
 
 ## Çözüm
-Bir `AbstractFactory` arayüzü tanımlanır ve ürün ailesindeki tüm ürünleri üretmek için metotlar eklenir.
+`GuiFactory` arayüzüyle ürün ailesi sözleşmesi tanımlanır:
+- `createButton()`
+- `createCheckbox()`
 
-Örnek:
-- `GuiFactory#createButton()`
-- `GuiFactory#createCheckbox()`
-
-Sonra her ürün ailesi için somut fabrika yazılır:
-- `LightThemeFactory`
-- `DarkThemeFactory`
-
-Client (`UiScreen`) sadece fabrikaya bağımlıdır:
-- Hangi somut ürünün üretileceğini bilmez.
-- Uyumlu ürün setini tek noktadan alır.
-- Tema değişimi için yalnızca kullanılan factory değişir.
+`LightThemeFactory` ve `DarkThemeFactory` bu aileyi tema bazında üretir.
+Client (`UiScreen`) sadece factory sözleşmesini bilir.
 
 ## Yapı
 
@@ -51,9 +33,6 @@ classDiagram
       +createCheckbox() Checkbox
     }
 
-    class LightThemeFactory
-    class DarkThemeFactory
-
     class Button {
       <<interface>>
       +render() String
@@ -64,93 +43,67 @@ classDiagram
       +render() String
     }
 
-    class LightButton
-    class DarkButton
-    class LightCheckbox
-    class DarkCheckbox
-
-    class UiScreen {
-      -button: Button
-      -checkbox: Checkbox
-      +UiScreen(factory: GuiFactory)
-      +draw() String
-    }
-
     GuiFactory <|.. LightThemeFactory
     GuiFactory <|.. DarkThemeFactory
 
     Button <|.. LightButton
     Button <|.. DarkButton
+
     Checkbox <|.. LightCheckbox
     Checkbox <|.. DarkCheckbox
 
     UiScreen --> GuiFactory
-    LightThemeFactory --> LightButton
-    LightThemeFactory --> LightCheckbox
-    DarkThemeFactory --> DarkButton
-    DarkThemeFactory --> DarkCheckbox
+```
+
+## UI tema akışı
+
+```mermaid
+flowchart LR
+    T[Theme: LIGHT / DARK] --> P[GuiFactoryProvider.forTheme]
+    P --> LF[LightThemeFactory]
+    P --> DF[DarkThemeFactory]
+    LF --> LB[LightButton]
+    LF --> LC[LightCheckbox]
+    DF --> DB[DarkButton]
+    DF --> DC[DarkCheckbox]
+    LB --> UI[UiScreen]
+    LC --> UI
+    DB --> UI
+    DC --> UI
 ```
 
 ## Bu projedeki model
-
 - `Button`, `Checkbox` → Abstract Product
 - `LightButton`, `DarkButton`, `LightCheckbox`, `DarkCheckbox` → Concrete Product
 - `GuiFactory` → Abstract Factory
 - `LightThemeFactory`, `DarkThemeFactory` → Concrete Factory
+- `GuiFactoryProvider` → Factory seçici
 - `UiScreen` → Client
-- `AbstractFactoryDemo#run()` → Çalıştırma akışı
 
-## Gerçek hayattan analoji
-Bir otomotiv markasında araç paketlerini düşün:
-- **Sport paket**: sport jant + sport süspansiyon + sport koltuk
-- **Comfort paket**: konfor jant + yumuşak süspansiyon + konfor koltuk
+## Teknik notlar
+- `GuiFactoryProvider` tema seçimini merkezi bir policy noktasına çeker.
+- `UiScreen` içinde somut sınıf referansı olmaması, tema değişimini düşük maliyetli yapar.
+- Temaya özel tüm ürünlerin birlikte değiştirilmesi gereken durumlarda bakım maliyeti düşer.
 
-Parçaları tek tek rastgele seçmek yerine paket bazlı seçim yaparsın.
-Bu sayede uyumsuz kombinasyon ihtimali azalır.
+## Ne zaman kullanılır?
+- Ürünler aile halinde birlikte değişiyorsa.
+- Çoklu tema/platform/tenant varyantları varsa.
+- Tutarsız ürün kombinasyonlarını compile-time’a yakın yerde engellemek istiyorsan.
 
-Burada paket üreticisi = **Abstract Factory**, paket içindeki parçalar = **Product Family**.
-
-## Developer kullanım senaryoları
-- **UI tema sistemleri:** Light/Dark/High-Contrast bileşenlerini tutarlı üretmek.
-- **Çoklu bulut sağlayıcıları:** AWS/Azure/GCP için uyumlu istemci aileleri üretmek.
-- **Ödeme entegrasyonu:** Stripe/Adyen/Iyzico için ortak fakat sağlayıcıya özel nesneler üretmek.
-- **Veritabanı katmanı:** PostgreSQL/MySQL için bağlantı + sorgu oluşturucu + migration bileşenlerini aile olarak sağlamak.
-- **Mesajlaşma sistemleri:** Kafka/RabbitMQ için producer/consumer/config nesnelerini birlikte üretmek.
-
-## Factory Method ile farkı
-- **Factory Method** genellikle **tek bir ürünün** üretimine odaklanır.
-- **Abstract Factory** ise **birbiriyle ilişkili birden fazla ürünün ailesini** birlikte üretir.
-
-Pratikte Abstract Factory, çoğunlukla içeride birden fazla Factory Method barındırır.
-
-## OOP ve SOLID notları
-
-- **SRP:** Ürün ailesi seçimi factory'lerde toplanır, client sadece kullanım akışına odaklanır.
-- **OCP:** Yeni bir aile (ör. `BlueThemeFactory`) eklemek mevcut client kodunu bozmaz.
-- **DIP:** Üst seviye modül (`UiScreen`) somut sınıflara değil soyutlamalara (`GuiFactory`, `Button`, `Checkbox`) bağımlıdır.
-- **Encapsulation:** Somut ürünlerin oluşturulma ayrıntıları client'tan gizlenir.
-
-## Uygulanabilirlik
-- Birlikte çalışması gereken ürün aileleri varsa.
-- Uyumlu kombinasyonları garanti etmek istiyorsan.
-- Somut sınıf bağımlılıklarını azaltmak istiyorsan.
-- Çalışma zamanında aile değiştirme ihtiyacı varsa (tema/tenant/ülke/sağlayıcı).
+## Ne zaman kullanma?
+- Tek ürün var ve aile ilişkisi yoksa.
+- Varyant sayısı çok düşük ve stabilse.
 
 ## Artılar / Eksiler
 
 **Artılar**
-- Ürün aileleri arasında güçlü tutarlılık sağlar.
-- Client kodunu somut sınıflardan ayırır.
-- Aile değiştirme (ör. Light → Dark) tek noktadan yapılır.
-- Testlerde fake/mock factory ile senaryo üretimi kolaylaşır.
+- Aile tutarlılığı
+- Client tarafında düşük bağımlılık
+- Varyant geçişinde temiz mimari
 
 **Eksiler**
-- Yeni bir ürün türü eklemek maliyetlidir.
-  - Örn. `Slider` eklenirse `GuiFactory` ve tüm concrete factory'ler güncellenir.
-- Sınıf sayısı artar (özellikle çok aile/çok ürün kombinasyonunda).
-- Küçük projelerde fazla soyutlama yaratabilir.
+- Yeni ürün türü eklendiğinde tüm factory ailesi etkilenir
+- Başlangıçta soyutlama maliyeti vardır
 
 ## Kısa özet
-Abstract Factory, özellikle "birlikte değişen" ürün kümelerinde çok değerlidir. 
-Tema, sağlayıcı veya platforma göre uyumlu nesne setlerini merkezi ve güvenli şekilde üretmeyi sağlar. 
-Orta-büyük ölçekli mimarilerde, yanlış ürün kombinasyonlarını engelleyerek bakım ve genişletilebilirlikte ciddi avantaj sağlar.
+Abstract Factory, özellikle UI ve platform farklılaşmasının yoğun olduğu projelerde “doğru kombinasyonla üretim” garantisi vererek sistem bütünlüğünü korur.

@@ -1,29 +1,22 @@
 # Prototype (Creational Pattern)
 
-> Diğer adı: **Clone-Based Object Creation**
+> Diğer adı: **Clone-based Object Creation**
 
 ## Niyet (Intent)
-Prototype, mevcut bir nesnenin kopyasını alarak yeni nesneler üretmeyi amaçlar. Böylece maliyetli kurulum adımlarını tekrar etmeden, hazır şablondan hızlıca yeni örnekler oluşturulur.
+Prototype, yeni nesneyi sıfırdan kurmak yerine mevcut örneğin kopyasından üretir.
 
-Kısa versiyon: **"Sıfırdan kurma, iyi bir örnekten çoğalt."**
+Kısa versiyon: **"Kurulumu pahalıysa, şablonu kopyala ve özelleştir."**
 
 ## Problem
-Bazı nesnelerin oluşturulması:
-- Çok fazla konfigürasyon adımı gerektirir.
-- Dış kaynaklardan yükleme yaptığı için maliyetlidir.
-- Birçok benzer varyant üretileceğinde gereksiz kod tekrarına neden olur.
-
-Doğrudan `new` ile her seferinde sıfırdan üretim yapmak:
-- Performans maliyetini artırabilir,
-- Kurulum adımlarında insan hatası riskini yükseltebilir,
-- Aynı "başlangıç ayarlarını" sürekli tekrar etmene neden olur.
+Bazı nesneler:
+- Karmaşık kurulum adımlarına sahiptir.
+- Çok sayıda default değer ve nested yapı içerir.
+- Her seferinde sıfırdan üretildiğinde performans/maliyet baskısı oluşturur.
 
 ## Çözüm
-Ortak bir `Prototype<T>` arayüzü ile `copy()` metodu tanımlanır.
-- Client kodu, nesneyi nasıl inşa edeceğini bilmek yerine bir **template** klonlar.
-- Her Concrete Prototype kendi kopyalama mantığını (deep/shallow) kontrol eder.
-- Yeni varyasyonlar, klon sonrası kişiselleştirme adımlarıyla üretilir.
-- İstersen prototype'ları bir `Registry` içinde saklayıp anahtar ile çağırırsın.
+`Prototype<T>` arayüzü ile `copy()` kontratı tanımlanır.
+Somut sınıf (`CandidateProfile`) copy-constructor ile güvenli klon üretir.
+`CandidateProfileRegistry` sık kullanılan şablonları merkezi saklar.
 
 ## Yapı
 
@@ -37,6 +30,11 @@ classDiagram
     }
 
     class CandidateProfile {
+      -fullName: String
+      -targetRole: String
+      -summary: String
+      -address: Address
+      -skills: List~String~
       +copy() CandidateProfile
       +personalize(fullName, summary)
       +addSkill(skill)
@@ -44,79 +42,63 @@ classDiagram
     }
 
     class CandidateProfileRegistry {
+      -templates: Map~String, CandidateProfile~
       +register(templateId, profile)
-      +cloneOf(templateId)
+      +cloneOf(templateId) CandidateProfile
     }
 
-    class Address
-
     Prototype <|.. CandidateProfile
-    CandidateProfile --> Address
     CandidateProfileRegistry --> CandidateProfile
+    CandidateProfile --> Address
+```
+
+## Runtime akışı
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant R as CandidateProfileRegistry
+    participant T as Template CandidateProfile
+    participant P as Cloned CandidateProfile
+
+    C->>R: cloneOf("backend-template")
+    R->>T: copy()
+    T-->>R: cloned instance
+    R-->>C: P
+    C->>P: personalize(...)
+    C->>P: addSkill(...)
 ```
 
 ## Bu projedeki model
-
 - `Prototype<T>` → Prototype arayüzü
 - `CandidateProfile` → Concrete Prototype
-- `Address` → Deep copy yapılması gereken iç nesne
-- `CandidateProfileRegistry` → Şablonların tutulduğu registry
-- `PrototypeDemo` → Client akışı
+- `CandidateProfileRegistry` → Prototype Registry
+- `Address` → Deep copy gerektiren nested obje
 
-## Gerçek hayattan analoji
-Bir emlak ofisinde "standart ilan şablonları" düşün:
-- 1+1 kiralık daire, 3+1 satılık daire gibi hazır şablonlar var.
-- Yeni ilan açarken sıfırdan yazmak yerine uygun şablon klonlanıyor.
-- Sadece dairenin adresi, fiyatı ve görselleri güncelleniyor.
+## Teknik notlar
+- `CandidateProfile` copy-constructor içinde `Address` ve `skills` için deep copy uygulanır.
+- Deep copy sayesinde klonda yapılan değişiklik template’e sızmaz.
+- Registry yaklaşımı runtime template yönetimini hızlandırır.
 
-Burada şablon ilan = **Prototype**, yeni ilan = **Clone + personalize**.
-
-## Developer kullanım senaryoları
-- **CV / profil üretimi:** farklı pozisyonlar için hazır aday şablonundan türetme.
-- **Oyun geliştirme:** aynı düşman tipinden (HP, hız, animasyon seti) çok sayıda instance üretme.
-- **UI bileşenleri:** varsayılan tema + davranışlara sahip component konfigurasyonlarını çoğaltma.
-- **Raporlama:** temel rapor şablonunu klonlayıp tarih aralığı/filtreleri değiştirerek yeni rapor oluşturma.
-- **E2E test verisi:** temel fixture nesnesini klonlayıp sadece testte gereken alanları değiştirme.
-
-## OOP ve SOLID notları
-
-- **SRP:** Klonlama sorumluluğu `CandidateProfile` içinde, şablon yönetimi `CandidateProfileRegistry` içinde.
-- **OCP:** Yeni bir profil tipi ekleneceğinde mevcut client kodunu bozmak gerekmez; yeni prototype sınıfı eklemek yeterlidir.
-- **Encapsulation:** İç durum (`address`, `skills`) prototype tarafından kontrollü biçimde çoğaltılır.
-
-## Deep Copy neden önemli?
-Bu örnekte `Address` ve `skills` koleksiyonu **ayrı kopyalar** olarak üretilir.
-Böylece klon üzerinde yapılan değişiklikler template nesneyi etkilemez.
-
-Örnek risk:
-- Shallow copy yaparsan, klonun `skills` listesine eklenen bir teknoloji template listesinde de görünür.
-- Bu da özellikle çok kullanıcılı sistemlerde beklenmedik veri sızıntılarına veya "yan etki" bug'larına yol açar.
-
-## Prototype + Registry birlikte neden güçlü?
-- Sık kullanılan şablonlar bellekte hazır tutulur.
-- Runtime'da `templateId` ile hızlıca kopya üretilir.
-- Kampanya, ülke, tenant, rol bazında farklı default ayarları kolay yönetilir.
-
-Bu yaklaşım özellikle multi-tenant SaaS uygulamalarında işe yarar: her tenant için farklı başlangıç konfigürasyonu template olarak saklanır.
-
-## Uygulanabilirlik
-- Çok sayıda benzer nesne üretilecekse.
+## Ne zaman kullanılır?
 - Nesne kurulum maliyeti yüksekse.
-- Runtime'da dinamik şablonlardan varyasyonlar üretilecekse.
-- "Ön tanımlı başlangıç durumu" tekrar tekrar gerekiyorsa.
+- Benzer nesnelerden çok sayıda varyasyon üretilecekse.
+- Tenant/kampanya/rol bazlı şablon yönetimi gerekiyorsa.
+
+## Ne zaman kullanma?
+- Nesne çok basitse ve clone maliyeti/sorumluluğu gereksizse.
+- Kopyalama semantiği açıkça tanımlanamıyorsa.
 
 ## Artılar / Eksiler
 
 **Artılar**
-- Hızlı nesne üretimi
-- Karmaşık kurulum kodunu azaltma
-- Runtime'da esnek varyasyon üretimi
-- Tekrarlanan konfigürasyon adımlarını merkezi hale getirme
+- Hızlı çoğaltma
+- Şablon tabanlı üretim
+- Kurulum kodu tekrarını azaltma
 
 **Eksiler**
-- Deep vs shallow copy karmaşıklığı
-- Dairesel referanslarda kopyalama maliyeti/karmaşıklığı artabilir
-- Kopyalama kuralları net tanımlanmazsa debug zorlaşabilir
+- Deep/shallow copy karmaşıklığı
+- Dairesel referanslarda kopya yönetimi zorlaşabilir
 
 ## Kısa özet
-Prototype, "kurulumu pahalı ama varyasyonu bol" nesnelerde geliştirici hızını ciddi artırır. Doğru deep-copy stratejisiyle birlikte kullanıldığında hem performans hem bakım tarafında güçlü bir desen haline gelir.
+Prototype, özellikle hazır şablondan varyasyon üretiminin yoğun olduğu sistemlerde hız ve esneklik sağlar; ancak kopyalama kuralları net tasarlanmazsa ciddi yan etki üretir.

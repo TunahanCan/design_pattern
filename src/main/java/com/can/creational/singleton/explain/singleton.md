@@ -3,34 +3,28 @@
 > Diğer adı: **Single Instance**
 
 ## Niyet (Intent)
-Singleton, bir sınıfın uygulama yaşam döngüsü boyunca **yalnızca bir kez oluşturulmasını** ve bu tek örneğe global erişim sağlanmasını amaçlar.
+Singleton, bir sınıfın süreç boyunca yalnızca tek kez üretilmesini ve bu örneğe merkezi erişim sunulmasını sağlar.
 
-Kısa versiyon: **"Tek kaynak, tek gerçek."**
+Kısa versiyon: **"Tek kaynak, tek gerçek durum."**
 
 ## Problem
-Bazı bileşenler doğası gereği tek olmalıdır:
-- Uygulama konfigürasyonu (`AppConfig`)
-- Feature flag cache
-- Lisans doğrulama yöneticisi
-- Process-level telemetry/metrics toplayıcısı
+Aşağıdaki bileşenler çoğu zaman tek olmalıdır:
+- Uygulama konfigürasyonu
+- Process-level cache/registry
+- Telemetry sayaç toplayıcısı
 
-Bu tip bir bileşen birden fazla üretilirse:
-- Tutarsız durumlar oluşur (farklı config değerleri),
-- Kaynak tüketimi artar,
-- Debug süreci zorlaşır (hangi instance aktif?),
-- Multi-thread ortamlarda race condition riskleri ortaya çıkar.
+Birden fazla instance oluşursa:
+- Konfigürasyon tutarsızlığı
+- Kaynak israfı
+- Debug karmaşası
+- Çok thread’li senaryoda yarış koşulları
 
 ## Çözüm
-Singleton sınıfı aşağıdaki kuralları uygular:
-- Constructor `private` olur (dışarıdan `new` engellenir).
-- Tek örnek `static` alanda tutulur.
-- Erişim noktası olarak `getInstance()` tanımlanır.
-- Thread-safety için bu projede **Double-Checked Locking + `volatile`** kullanılır.
-
-Bu sayede:
-- İlk kullanımda lazy initialize edilir,
-- Sonraki erişimlerde kilit maliyeti minimumda tutulur,
-- Tüm katmanlar aynı referansı kullanır.
+`AppConfig` sınıfında:
+- Constructor `private`
+- Tek örnek `static volatile instance`
+- Erişim `getInstance()`
+- Thread-safe lazy initialization için double-checked locking
 
 ## Yapı
 
@@ -39,81 +33,62 @@ classDiagram
     direction LR
 
     class AppConfig {
-      -volatile AppConfig instance$
-      -String apiBaseUrl
-      -int connectionTimeoutMs
+      -static volatile instance: AppConfig
+      -apiBaseUrl: String
+      -connectionTimeoutMs: int
       -AppConfig()
-      +getInstance()$ AppConfig
-      +getApiBaseUrl() String
-      +getConnectionTimeoutMs() int
-      +describe() String
+      +getInstance(): AppConfig
+      +getApiBaseUrl(): String
+      +getConnectionTimeoutMs(): int
+      +describe(): String
     }
 
-    class SingletonDemo {
-      +run()$
-    }
-
+    class SingletonDemo
     SingletonDemo --> AppConfig
 ```
 
+## Runtime akışı
+
+```mermaid
+sequenceDiagram
+    participant C1 as Client A
+    participant C2 as Client B
+    participant S as AppConfig
+
+    C1->>S: getInstance()
+    S-->>C1: instance
+    C2->>S: getInstance()
+    S-->>C2: same instance
+```
+
 ## Bu projedeki model
-
 - `AppConfig` → Singleton sınıfı
-- `SingletonDemo` → Client akışı
+- `SingletonDemo` → Client
 
-Dosyalar:
-- `src/main/java/com/can/creational/singleton/AppConfig.java`
-- `src/main/java/com/can/creational/singleton/SingletonDemo.java`
+## Teknik notlar
+- `volatile`, JVM instruction reordering riskini azaltır; yarım-initialize nesnenin görünmesini engeller.
+- Double-checked locking, ilk oluşturma dışındaki çağrılarda gereksiz lock maliyetini düşürür.
+- `resetForTests()` ile test izolasyonu senaryosu desteklenmiştir.
 
-## Gerçek hayattan analoji
-Bir şirket binasındaki **yangın alarm panelini** düşün:
-- Her katta farklı panel olsaydı kurallar ve durum takibi dağılırdı.
-- Tek merkezi panel tüm sensör durumunu yönetir.
-- Herkes aynı panelin ürettiği gerçekliğe göre hareket eder.
+## Ne zaman kullanılır?
+- Sistem genelinde tek konfigürasyon/registry örneği gerekiyorsa.
+- Birden fazla instance iş kuralını bozuyorsa.
 
-Burada alarm paneli = **Singleton**.
-
-## Developer kullanım senaryoları
-- **Configuration Manager:** environment bazlı config değerlerinin tek kaynaktan okunması.
-- **In-memory Cache Gateway:** process içindeki kısa ömürlü cache'e tek erişim kapısı.
-- **Telemetry Registry:** sayaç/metrik toplama servisinin merkezi yönetimi.
-- **Connection Pool Wrapper:** pool nesnesinin tek orkestratör üzerinden paylaşılması.
-
-## Thread-safety notu
-Bu projede kullanılan yaklaşım:
-- `instance` alanı `volatile`
-- `getInstance()` içinde double-checked locking
-
-Neden `volatile`?
-- JVM instruction reordering nedeniyle kısmi oluşturulmuş nesnenin görünmesini önler.
-- Multi-thread senaryoda güvenli yayınlama (safe publication) sağlar.
-
-## OOP ve SOLID notları
-- **SRP uyarısı:** Singleton sınıfı sadece "tek örnek yönetimi + kendi domain sorumluluğu" taşımalıdır.
-- **DIP riski:** Singleton'ı doğrudan her yere çağırmak global state bağımlılığı oluşturabilir.
-- **Testability:** Test izolasyonu için reset/adapter ihtiyacı doğabilir (bu projede test için `resetForTests()` mevcut).
-
-## Uygulanabilirlik
-- Uygulama genelinde paylaşılacak tek bir durum/servis gerektiğinde.
-- Nesnenin birden fazla oluşturulması iş kurallarını bozuyorsa.
-- Merkezi erişim noktası tasarım açısından anlamlıysa.
-
-Kullanmaman gereken durumlar:
-- Aslında DI container ile `singleton scope` çözebileceğin yerler,
-- Test bağımsızlığının kritik olduğu katmanlar,
-- Gizli global state'in bakım maliyetini artıracağı domain'ler.
+## Ne zaman kullanma?
+- DI container yaşam döngüsünü zaten yönetiyorsa.
+- Global state’in test/bağımlılık maliyeti kabul edilemezse.
 
 ## Artılar / Eksiler
 
 **Artılar**
 - Tek instance garantisi
 - Merkezi erişim
-- Lazy initialization ile kontrollü kaynak kullanımı
+- Lazy initialize ile kontrollü kaynak kullanımı
 
 **Eksiler**
-- Global state kokusu oluşturabilir
-- Unit test izolasyonunu zorlaştırabilir
-- Yanlış kullanımda gevşek bağlılık yerine sıkı bağlılık üretir
+- Global state kokusu riski
+- Unit test izolasyon zorluğu
+- Yanlış kullanımda sıkı bağlılık
 
 ## Kısa özet
-Singleton, doğru yerde kullanıldığında "tek gerçek kaynağı" güvenli şekilde sunar. Ancak her problemi singleton ile çözmek yerine, bağımlılık enjeksiyonu ve yaşam döngüsü yönetimi alternatifleriyle birlikte değerlendirmek gerekir.
+Singleton doğru yerde güçlü bir araçtır; ama “kolay erişim” uğruna global state’i yaygınlaştırmak uzun vadede bakım maliyetini artırır.
