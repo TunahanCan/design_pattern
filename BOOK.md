@@ -87,28 +87,12 @@ Abstract Factory içeriği, desenin kendi klasörüne taşındı:
 
 ## 3) Builder
 
-### Amaç
-Karmaşık nesneleri adım adım inşa etmek; okunabilir ve yönetilebilir kod ile çok sayıda opsiyonel parametreyi ele almak.
+Bu bölüm artık tek bir kitap dosyasında tutulmuyor.
+Builder içeriği, desenin kendi klasörüne taşındı:
 
-### Problem
-Çok sayıda opsiyonel parametreye sahip bir sınıfın yapıcıları (constructors) ile yönetilmesi zorlaşır (constructor parametre patlaması).
+- `src/main/java/com/can/creational/builder/explain/builder.md`
 
-### Çözüm
-Bir `Builder` sınıfı tanımla; adım adım gerekli alanları set edip son olarak `build()` çağır.
-
-### Yapı
-- Product (`Report`)
-- Builder (`Report.Builder`) — zincirlenebilir setter metodları ve `build()`.
-
-### Örnek
-Projede ilgili dosya: `src/main/java/com/can/creational/builder/BuilderDemo.java`.
-
-### Ne zaman kullanılır?
-- Eğer nesnenin oluşturulması birden fazla adım gerektiriyorsa veya birçok opsiyonel alan varsa.
-
-### Artılar / Eksiler
-- Artı: Okunaklı API ve immutability ile uyumlu tasarım.
-- Eksi: Çok küçük ve basit nesneler için aşırı olabilir.
+> Not: Böylece her pattern kendi paketinde, ilgili kodla birlikte versiyonlanabilir.
 
 ---
 
