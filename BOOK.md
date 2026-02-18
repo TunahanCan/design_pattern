@@ -125,27 +125,12 @@ Projede ilgili dosya: `src/main/java/com/can/creational/prototype/PrototypeDemo.
 
 ## 5) Singleton
 
-### Amaç
-Uygulama boyunca tek bir instance gerektiğinde bu durumu garanti altına almak.
+Bu bölüm artık tek bir kitap dosyasında tutulmuyor.
+Singleton içeriği, desenin kendi klasörüne taşındı:
 
-### Problem
-Global erişim gereken ancak birden fazla örnek istenmeyen kaynaklar (config, cache) için sınır koymak.
+- `src/main/java/com/can/creational/singleton/explain/singleton.md`
 
-### Çözüm
-Singleton deseni: instance'ı kontrollü şekilde yarat ve herkese aynı referansı sağla. Thread-safety için double-checked locking veya enum tabanlı yaklaşımlar tercih edilebilir.
-
-### Yapı
-- Singleton sınıfı (örn. `AppConfig`) — özel constructor, static erişim metodu.
-
-### Örnek
-Projede ilgili dosya: `src/main/java/com/can/creational/singleton/SingletonDemo.java`.
-
-### Ne zaman kullanılır?
-- Konfigürasyon, uygulama geneli cache, log yönetimi gibi tekil paylaşılacak kaynaklar olduğunda.
-
-### Artılar / Eksiler
-- Artı: Basit global erişim.
-- Eksi: Test edilebilirliği ve bağımlılık yönetimi zorlaşabilir; dikkatli kullanılmalı.
+> Not: Böylece her pattern kendi paketinde, ilgili kodla birlikte versiyonlanabilir.
 
 ---
 
