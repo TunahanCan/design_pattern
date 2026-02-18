@@ -65,47 +65,12 @@ pandoc BOOK.md -o design-patterns.pdf --pdf-engine=pdflatex
 
 ## 1) Factory Method
 
-### Amaç
-Nesne oluşturma işini alt sınıflara devretmek; hangi sınıfın yaratılacağına çalışma zamanında karar vermek.
+Bu bölüm artık tek bir kitap dosyasında tutulmuyor.
+Factory Method içeriği, desenin kendi klasörüne taşındı:
 
-### Problem
-Farklı türde nesneler yaratılması gereken kodda `new` kullanımı dağıldığında, yeni bir ürün türü eklendiğinde değişimin merkezileştirilmesi zorlaşır.
+- `src/main/java/com/can/creational/factorymethod/factorymethod.md`
 
-### Çözüm
-Create (factory) metodu soyutlayıp, alt sınıfların somut ürünleri üretmesine izin ver.
-
-### Yapı
-Merak edilen roller:
-- Creator (örn. `NotificationCreator`) — fabrika metodu içerir.
-- ConcreteCreator (örn. `EmailNotificationCreator`) — somut ürünleri üretir.
-- Product (örn. `Notification`) — yaratılan nesnelerin ortak arayüzü.
-
-Mermaid (basit sınıf diyagramı)
-
-```mermaid
-classDiagram
-    class NotificationCreator {
-        +createNotification()
-    }
-    class EmailNotificationCreator
-    class Notification
-    class EmailNotification
-    NotificationCreator <|-- EmailNotificationCreator
-    Notification <|-- EmailNotification
-```
-
-### Örnek
-Projede ilgili dosya: `src/main/java/com/can/creational/factorymethod/FactoryMethodDemo.java` (örnek sınıflar: `NotificationCreator`, `EmailNotification`, `SmsNotification`, `PushNotification`).
-
-> İpucu: MkDocs ile `include-markdown` plugin kullanırsan, örnek kod parçalarını doğrudan kaynak dosyalardan çekip sayfada gösterebilirsin.
-
-### Ne zaman kullanılır?
-- Nesne oluşturma mantarını merkezileştirmek istediğinde.
-- Altta yatan sınıfın kararı alt sınıflara bırakılmalıysa.
-
-### Artılar / Eksiler
-- Artı: Yeni ürün türleri için Creator alt sınıfları eklemek kolay.
-- Eksi: Çok sayıda alt sınıf oluşturabilir; basit durumlarda aşırı karmaşık olabilir.
+> Not: Böylece her pattern kendi paketinde, ilgili kodla birlikte versiyonlanabilir.
 
 ---
 
