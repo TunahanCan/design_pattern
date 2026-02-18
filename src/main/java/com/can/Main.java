@@ -6,7 +6,8 @@ import com.can.creational.factorymethod.FactoryMethodDemo;
 import com.can.creational.prototype.PrototypeDemo;
 import com.can.creational.singleton.SingletonDemo;
 
-public class Main {
+public class Main
+{
     public static void main(String[] args) {
         System.out.println("=== CREATIONAL DESIGN PATTERNS ===\n");
 
