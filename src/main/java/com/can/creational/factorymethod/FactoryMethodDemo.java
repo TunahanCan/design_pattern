@@ -4,6 +4,10 @@ import java.util.Map;
 
 public class FactoryMethodDemo {
 
+    public static void main(String[] args) {
+        run();
+    }
+
     public static void run() {
         System.out.println("1) Factory Method");
 
