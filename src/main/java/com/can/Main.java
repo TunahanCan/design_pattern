@@ -1,5 +1,6 @@
 package com.can;
 
+import com.can.behavirol.chainofresponsibility.ChainOfResponsibilityDemo;
 import com.can.creational.abstractfactory.AbstractFactoryDemo;
 import com.can.creational.builder.BuilderDemo;
 import com.can.creational.factorymethod.FactoryMethodDemo;
@@ -16,5 +17,8 @@ public class Main
         BuilderDemo.run();
         PrototypeDemo.run();
         SingletonDemo.run();
+
+        System.out.println("=== BEHAVIORAL DESIGN PATTERNS ===\n");
+        ChainOfResponsibilityDemo.run();
     }
 }
