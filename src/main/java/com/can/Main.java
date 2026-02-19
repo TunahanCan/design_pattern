@@ -2,6 +2,7 @@ package com.can;
 
 import com.can.behavirol.chainofresponsibility.ChainOfResponsibilityDemo;
 import com.can.behavirol.command.CommandPatternDemo;
+import com.can.behavirol.iterator.IteratorPatternDemo;
 import com.can.creational.abstractfactory.AbstractFactoryDemo;
 import com.can.creational.builder.BuilderDemo;
 import com.can.creational.factorymethod.FactoryMethodDemo;
@@ -22,5 +23,6 @@ public class Main
         System.out.println("=== BEHAVIORAL DESIGN PATTERNS ===\n");
         ChainOfResponsibilityDemo.run();
         CommandPatternDemo.run();
+        IteratorPatternDemo.run();
     }
 }
