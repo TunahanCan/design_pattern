@@ -18,6 +18,7 @@ import com.can.creational.singleton.SingletonDemo;
 import com.can.structural.adapter.AdapterPatternDemo;
 import com.can.structural.bridge.BridgePatternDemo;
 import com.can.structural.composite.CompositePatternDemo;
+import com.can.structural.decorator.DecoratorPatternDemo;
 
 public class Main
 {
@@ -34,6 +35,7 @@ public class Main
         AdapterPatternDemo.run();
         BridgePatternDemo.run();
         CompositePatternDemo.run();
+        DecoratorPatternDemo.run();
 
         System.out.println("=== BEHAVIORAL DESIGN PATTERNS ===\n");
         ChainOfResponsibilityDemo.run();
