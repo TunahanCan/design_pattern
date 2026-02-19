@@ -21,6 +21,7 @@ import com.can.structural.composite.CompositePatternDemo;
 import com.can.structural.decorator.DecoratorPatternDemo;
 import com.can.structural.facade.FacadePatternDemo;
 import com.can.structural.flyweight.FlyweightPatternDemo;
+import com.can.structural.proxy.ProxyPatternDemo;
 
 public class Main
 {
@@ -40,6 +41,7 @@ public class Main
         DecoratorPatternDemo.run();
         FacadePatternDemo.run();
         FlyweightPatternDemo.run();
+        ProxyPatternDemo.run();
 
         System.out.println("=== BEHAVIORAL DESIGN PATTERNS ===\n");
         ChainOfResponsibilityDemo.run();
