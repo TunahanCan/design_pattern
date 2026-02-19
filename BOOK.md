@@ -34,6 +34,7 @@ flowchart TD
     S --> S2[Bridge]
     S --> S3[Composite]
     S --> S4[Decorator]
+    S --> S5[Facade]
 
     B --> B1[Chain of Responsibility]
     B --> B2[Command]
@@ -52,7 +53,7 @@ ASCII fallback:
 ```text
 Design Patterns
 ├─ Creational: Factory Method, Abstract Factory, Builder, Prototype, Singleton
-├─ Structural: Adapter, Bridge, Composite, Decorator
+├─ Structural: Adapter, Bridge, Composite, Decorator, Facade
 └─ Behavioral: CoR, Command, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor
 ```
 
@@ -94,6 +95,7 @@ Bu projedeki karşılığı:
 - `src/main/java/com/can/structural/bridge/`
 - `src/main/java/com/can/structural/composite/`
 - `src/main/java/com/can/structural/decorator/`
+- `src/main/java/com/can/structural/facade/`
 
 ### 2.3 Kod tabanında paket bazlı ilişki grafiği
 
@@ -113,6 +115,7 @@ flowchart LR
     S --> SBR[bridge]
     S --> SCO[composite]
     S --> SDE[decorator]
+    S --> SFA[facade]
 
     B --> BCO[chainofresponsibility]
     B --> BCM[command]
@@ -132,7 +135,7 @@ ASCII fallback:
 com.can
 ├─ Main
 ├─ creational (factorymethod, abstractfactory, builder, prototype, singleton)
-├─ structural (adapter, bridge, composite, decorator)
+├─ structural (adapter, bridge, composite, decorator, facade)
 └─ behavirol (chainofresponsibility, command, iterator, mediator, memento, observer, state, strategy, templatemethod, visitor)
 ```
 

@@ -19,6 +19,7 @@ import com.can.structural.adapter.AdapterPatternDemo;
 import com.can.structural.bridge.BridgePatternDemo;
 import com.can.structural.composite.CompositePatternDemo;
 import com.can.structural.decorator.DecoratorPatternDemo;
+import com.can.structural.facade.FacadePatternDemo;
 
 public class Main
 {
@@ -36,6 +37,7 @@ public class Main
         BridgePatternDemo.run();
         CompositePatternDemo.run();
         DecoratorPatternDemo.run();
+        FacadePatternDemo.run();
 
         System.out.println("=== BEHAVIORAL DESIGN PATTERNS ===\n");
         ChainOfResponsibilityDemo.run();
