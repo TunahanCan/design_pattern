@@ -730,3 +730,152 @@ Bu projedeki karşılığı:
 - **Undo/redo ve komut nesneleştirme:** Command (+ Memento)
 - **Duruma göre davranış:** State
 - **Algoritma değişimi:** Strategy
+
+---
+
+## 5) Yayınlama
+
+Bu bölüm, `BOOK.md` içeriğini farklı formatlarda yayınlamak için pratik bir akış sunar.
+
+### 5.1 Markdown okuma
+- Birincil kaynak dosya `BOOK.md` olmalıdır; türetilmiş çıktıların (HTML/PDF) elle düzenlenmesi önerilmez.
+- Mermaid diyagramı olan ortamlarda doğrudan Markdown preview kullanılabilir.
+- Mermaid desteklenmeyen ortamlarda her diyagramın altındaki ASCII fallback esas alınır.
+
+### 5.2 HTML üretimi
+- **MkDocs Material** yaklaşımı:
+  1. `BOOK.md` içerik yapısını bölüm başlıklarıyla koru.
+  2. Gerekirse `docs/` altına taşıyıp `mkdocs.yml` ile gezinme menüsü oluştur.
+  3. Mermaid için tema/eklenti uyumunu kontrol et.
+- **Pandoc HTML** yaklaşımı:
+  - Tek komutla çıktı almak için örnek:
+
+```bash
+pandoc BOOK.md -s -o book.html --toc --metadata title="Design Patterns Kitabı"
+```
+
+### 5.3 PDF üretimi
+- Önerilen yol: **Pandoc + uygun PDF engine** (`xelatex`, `lualatex` veya kurum standardı bir engine).
+- Türkçe karakter ve tipografi için `xelatex` genellikle daha sorunsuzdur.
+- Örnek:
+
+```bash
+pandoc BOOK.md \
+  --from gfm \
+  --pdf-engine=xelatex \
+  --toc \
+  -V geometry:margin=2.2cm \
+  -V colorlinks=true \
+  -o book.pdf
+```
+
+---
+
+## 6) PDF uyumluluğu için diyagram ve görsel kural seti
+
+### 6.1 Mermaid render stratejisi
+- PDF hattında Mermaid doğrudan düzgün render olmuyorsa diyagramları önceden SVG/PNG olarak üret.
+- Önerilen öncelik: **SVG** (vektörel, net baskı) → gerekiyorsa **yüksek çözünürlüklü PNG**.
+- Her Mermaid bloğu için en az bir metin tabanlı fallback (ASCII/tablo) korunmalıdır.
+- Kritik diyagramlarda `BOOK.md` içinde şu sıra korunur:
+  1. Mermaid kaynak bloğu
+  2. (Gerekirse) görsel referansı
+  3. ASCII/tablo fallback
+
+### 6.2 Görsellerin göreli path düzeni
+- Tüm görseller göreli path ile referanslanmalıdır (örn. `assets/diagrams/state-flow.svg`).
+- Mutlak path (`/tmp/...`, `C:\...`) kullanılmamalıdır.
+- Önerilen klasör düzeni:
+  - `assets/diagrams/` → diyagram çıktıları
+  - `assets/images/` → ekran görüntüleri ve diğer görseller
+- Dosya adlandırma kısa, açıklayıcı ve kebab-case olmalıdır (örn. `factory-method-sequence.svg`).
+
+### 6.3 Tablo/şema genişlik sınırları
+- PDF taşmasını önlemek için geniş tablolar 4–5 sütunla sınırlandırılmalı; gerekirse tablo ikiye bölünmelidir.
+- Satır içi kod/parça metinler çok uzunsa satır kırılımı olan ifadeler tercih edilmelidir.
+- Diyagramlarda çok uzun node metinleri yerine kısa etiket + açıklama notu yaklaşımı kullanılmalıdır.
+- Hedef: A4 tek sütun düzende yatay kaydırma gerektirmeyen içerik.
+
+---
+
+## 7) Kitap stil rehberi
+
+### 7.1 Kapak
+- Kapakta şu bilgiler net yer almalı:
+  - Kitap adı
+  - Alt başlık (opsiyonel)
+  - Yazar/ekip
+  - Sürüm ve tarih
+- Kapak sade olmalı; tek vurgu rengi ve tutarlı tipografi tercih edilmelidir.
+
+### 7.2 İçindekiler
+- İçindekiler otomatik üretilmeli (Pandoc `--toc` veya MkDocs nav).
+- En fazla H3 seviyesine kadar listelenmesi okunabilirlik için idealdir.
+- Başlık metinleri kısa ve eylem odaklı olmalıdır.
+
+### 7.3 Bölüm ayraçları
+- Ana bölümler arasında yatay çizgi (`---`) veya yeni sayfa mantığı kullanılmalıdır.
+- Her ana bölüm girişinde 1–2 cümlelik amaç paragrafı bulunmalıdır.
+- Uzun bölümlerde alt başlıklar arasına kısa “özet kutusu” eklemek okunabilirliği artırır.
+
+### 7.4 Tipografi önerileri
+- Gövde metin: okunaklı serif veya sans-serif bir yazı tipi, tutarlı satır aralığı.
+- Kod blokları: monospace font, yeterli kontrast, satır taşmasını önleyen düzen.
+- Vurgu kullanımı:
+  - Kavram adı: **kalın**
+  - Dosya yolu/komut: `inline code`
+  - Uzun teknik not: callout blok
+
+### 7.5 Başlık seviyeleri
+- H1: Doküman başlığı için tek kullanım.
+- H2: Ana bölüm (ör. “Yayınlama”, “Stil Rehberi”).
+- H3: Alt konu (ör. “PDF üretimi”, “Kapak”).
+- H4 ve altı yalnızca zorunluysa kullanılmalı; mümkünse içerik H2/H3 içinde sadeleştirilmelidir.
+
+### 7.6 Callout blokları
+- Önemli not, uyarı, ipucu gibi içerikler callout ile ayrılmalıdır.
+- Markdown taşınabilirliği için blok alıntı tabanlı sade bir format tercih edilir:
+
+```markdown
+> **Not:** Bu bölümdeki komutlar örnektir, proje standardına göre güncellenebilir.
+```
+
+- HTML tabanlı zengin callout yalnızca görsel katkı netse kullanılmalıdır; aynı yerde Markdown fallback korunmalıdır.
+
+### 7.7 Kod bloğu standartları (Java)
+- Kod bloklarında dil etiketi zorunludur: ` ```java `.
+- Örnekler tek sorumluluğa odaklanmalı, gereksiz boilerplate azaltılmalıdır.
+- Sınıf/metot isimleri proje içi adlandırmayla tutarlı olmalıdır.
+- Gerekirse kod bloğu öncesinde kısa bağlam, sonrasında beklenen çıktı/etki açıklaması verilmelidir.
+
+---
+
+## 8) Kod ve açıklama senkronizasyonu bakım kuralları
+
+### 8.1 Yeni pattern eklendiğinde `BOOK.md` güncelleme checklist’i
+1. Pattern ailesini doğru bölümde ekle (Creational/Structural/Behavioral).
+2. Pattern başlığını ve kısa problem tanımını yaz.
+3. Mermaid diyagramını ekle.
+4. Mermaid olmayan ortam için ASCII/tablo fallback ekle.
+5. “Bu projedeki karşılığı” altında ilgili Java dosya yollarını listele.
+6. Gerekliyse “Patternler arası geçiş senaryoları” bölümüne ilişki notu ekle.
+7. “Hızlı seçim özeti” kısmında karar etkisi varsa maddeyi güncelle.
+
+### 8.2 `explain/*.md` ile `BOOK.md` tutarlılık kontrol adımları
+- Başlık eşleşmesi:
+  - `explain/` altındaki pattern doküman adı ve `BOOK.md` başlığı aynı kavramı temsil etmeli.
+- Rol/sınıf eşleşmesi:
+  - Açıklanan ana sınıf/arayüz isimleri Java kodu ve `BOOK.md` arasında aynı olmalı.
+- Diyagram eşleşmesi:
+  - Diyagramdaki ilişkiler ile koddaki bağımlılıklar çelişmemeli.
+- Dosya yolu doğruluğu:
+  - `BOOK.md` içindeki path’ler gerçekten mevcut dosyalara işaret etmeli.
+- Son kontrol:
+  - Pattern üzerinde kod değiştiyse ilgili `explain/*.md` ve `BOOK.md` aynı PR içinde güncellenmeli.
+
+### 8.3 HTML blok kullanım ilkesi (opsiyonel)
+- `BOOK.md` içinde HTML blokları yalnızca aşağıdaki durumlarda kullanılmalıdır:
+  - Saf Markdown ile sağlanamayacak anlamlı bir görsel/yerleşim faydası varsa.
+  - Çıktı alınan hedefte (HTML/PDF) tutarlı render edilebiliyorsa.
+- Her HTML blok yanında veya hemen altında saf Markdown fallback’i bulunmalıdır.
+- Fallback, içeriğin anlamını kaybetmeden okunabilirliği korumalıdır.
