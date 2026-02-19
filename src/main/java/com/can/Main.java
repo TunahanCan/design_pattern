@@ -9,6 +9,7 @@ import com.can.behavirol.observer.ObserverPatternDemo;
 import com.can.behavirol.state.StatePatternDemo;
 import com.can.behavirol.strategy.StrategyPatternDemo;
 import com.can.behavirol.templatemethod.TemplateMethodPatternDemo;
+import com.can.behavirol.visitor.VisitorPatternDemo;
 import com.can.creational.abstractfactory.AbstractFactoryDemo;
 import com.can.creational.builder.BuilderDemo;
 import com.can.creational.factorymethod.FactoryMethodDemo;
@@ -36,5 +37,6 @@ public class Main
         StatePatternDemo.run();
         StrategyPatternDemo.run();
         TemplateMethodPatternDemo.run();
+        VisitorPatternDemo.run();
     }
 }
