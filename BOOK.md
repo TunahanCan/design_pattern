@@ -32,6 +32,7 @@ flowchart TD
 
     S --> S1[Adapter]
     S --> S2[Bridge]
+    S --> S3[Composite]
 
     B --> B1[Chain of Responsibility]
     B --> B2[Command]
@@ -50,7 +51,7 @@ ASCII fallback:
 ```text
 Design Patterns
 ├─ Creational: Factory Method, Abstract Factory, Builder, Prototype, Singleton
-├─ Structural: Adapter, Bridge
+├─ Structural: Adapter, Bridge, Composite
 └─ Behavioral: CoR, Command, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor
 ```
 
@@ -66,6 +67,7 @@ Bu projedeki karşılığı:
 | Factory Method vs Abstract Factory vs Builder | Esnek nesne üretimi | FM tek ürün üretimini alt sınıfa bırakır; AF ürün ailelerini birlikte üretir; Builder tek bir karmaşık ürünü adım adım kurar | `NotificationCreator` / `GuiFactory` / `Report.Builder` |
 | Strategy vs State | Davranışı runtime’da değiştirme | Strategy dışarıdan algoritma seçimi; State iç durum geçişine bağlı davranış | `CalculationStrategy` / `DocumentState` |
 | Adapter vs Bridge | Arayüz uyumu ve bağımlılık azaltma | Adapter mevcut uyumsuz API’yi sarar; Bridge iki ekseni baştan ayırır (abstraction-implementation) | `SquarePegAdapter` / `RemoteControl` + `Device` |
+| Composite vs Decorator | Recursive kompozisyon kullanımı | Composite birden çok çocuğun sonucunu toplar; Decorator tek çocuğa davranış ekler | `Box` + `OrderComponent` / (bu projede Decorator yok) |
 
 ASCII fallback:
 
@@ -89,6 +91,7 @@ Bu projedeki karşılığı:
 - `src/main/java/com/can/behavirol/state/`
 - `src/main/java/com/can/structural/adapter/`
 - `src/main/java/com/can/structural/bridge/`
+- `src/main/java/com/can/structural/composite/`
 
 ### 2.3 Kod tabanında paket bazlı ilişki grafiği
 
@@ -106,6 +109,7 @@ flowchart LR
 
     S --> SAD[adapter]
     S --> SBR[bridge]
+    S --> SCO[composite]
 
     B --> BCO[chainofresponsibility]
     B --> BCM[command]
@@ -125,7 +129,7 @@ ASCII fallback:
 com.can
 ├─ Main
 ├─ creational (factorymethod, abstractfactory, builder, prototype, singleton)
-├─ structural (adapter, bridge)
+├─ structural (adapter, bridge, composite)
 └─ behavirol (chainofresponsibility, command, iterator, mediator, memento, observer, state, strategy, templatemethod, visitor)
 ```
 
