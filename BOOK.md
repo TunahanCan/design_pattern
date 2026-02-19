@@ -33,6 +33,7 @@ flowchart TD
     S --> S1[Adapter]
     S --> S2[Bridge]
     S --> S3[Composite]
+    S --> S4[Decorator]
 
     B --> B1[Chain of Responsibility]
     B --> B2[Command]
@@ -51,7 +52,7 @@ ASCII fallback:
 ```text
 Design Patterns
 ├─ Creational: Factory Method, Abstract Factory, Builder, Prototype, Singleton
-├─ Structural: Adapter, Bridge, Composite
+├─ Structural: Adapter, Bridge, Composite, Decorator
 └─ Behavioral: CoR, Command, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor
 ```
 
@@ -67,7 +68,7 @@ Bu projedeki karşılığı:
 | Factory Method vs Abstract Factory vs Builder | Esnek nesne üretimi | FM tek ürün üretimini alt sınıfa bırakır; AF ürün ailelerini birlikte üretir; Builder tek bir karmaşık ürünü adım adım kurar | `NotificationCreator` / `GuiFactory` / `Report.Builder` |
 | Strategy vs State | Davranışı runtime’da değiştirme | Strategy dışarıdan algoritma seçimi; State iç durum geçişine bağlı davranış | `CalculationStrategy` / `DocumentState` |
 | Adapter vs Bridge | Arayüz uyumu ve bağımlılık azaltma | Adapter mevcut uyumsuz API’yi sarar; Bridge iki ekseni baştan ayırır (abstraction-implementation) | `SquarePegAdapter` / `RemoteControl` + `Device` |
-| Composite vs Decorator | Recursive kompozisyon kullanımı | Composite birden çok çocuğun sonucunu toplar; Decorator tek çocuğa davranış ekler | `Box` + `OrderComponent` / (bu projede Decorator yok) |
+| Composite vs Decorator | Recursive kompozisyon kullanımı | Composite birden çok çocuğun sonucunu toplar; Decorator tek çocuğa davranış ekler | `Box` + `OrderComponent` / `Notifier` + Decorator stack |
 
 ASCII fallback:
 
@@ -92,6 +93,7 @@ Bu projedeki karşılığı:
 - `src/main/java/com/can/structural/adapter/`
 - `src/main/java/com/can/structural/bridge/`
 - `src/main/java/com/can/structural/composite/`
+- `src/main/java/com/can/structural/decorator/`
 
 ### 2.3 Kod tabanında paket bazlı ilişki grafiği
 
@@ -110,6 +112,7 @@ flowchart LR
     S --> SAD[adapter]
     S --> SBR[bridge]
     S --> SCO[composite]
+    S --> SDE[decorator]
 
     B --> BCO[chainofresponsibility]
     B --> BCM[command]
@@ -129,7 +132,7 @@ ASCII fallback:
 com.can
 ├─ Main
 ├─ creational (factorymethod, abstractfactory, builder, prototype, singleton)
-├─ structural (adapter, bridge, composite)
+├─ structural (adapter, bridge, composite, decorator)
 └─ behavirol (chainofresponsibility, command, iterator, mediator, memento, observer, state, strategy, templatemethod, visitor)
 ```
 
@@ -345,6 +348,47 @@ Bu projedeki karşılığı:
 - `src/main/java/com/can/structural/bridge/Device.java`
 - `src/main/java/com/can/structural/bridge/Tv.java`
 - `src/main/java/com/can/structural/bridge/Radio.java`
+
+
+
+## B.3 Decorator
+
+```mermaid
+classDiagram
+    class Notifier
+    class EmailNotifier
+    class BaseNotifierDecorator
+    class SmsDecorator
+    class SlackDecorator
+    class FacebookDecorator
+
+    Notifier <|.. EmailNotifier
+    Notifier <|.. BaseNotifierDecorator
+    BaseNotifierDecorator <|-- SmsDecorator
+    BaseNotifierDecorator <|-- SlackDecorator
+    BaseNotifierDecorator <|-- FacebookDecorator
+    BaseNotifierDecorator --> Notifier : wrappee
+```
+
+ASCII fallback:
+
+```text
+Notifier
+├─ EmailNotifier (base behavior)
+└─ BaseNotifierDecorator (wraps Notifier)
+   ├─ SmsDecorator
+   ├─ SlackDecorator
+   └─ FacebookDecorator
+```
+
+Bu projedeki karşılığı:
+- `src/main/java/com/can/structural/decorator/Notifier.java`
+- `src/main/java/com/can/structural/decorator/EmailNotifier.java`
+- `src/main/java/com/can/structural/decorator/BaseNotifierDecorator.java`
+- `src/main/java/com/can/structural/decorator/SmsDecorator.java`
+- `src/main/java/com/can/structural/decorator/SlackDecorator.java`
+- `src/main/java/com/can/structural/decorator/FacebookDecorator.java`
+- `src/main/java/com/can/structural/decorator/DecoratorPatternDemo.java`
 
 ---
 
