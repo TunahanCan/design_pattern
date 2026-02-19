@@ -15,6 +15,7 @@ import com.can.creational.builder.BuilderDemo;
 import com.can.creational.factorymethod.FactoryMethodDemo;
 import com.can.creational.prototype.PrototypeDemo;
 import com.can.creational.singleton.SingletonDemo;
+import com.can.structural.adapter.AdapterPatternDemo;
 
 public class Main
 {
@@ -26,6 +27,9 @@ public class Main
         BuilderDemo.run();
         PrototypeDemo.run();
         SingletonDemo.run();
+
+        System.out.println("=== STRUCTURAL DESIGN PATTERNS ===\n");
+        AdapterPatternDemo.run();
 
         System.out.println("=== BEHAVIORAL DESIGN PATTERNS ===\n");
         ChainOfResponsibilityDemo.run();
