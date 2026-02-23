@@ -1,7 +1,9 @@
 package com.can.behavirol.chainofresponsibility;
 
 public class AuthenticationHandler extends BaseOrderRequestHandler {
+
     private final UserRepository userRepository;
+
     private final LoginAttemptService loginAttemptService;
 
     public AuthenticationHandler(UserRepository userRepository, LoginAttemptService loginAttemptService) {

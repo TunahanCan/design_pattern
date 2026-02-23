@@ -2,7 +2,8 @@ package com.can.behavirol.chainofresponsibility;
 
 import java.util.Map;
 
-public class ChainOfResponsibilityDemo {
+public class ChainOfResponsibilityDemo
+{
 
     public static void main(String[] args) {
         run();

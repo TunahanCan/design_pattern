@@ -1,6 +1,7 @@
 package com.can.behavirol.chainofresponsibility;
 
-public class OrderRequest {
+public class OrderRequest
+{
     private final String username;
     private final String password;
     private final String ipAddress;

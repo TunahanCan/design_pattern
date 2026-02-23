@@ -1,6 +1,7 @@
 package com.can.behavirol.command;
 
-public class ApplicationContext {
+public class ApplicationContext
+{
     private String clipboard = "";
 
     public String getClipboard() {

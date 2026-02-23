@@ -1,6 +1,7 @@
 package com.can.behavirol.chainofresponsibility;
 
 public abstract class BaseOrderRequestHandler implements OrderRequestHandler {
+
     private OrderRequestHandler next;
 
     @Override

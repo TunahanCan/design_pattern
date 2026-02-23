@@ -1,6 +1,7 @@
 package com.can.behavirol.command;
 
-public interface Command {
+public interface Command
+{
     boolean execute();
 
     void undo();
