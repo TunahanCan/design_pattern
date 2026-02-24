@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class XmlExportVisitor implements GeoNodeVisitor {
+public class XmlExportVisitor implements GeoNodeVisitor
+{
 
     private final List<String> xmlRows = new ArrayList<>();
 
@@ -27,7 +28,6 @@ public class XmlExportVisitor implements GeoNodeVisitor {
                         + sightSeeing.getAnnualVisitors()
                         + "\" />");
     }
-
     public List<String> getXmlRows() {
         return Collections.unmodifiableList(xmlRows);
     }
