@@ -18,10 +18,12 @@ public class VisitorPatternDemo {
 
         XmlExportVisitor xmlExportVisitor = new XmlExportVisitor();
         RiskAuditVisitor riskAuditVisitor = new RiskAuditVisitor();
+        GeoSummaryVisitor summaryVisitor = new GeoSummaryVisitor();
 
         for (GeoNode node : graph) {
             node.accept(xmlExportVisitor);
             node.accept(riskAuditVisitor);
+            node.accept(summaryVisitor);
         }
 
         System.out.println("XML Export:");
@@ -29,6 +31,9 @@ public class VisitorPatternDemo {
 
         System.out.println("\nRisk Audit:");
         riskAuditVisitor.getNotes().forEach(System.out::println);
+
+        System.out.println("\nToplu Özet:");
+        System.out.println(summaryVisitor.getSummary());
         System.out.println();
     }
 }

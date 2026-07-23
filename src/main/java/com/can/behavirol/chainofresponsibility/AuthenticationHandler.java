@@ -16,6 +16,10 @@ public class AuthenticationHandler extends BaseOrderRequestHandler {
         User user = userRepository.findByUsername(request.getUsername());
         if (user == null || !user.password().equals(request.getPassword())) {
             loginAttemptService.registerFailedAttempt(request.getIpAddress());
+            request.completeAs(
+                    OrderRequestOutcome.REJECTED,
+                    "Kullanıcı adı veya parola geçersiz."
+            );
             System.out.println("[Authentication] Kimlik doğrulama başarısız: " + request.getUsername());
             return false;
         }

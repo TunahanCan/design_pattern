@@ -1,106 +1,338 @@
-# Proxy Pattern (Yapısal / Structural)
+# Proxy Pattern — Gerçek Nesneye Giden Yolda Kontrollü Temsilci
 
-## Intent
+> Bu örnekte uzak YouTube servisi ve download işlemi String/sayaçlarla simüle edilir; gerçek ağ, depolama veya YouTube API çağrısı yoktur.
 
-**Proxy**, başka bir nesnenin yerine geçen bir temsilci (substitute/placeholder) sağlar.
-Bu temsilci, isteğin gerçek nesneye gitmeden önce veya gittikten sonra ek işlemler yaparak erişimi kontrol eder.
+## 30 saniyelik kart
 
-Kısaca:
-- Arayüz aynı kalır,
-- İstemci değişmez,
-- Erişim kontrolü / cache / log / lazy initialization gibi ihtiyaçlar proxy katmanında çözülür.
+| Soru | Kısa cevap |
+|---|---|
+| Niyet | Gerçek nesneyle aynı kontratı koruyarak ona erişimi yönetmek |
+| Değişen eksen | Cache, yetki, lazy creation, remote iletişim veya logging politikası |
+| Ana araç | Subject interface'ini uygulayan ve Real Subject'e delege eden temsilci |
+| Korunan şey | Client gerçek servis ile proxy arasında değiştirilmez |
+| Bedel | Gizli gecikme/state, invalidation, concurrency ve lifecycle karmaşıklığı |
+| Repo cümlesi | Aynı video isteği backend'e bir kez gider, sonra cache'den döner |
 
----
+**Hafıza kancası:** Proxy kapının kendisi değildir; kapıya kim, ne zaman ve nasıl ulaşır onu yöneten görevli gibidir.
 
-## Problem
+## Örnek haritası: temel → güçlendirilmiş → production
 
-Neden bir nesneye erişimi kontrol etmek isteriz?
+| Katman | Repodaki karşılığı | Öğrettiği şey |
+|---|---|---|
+| Temel örnek | `ThirdPartyYouTubeLib`, `ThirdPartyYouTubeClass`, `CachedYouTubeClass` | Client'ı değiştirmeden liste, metadata ve download erişimine cache policy eklemek |
+| Güçlendirilmiş örnek | Immutable liste snapshot'ı, `ConcurrentHashMap`, exact-id kontratı ve `invalidateVideo(id)` | Cache poisoning'i önlemek, Subject semantiğini korumak, aynı-key reuse'u güvenli kılmak ve hedefli invalidation yapmak |
+| Bilinçli production sınırı | TTL/kapasite/tenant key yok; download String'dir | Dağıtık stampede, eviction, stale toleransı, CDN/object storage ve authorization ayrıca tasarlanır |
 
-Çünkü bazı servis nesneleri:
-- Ağırdır (çok kaynak tüketir),
-- Uzak kaynaktan veri çeker (gecikme yaratır),
-- Tekrarlı çağrılarda gereksiz maliyet üretir.
+## Akılda kalıcı analoji: güvenlik turnikesi
 
-Örneğin YouTube benzeri bir serviste aynı videonun bilgisini her seferinde yeniden indirmek uygulamayı yavaşlatır.
+Ofisteki turnike geçiş kartını kontrol eder, denetim kaydı tutabilir ve yetkisiz isteği toplantı odasına ulaşmadan durdurur.
+Oda işini değiştirmez; aynı hedefe giden erişim yolu kontrol edilir.
 
----
+Caching Proxy'de görevli daha önce istenen bilgiye sahipse gerçek servise tekrar gitmez. Bu repodaki `CachedYouTubeClass` yalnız caching proxy çeşidini gösterir; lazy initialization, authorization ve remote transport kodda uygulanmış değildir.
 
-## Solution
+## Pattern olmadan problem
 
-Proxy yaklaşımı şunu söyler:
-1. Gerçek servisle **aynı interface**'e sahip bir Proxy sınıfı oluştur.
-2. İstemcilerde gerçek servis yerine proxy ver.
-3. Proxy, gerekirse gerçek servisi oluşturup çağrıyı ona delege etsin.
+`YouTubeManager` doğrudan uzak servise bağlanırsa her ekran çiziminde:
 
-Böylece:
-- Lazy initialization yapılabilir,
-- Sonuçlar cache'lenebilir,
-- Loglama ve access control eklenebilir,
-- Tüm bunlar gerçek servisi değiştirmeden uygulanır.
+- video listesi tekrar indirilebilir,
+- aynı video metadata'sı tekrar istenebilir,
+- aynı download tekrar başlatılabilir,
+- latency ve kota maliyeti client koduna yayılır.
 
----
+Cache için `containsKey/get/remote call` akışını manager içine koymak da erişim politikasını UI sorumluluğuna karıştırır.
 
-## Projedeki OOP Örneği (YouTube Caching Proxy)
+Bu durumda UI/client:
 
-Bu projede aşağıdaki roller var:
+- remote erişim politikasını bilir,
+- birden çok manager aynı cache kodunu tekrarlar,
+- gerçek servis yerine farklı policy vermek zorlaşır,
+- Single Responsibility ihlal edilir.
 
-- **Service Interface**: `ThirdPartyYouTubeLib`
-- **Real Service**: `ThirdPartyYouTubeClass`
-- **Proxy**: `CachedYouTubeClass`
-- **Client**: `YouTubeManager`
+## Çözüm ve çözümün sınırı
 
-### Nasıl çalışıyor?
+Gerçek servis ve Proxy aynı Subject interface'ini uygular:
 
-- `ThirdPartyYouTubeClass`, video listesini, video bilgisini ve indirme çıktısını üretir.
-- `CachedYouTubeClass`, aynı çağrıları cache üzerinden yönetir:
-  - `listVideos()` sonucu tek sefer çağrılır.
-  - `getVideoInfo(id)` aynı `id` için cache'den döner.
-  - `downloadVideo(id)` aynı `id` için tekrar gerçek servise gitmez.
-- `YouTubeManager`, servisle sadece interface üzerinden konuşur. Bu nedenle gerçek servis yerine proxy verilmesi istemciyi bozmaz.
+```java
+public interface ThirdPartyYouTubeLib {
+    List<String> listVideos();
+    String getVideoInfo(String id);
+    String downloadVideo(String id);
+}
+```
 
----
+Proxy gerçek servisi içeride tutar:
 
-## Real-World Analogy
+```java
+public String getVideoInfo(String id) {
+    String exactId = Objects.requireNonNull(id, "video id cannot be null");
+    return videoInfoCache.computeIfAbsent(exactId, service::getVideoInfo);
+}
+```
 
-Kredi kartı, nakit para için bir proxy gibi düşünülebilir.
-Kullanıcı ödeme yapar ama fiziksel nakit taşımaz; kart, banka hesabı üzerinden aynı amaca ulaşır.
+Client yalnız interface görür:
 
----
+```java
+ThirdPartyYouTubeLib service = new CachedYouTubeClass(realService);
+YouTubeManager manager = new YouTubeManager(service);
+```
 
-## Applicability
+Proxy'nin sınırı:
 
-Proxy en çok şu durumlarda kullanılır:
-- **Virtual Proxy (Lazy Initialization)**: Ağır nesneyi ihtiyaç anında oluşturmak.
-- **Protection Proxy (Access Control)**: Sadece yetkili istemcileri geçirmek.
-- **Remote Proxy**: Uzak servise ağ üzerinden erişimi soyutlamak.
-- **Logging Proxy**: İstek geçmişini tutmak.
-- **Caching Proxy**: Tekrarlı istekleri cache’den döndürmek.
-- **Smart Reference**: Ağır nesnenin yaşam döngüsünü/aktif referanslarını yönetmek.
+- Aynı interface şeffaflığı, aynı non-functional davranış anlamına gelmez.
+- Cache freshness ve invalidation kendiliğinden çözülmez.
+- Proxy gerçek servisin domain hatalarını gizlememelidir.
+- Caching Proxy cache key üretirken Subject girdisini trim/normalize ederek
+  fonksiyonel sonucu değiştirmemelidir.
+- Dağıtık sistemde “aynı çağrı” idempotent olmayabilir.
+- Cache her operasyona uygun değildir; download sonucu büyük olabilir.
 
----
+Liste cache'i özel olarak immutable snapshot üretir:
 
-## Pros / Cons
+```java
+listCache = List.copyOf(service.listVideos());
+```
+
+Bu hem kaynağın sonradan değişmesini cache'ten ayırır hem client'ın `add/set` ile
+gelecekteki hit'leri zehirlemesini engeller. `invalidateVideo(id)` yalnız ilgili
+metadata ve download entry'sini siler; `reset()` bütün bölgeleri temizler.
+
+## Repodaki roller
+
+| Pattern rolü | Tip | Sorumluluk |
+|---|---|---|
+| Subject | `ThirdPartyYouTubeLib` | Client ve iki servis için ortak kontrat |
+| Real Subject | `ThirdPartyYouTubeClass` | Sonuç üretir ve gerçek çağrı sayısını simüle eder |
+| Proxy | `CachedYouTubeClass` | Liste, bilgi ve download sonuçlarını cache'ler; hedefli/tam invalidation sunar |
+| Client | `YouTubeManager` | Yalnız Subject üzerinden panel/page/download üretir |
+| Composition root | `ProxyPatternDemo` | Real Subject, Proxy ve Client graph'ını kurar |
+
+Real service içindeki sayaçlar öğretici test gözlem noktalarıdır. Production remote client'ın ana sorumluluğuna test sayacı eklemek yerine metrics veya fake kullanılmalıdır.
+
+## Yapı diyagramı
+
+```mermaid
+classDiagram
+    class ThirdPartyYouTubeLib {
+        <<interface>>
+        +listVideos() List
+        +getVideoInfo(String) String
+        +downloadVideo(String) String
+    }
+    class ThirdPartyYouTubeClass
+    class CachedYouTubeClass {
+        -ThirdPartyYouTubeLib service
+        -List listCache
+        -Map videoInfoCache
+        -Map downloadedVideoCache
+        +invalidateVideo(String)
+        +reset()
+    }
+    class YouTubeManager
+
+    ThirdPartyYouTubeLib <|.. ThirdPartyYouTubeClass
+    ThirdPartyYouTubeLib <|.. CachedYouTubeClass
+    CachedYouTubeClass o-- ThirdPartyYouTubeLib : delegates
+    YouTubeManager --> ThirdPartyYouTubeLib
+```
+
+Cache hit/miss akışı:
+
+```mermaid
+sequenceDiagram
+    participant Manager
+    participant Proxy
+    participant Real as Real Service
+
+    Manager->>Proxy: getVideoInfo("proxy-pattern")
+    alt cache miss
+        Proxy->>Real: getVideoInfo("proxy-pattern")
+        Real-->>Proxy: Video[...]
+        Proxy->>Proxy: cache'e yaz
+    end
+    Proxy-->>Manager: Video[...]
+    Manager->>Proxy: aynı id
+    Proxy-->>Manager: cache hit, Real çağrılmaz
+```
+
+## Kodun execution trace'i
+
+`renderVideoPage("proxy-pattern")` iki kez çağrıldığında:
+
+1. Manager Subject'ten `getVideoInfo(id)` ister.
+2. Proxy map'te id'yi bulamaz.
+3. `computeIfAbsent` Real Subject metodunu çağırır.
+4. Real Subject id sayacını `1` yapar ve String döndürür.
+5. Proxy sonucu map'e koyar.
+6. Manager `"VideoPage => ..."` çıktısını üretir.
+7. İkinci çağrıda map sonucu bulunur.
+8. Real Subject sayacı `1` kalır.
+
+`invalidateVideo(id)` yalnız o id'nin info/download kayıtlarını siler. `reset()`
+liste alanını synchronized blokta null yapar ve iki map'i temizler. Sonraki ilk
+çağrı yeniden miss olur.
+
+## Test kontratları neyi öğretiyor?
+
+`ProxyPatternDemoTest` altı `@Nested` hikâye kullanır.
+
+### `SubjectContract`
+
+- Aynı parametreli kontrat testini hem Real Subject hem Caching Proxy üzerinde
+  çalıştırır.
+- Başında/sonunda boşluk olan ve blank id'nin iki implementasyonda da exact
+  korunduğunu gösterir.
+- Null id'nin iki tarafta da aynı hata ailesiyle reddedildiğini doğrular.
+
+### `ListCaching`
+
+- Manager'ın görünür panel çıktısını exact doğrular.
+- İki client çağrısına rağmen Real Subject'in bir kez çağrıldığını kanıtlar.
+- Mutable service listesinin immutable ve defensive snapshot'a dönüştüğünü gösterir.
+
+### `VideoInfoCaching`
+
+- Cache'in id bazında çalıştığını,
+- aynı id'nin reuse edildiğini,
+- farklı id'nin bağımsız miss oluşturduğunu gösterir.
+
+### `DownloadCachingAndReset`
+
+- Aynı download sonucunun tekrar kullanıldığını doğrular.
+- Reset sonrası backend sayacının arttığını gösterir.
+- Reset'in list, info ve download bölgelerinin tamamını temizlediğini sınar.
+- Tek video invalidation'ının başka id'nin sıcak cache entry'sini koruduğunu kanıtlar.
+
+### `ConcurrentCacheCoordination`
+
+- Başlangıç bariyerinde buluşan `16` paralel liste miss'inin tek backend çağrısı ve
+  tek immutable snapshot identity'si ürettiğini,
+- `16` paralel aynı-id metadata miss'inin tek cached value ve tek backend çağrısına
+  birleştiğini deterministik executor testiyle kanıtlar.
+
+### `ProxyBoundaries`
+
+- Null servis/manager bağımlılığını,
+- null video id'sini ve null invalidation hedefini fail-fast reddeder.
+
+Bu testlerde görünür sonuç ile backend çağrı sayısı birlikte assert edilir. Yalnız eşit String kontrolü, Proxy gerçekten cache kullanmadan da geçebilirdi.
+
+## Edge case, güvenlik, concurrency ve performans
+
+### Immutable liste cache'i
+
+`listVideos()` real service sonucunu `List.copyOf` ile bir kez snapshot'a çevirir.
+`volatile` referans ve synchronized miss bölümü aynı proxy instance'ında listenin
+güvenli publication'ını sağlar. Client mutation denemesi
+`UnsupportedOperationException` üretir; kaynağın sonraki mutation'ı snapshot'ı
+değiştirmez.
+
+### Null ve failure semantiği
+
+Null service constructor'da, null video id hem Real Subject hem Proxy'de gerçek
+işlemden önce reddedilir. Blank ve whitespace içeren id ise mevcut Subject
+kontratında geçerlidir ve **aynen** korunur; caching katmanı trim ederek görünür
+sonucu veya cache-key eşitliğini değiştirmez. Gerçek domain blank id'yi yasaklayacaksa
+bu kural ortak bir `VideoId` value object veya bütün Subject implementasyonlarında
+aynı contract ile uygulanmalıdır.
+
+`Map.computeIfAbsent` mapping function null döndürürse değer saklanmaz; aynı id her
+seferinde backend'e gider. Exception da cache'lenmez ve sonraki çağrı yeniden dener.
+Bunun doğru olup olmadığı açık negatif-cache/retry politikası olmalıdır.
+
+### Freshness, kapasite ve invalidation
+
+Cache'te hedefli `invalidateVideo(id)` ve bütün bölgeleri temizleyen `reset()` vardır;
+fakat TTL ve maksimum entry yoktur. Veri explicit invalidation'a kadar stale
+kalabilir ve farklı id'ler belleği sınırsız büyütebilir. Caffeine gibi
+battle-tested cache çoğu production senaryosunda daha güvenlidir.
+
+### Güvenlik
+
+Protection Proxy yazılıyorsa authentication kadar authorization, tenant isolation ve audit gerekir. Cache key tenant/rol bilgisini içermiyorsa bir kullanıcının sonucu diğerine sızabilir. Hassas video metadata'sı cache ve loglarda şifreleme/retention gerektirebilir.
+
+### Concurrency
+
+Info/download bölgeleri `ConcurrentHashMap.computeIfAbsent`, liste bölgesi
+volatile + synchronized miss kullanır. Real service'in eğitim sayaçları da atomik
+hale getirilmiştir. Bu, tek JVM'deki aynı proxy instance'ının temel reuse'unu
+iyileştirir; başlangıç bariyerli paralel testler aynı instance'ta tek backend çağrısı
+olduğunu görünür kılar. `reset/invalidate` ile devam eden request yarışı ve birden
+çok instance/JVM arasındaki distributed stampede hâlâ çözülmüş değildir.
+
+### Performans
+
+Cache latency ve remote çağrı sayısını azaltabilir; fakat serialization, memory, eviction ve invalidation maliyeti getirir. Hit ratio, backend latency, entry size ve stale-data bedeli ölçülmelidir. Download payload'ını bellekte cache'lemek yerine object storage/CDN gerekebilir.
+
+## Ne zaman kullan?
+
+- Pahalı/uzak nesneye erişimi geciktirmek veya azaltmak istiyorsan.
+- Yetkilendirmeyi Subject sınırında uygulayacaksan.
+- Remote nesneyi yerel interface gibi sunacaksan.
+- Logging, rate limit veya metrics'i client'tan ayıracaksan.
+- Client'ın gerçek ve temsilci arasında değişmeden kalması önemliyse.
+
+## Ne zaman kullanma?
+
+- Cache doğruluğu freshness gereksinimini karşılamıyorsa.
+- Operasyon yan etkili ve tekrar kullanılamazsa.
+- Ek katman yalnızca çağrıyı geçiriyor, policy sunmuyorsa.
+- Client'ın gelişmiş backend özelliklerine doğrudan ihtiyacı varsa.
+- Dağıtık cache karmaşıklığı kazançtan büyükse.
+
+## Artılar ve bedeller
 
 ### Artılar
-- Gerçek servisi istemciden gizleyerek erişimi kontrol edebilirsin.
-- Servis yaşam döngüsünü istemciden bağımsız yönetebilirsin.
-- Open/Closed Principle: Yeni proxy'ler ekleyip davranış genişletilebilir.
 
-### Eksiler
-- Sınıf sayısı ve yapı karmaşıklığı artabilir.
-- Proxy katmanı, çağrılara küçük bir gecikme ekleyebilir.
+- Client'ı değiştirmeden erişim policy'si ekler.
+- Remote çağrı ve latency'yi azaltabilir.
+- Gerçek servisi security/lifecycle detayından ayırır.
+- Interface sayesinde fake ve farklı proxy'ler kolay bağlanır.
 
----
+### Bedeller
 
-## Diğer Pattern'lerle İlişki
+- Gizli state ve gecikme davranışı ekler.
+- Stale data ve invalidation zordur.
+- Memory/capacity ve concurrency yönetimi gerekir.
+- Hata, retry ve observability bir kat daha karmaşıklaşır.
 
-- **Adapter**: Farklı arayüzü uyumlu hale getirir. Proxy’de arayüz aynı kalır.
-- **Decorator**: Davranışı zenginleştirir; Proxy çoğunlukla erişim/lifecycle yönetir.
-- **Facade**: Karmaşık sistemi basit arayüzle sunar; Proxy ise gerçek servisle aynı arayüzü korur.
+## Karışan desenlerle karşılaştırma
 
----
+| Desen | Proxy'den farkı |
+|---|---|
+| Adapter | Farklı interface'i hedef interface'e çevirir |
+| Decorator | Asıl niyet davranış/sorumluluk eklemektir |
+| Facade | Alt sisteme daha sade ve çoğu zaman farklı bir API sunar |
+| Flyweight | Ortak intrinsic nesne state'ini paylaşır |
+| Gateway | Uzak sisteme uygulama-özel sınır sunabilir; Proxy aynı Subject şeffaflığını hedefler |
 
-## Kısa Özet
+Proxy ve Decorator yapısal olarak benzerdir. Ayrım niyettedir: **erişim kontrolü mü, davranış zenginleştirme mi?**
 
-Proxy, istemci ile gerçek servis arasına girip kontrol noktası oluşturan bir yapısal pattern’dir.
-Bu projede `CachedYouTubeClass`, `ThirdPartyYouTubeClass` için cache odaklı bir proxy görevi görerek gereksiz tekrarlı çağrıları engeller.
+## Yaygın hatalar
+
+1. Mutable sonucu doğrudan cache'ten dışarı vermek.
+2. TTL ve invalidation olmadan cache'i sonsuz doğru sanmak.
+3. Null/exception sonucunun cache politikasını belirsiz bırakmak.
+4. Thread-safe olmayan map'i paylaşılan proxy'de kullanmak.
+5. Tenant/user bilgisini cache key'den çıkarmak.
+6. Her download veya side-effect'i güvenle cache'lenebilir sanmak.
+7. Proxy'nin lazy olduğunu söyleyip gerçek servisi eager oluşturmak.
+
+## Üç kademeli alıştırma
+
+### Seviye 1 — Isınma
+
+İki farklı video id'sini ikişer kez iste. Her id için görünür sonuç dört kez üretilirken backend sayacının bir olduğunu test et.
+
+### Seviye 2 — Güvenli liste cache'i
+
+Liste cache'ine ayrı `invalidateList()` ekle. Yalnız listeyi soğutup info/download
+entry'lerini koruduğunu ve sonraki iki paralel liste isteğinin tek backend çağrısıyla
+sonuçlandığını test et.
+
+### Seviye 3 — Production cache policy
+
+`Clock`, TTL, maksimum boyut ve id bazlı invalidation ekleyen bir proxy tasarla. Paralel aynı-key miss, backend exception, null cevap ve tenant isolation senaryolarını test doubles ile sınayarak trade-off'ları yaz.
+
+## Son hafıza cümlesi
+
+> **Proxy gerçek nesnenin maskesi değil, ona giden yolun politikasını taşıyan aynı yüzlü temsilcidir.**

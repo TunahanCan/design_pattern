@@ -23,9 +23,14 @@ public class BridgePatternDemo {
 
         advancedRemote.togglePower();
         advancedRemote.volumeUp();
+        advancedRemote.saveChannelPreset("favori");
+        advancedRemote.channelUp();
+        advancedRemote.selectChannelPreset("favori");
         advancedRemote.mute();
 
-        System.out.println("Advanced remote + Radio -> " + radio.status());
+        System.out.println(
+            "Advanced remote + Radio (preset workflow) -> " + radio.status()
+        );
 
         advancedRemote.switchDevice(tv);
         advancedRemote.channelUp();

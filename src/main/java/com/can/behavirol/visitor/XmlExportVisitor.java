@@ -11,24 +11,33 @@ public class XmlExportVisitor implements GeoNodeVisitor
 
     @Override
     public void visitCity(City city) {
-        xmlRows.add("<city name=\"" + city.getName() + "\" population=\"" + city.getPopulation() + "\" />");
+        xmlRows.add("<city name=\"" + escape(city.getName()) + "\" population=\"" + city.getPopulation() + "\" />");
     }
 
     @Override
     public void visitIndustry(Industry industry) {
-        xmlRows.add("<industry name=\"" + industry.getName() + "\" sector=\"" + industry.getSector() + "\" />");
+        xmlRows.add("<industry name=\"" + escape(industry.getName()) + "\" sector=\"" + escape(industry.getSector()) + "\" />");
     }
 
     @Override
     public void visitSightSeeing(SightSeeing sightSeeing) {
         xmlRows.add(
                 "<sightseeing name=\""
-                        + sightSeeing.getName()
+                        + escape(sightSeeing.getName())
                         + "\" annualVisitors=\""
                         + sightSeeing.getAnnualVisitors()
                         + "\" />");
     }
     public List<String> getXmlRows() {
         return Collections.unmodifiableList(xmlRows);
+    }
+
+    private static String escape(String value) {
+        return value
+                .replace("&", "&amp;")
+                .replace("\"", "&quot;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("'", "&apos;");
     }
 }

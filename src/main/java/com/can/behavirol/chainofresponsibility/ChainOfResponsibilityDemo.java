@@ -31,8 +31,20 @@ public class ChainOfResponsibilityDemo
         chain.handle(new OrderRequest("admin", "root", "10.0.0.99", OrderOperation.VIEW_ALL_ORDERS,
                 "Tüm siparişleri görüntüle"));
 
-        chain.handle(new OrderRequest("admin", "root", "10.0.0.99", OrderOperation.VIEW_ALL_ORDERS,
-                "Tüm siparişleri görüntüle"));
+        OrderRequest duplicateRequest = new OrderRequest(
+                "admin",
+                "root",
+                "10.0.0.99",
+                OrderOperation.VIEW_ALL_ORDERS,
+                "Tüm siparişleri görüntüle"
+        );
+        chain.handle(duplicateRequest);
+        System.out.println(
+                "İkinci isteğin sonucu: "
+                        + duplicateRequest.getOutcome()
+                        + " -> "
+                        + duplicateRequest.getOutcomeMessage()
+        );
 
         System.out.println();
     }

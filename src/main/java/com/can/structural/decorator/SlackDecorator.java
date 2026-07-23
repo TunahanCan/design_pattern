@@ -6,12 +6,13 @@ public class SlackDecorator extends BaseNotifierDecorator {
 
     public SlackDecorator(Notifier wrappee, String channel) {
         super(wrappee);
-        this.channel = channel;
+        this.channel = Notifier.requireText(channel, "Slack channel");
     }
 
     @Override
     public String send(String message) {
-        return super.send(message) + System.lineSeparator()
-            + "Slack -> " + channel + " | mesaj=" + message;
+        String validatedMessage = Notifier.requireText(message, "message");
+        return super.send(validatedMessage) + System.lineSeparator()
+            + "Slack -> " + channel + " | mesaj=" + validatedMessage;
     }
 }

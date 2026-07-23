@@ -1,13 +1,14 @@
 package com.can.structural.proxy;
 
 import java.util.List;
+import java.util.Objects;
 
 public class YouTubeManager {
 
     private final ThirdPartyYouTubeLib service;
 
     public YouTubeManager(ThirdPartyYouTubeLib service) {
-        this.service = service;
+        this.service = Objects.requireNonNull(service, "service cannot be null");
     }
 
     public String renderVideoPage(String id) {

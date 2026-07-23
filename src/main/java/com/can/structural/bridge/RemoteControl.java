@@ -1,15 +1,17 @@
 package com.can.structural.bridge;
 
+import java.util.Objects;
+
 public class RemoteControl {
 
     protected Device device;
 
     public RemoteControl(Device device) {
-        this.device = device;
+        this.device = requireDevice(device);
     }
 
     public void switchDevice(Device device) {
-        this.device = device;
+        this.device = requireDevice(device);
     }
 
     public void togglePower() {
@@ -34,5 +36,9 @@ public class RemoteControl {
 
     public void channelUp() {
         device.setChannel(device.getChannel() + 1);
+    }
+
+    private static Device requireDevice(Device device) {
+        return Objects.requireNonNull(device, "device cannot be null");
     }
 }

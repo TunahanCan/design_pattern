@@ -26,8 +26,7 @@ public class MementoPatternDemo {
         history.push(editor.createSnapshot("Undo açıklaması yazıldı"));
         System.out.println("İkinci düzenleme: " + editor.viewState());
 
-        history.popLast(); // mevcut durumun snapshot'ı
-        history.popLast().ifPresent(editor::restore);
+        history.undo(editor);
         System.out.println("Undo sonrası: " + editor.viewState());
 
         history.printTimeline();

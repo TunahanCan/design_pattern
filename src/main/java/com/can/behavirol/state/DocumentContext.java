@@ -4,6 +4,7 @@ public class DocumentContext {
     private final String title;
     private String content;
     private String currentUserRole;
+    private String lastReviewNote;
     private DocumentState state;
 
     public DocumentContext(String title, String content, String currentUserRole) {
@@ -19,6 +20,10 @@ public class DocumentContext {
 
     public String edit(String newContent) {
         return state.edit(this, newContent);
+    }
+
+    public String reject(String reason) {
+        return state.reject(this, reason);
     }
 
     public void changeState(DocumentState newState) {
@@ -47,5 +52,13 @@ public class DocumentContext {
 
     public String getStateName() {
         return state.getName();
+    }
+
+    public String getLastReviewNote() {
+        return lastReviewNote;
+    }
+
+    void recordReviewNote(String reviewNote) {
+        this.lastReviewNote = reviewNote;
     }
 }

@@ -1,114 +1,299 @@
-# Strategy Pattern (Strateji Deseni)
+# Strategy — Strateji Deseni
 
-**Tür:** Behavioral (Davranışsal)
+> Aritmetik örnek mekanizmayı görünür kılar; teslimat örneği aynı fikrin gerçek iş kuralındaki karşılığını gösterir.
 
-## Intent (Amaç)
+## 30 saniyelik kart
 
-Strategy, bir algoritma ailesini ayrı sınıflara ayırmanıza ve bu sınıfları birbirinin yerine kullanılabilir (interchangeable) hale getirmenize yardımcı olur.
+| Soru | Kısa cevap |
+|---|---|
+| Niyet | Aynı işi yapan algoritma ailesini ortak sözleşmeyle değiştirilebilir nesneler yapmak |
+| Değişen eksen | Context’in kullandığı hesaplama algoritması |
+| Ana bedel | Client doğru stratejiyi bilmeli; sınıf/nesne sayısı artar |
+| Bu örnekte | Aritmetik algoritmalar ve teslimat fiyatlama politikaları runtime’da değiştirilir |
+| Hafıza ipucu | “Hedef aynı, oraya giden rota değişebilir.” |
 
----
+## Örnek haritası: temel → güçlendirilmiş → production
 
-## Problem
+| Katman | Bu repoda ne var? | Öğrettiği sınır |
+|---|---|---|
+| Temel örnek | `CalculationStrategy`, `CalculatorContext` ve üç aritmetik strategy | Aynı çağrının farklı algoritmaya delege edilmesi ve runtime seçim |
+| Güçlendirilmiş örnek | `DeliveryStrategy`, `DeliveryPlanner`, `Shipment`, `DeliveryQuote`, `StandardDeliveryStrategy`, `ExpressDeliveryStrategy` | Strategy’nin gerçek fiyat/SLA kuralını ve typed input/output’u kapsüllemesi |
+| Production sınırı | Currency-aware para modeli, konfigürasyon, uygunluk motoru, versiyonlama ve metrics | Cent tutarının tek currency varsayması; stratejiyi doğru seçmenin hâlâ client sorumluluğu olması |
 
-Navigasyon uygulaması örneğinde tek bir sınıfın farklı rota algoritmalarını (`araba`, `yürüme`, `toplu taşıma`, `bisiklet`...) yönetmesi zamanla şu problemlere yol açar:
+## Akılda kalıcı analoji: navigasyon rotası
 
-- Ana sınıf aşırı büyür (bloated class).
-- Yeni bir algoritma eklemek eski çalışan kodu riske atar.
-- Ekip aynı büyük sınıfta çalıştığı için merge conflict artar.
+Havalimanına gitme hedefi değişmez.
+Fakat koşula göre:
 
-Yani bir sınıfta çok fazla `if/switch` ile algoritma seçimi yapmak bakım maliyetini yükseltir.
+- araba,
+- toplu taşıma,
+- bisiklet,
+- yürüme
 
----
+algoritmalarından biri seçilir.
+
+Navigasyon ekranı “rota hesapla” der.
+Seçili strateji kendi algoritmasını çalıştırır.
+Yeni rota türü ekranın hesaplama akışını değiştirmez.
+
+## Pattern olmasaydı problem ne olurdu?
+
+Context concrete seçimleri kendi içinde yaparsa büyüyen koşul oluşur:
+
+```java
+int calculate(Operation operation, int a, int b) {
+    return switch (operation) {
+        case ADD -> a + b;
+        case SUBTRACT -> a - b;
+        case MULTIPLY -> a * b;
+    };
+}
+```
+
+Bu küçük örnekte switch gayet yeterli olabilir.
+Algoritmalar büyüyüp bağımlılıkları farklılaştığında ise:
+
+- context şişer,
+- her yeni algoritma context’i değiştirir,
+- algoritmalar ayrı test edilemez hale gelir,
+- runtime composition zorlaşır.
 
 ## Çözüm
 
-Strategy deseni, değişken davranışları ayrı strateji sınıflarına taşır:
+Algoritma ailesi `CalculationStrategy` arayüzünde birleşir.
+Her concrete strategy aynı `execute(a, b)` çağrısını farklı uygular.
+`CalculatorContext` yalnız interface’i bilir.
+Client, constructor veya setter ile aktif stratejiyi seçer.
 
-- Ortak bir `Strategy` arayüzü tanımlanır.
-- Her algoritma bu arayüzü uygulayan ayrı bir `ConcreteStrategy` sınıfına çıkarılır.
-- `Context`, aktif stratejiyi referans olarak tutar ve işi stratejiye delege eder.
-- İstemci (client), runtime'da stratejiyi değiştirerek farklı algoritma çalıştırır.
+Aynı yapı daha gerçekçi teslimat örneğinde tekrar edilir.
+`DeliveryPlanner`, `Shipment` verisini seçili `DeliveryStrategy` nesnesine verir ve typed `DeliveryQuote` alır.
+Standart strateji premium müşteriye ücretsiz gönderim uygularken ekspres strateji hız için ayrı fiyat hesaplar.
 
-Böylece `Context` sınıfı somut algoritmaları bilmeden çalışır.
+### Çözmediği şeyler
 
----
+Strategy tek başına:
 
-## Projedeki OOP Örneği
+- doğru algoritmayı otomatik seçmez,
+- client’taki seçim koşulunu yok etmez,
+- null stratejiyi engellemez,
+- temel `CalculatorContext` örneğindeki `int` overflow’unu kendiliğinden çözmez,
+- stateful stratejiyi thread-safe yapmaz,
+- algoritmalar arası ortak kodu otomatik paylaşmaz.
 
-Bu projede Strategy örneği, hesap makinesi işlemleri üzerinden modellenmiştir:
+## Repodaki roller
 
-- `CalculationStrategy` → Ortak strateji arayüzü (`execute`)
-- `AddStrategy`, `SubtractStrategy`, `MultiplyStrategy` → Somut stratejiler
-- `CalculatorContext` → Aktif stratejiyi tutan context
-- `StrategyPatternDemo` → Runtime'da strateji değiştirilen demo akışı
+| Pattern rolü | Repodaki karşılığı | Sorumluluk |
+|---|---|---|
+| Strategy | `CalculationStrategy` | `execute` ve gösterim adı sözleşmesi |
+| Concrete Strategy | `AddStrategy` | `a + b` |
+| Concrete Strategy | `SubtractStrategy` | `a - b` |
+| Concrete Strategy | `MultiplyStrategy` | `a * b` |
+| Context | `CalculatorContext` | Aktif stratejiyi saklar ve delege eder |
+| Client | `StrategyPatternDemo` | Runtime strateji seçimini yapar |
+| Gerçekçi Strategy | `DeliveryStrategy` | `Shipment` için `DeliveryQuote` sözleşmesi |
+| Gerçekçi Context | `DeliveryPlanner` | Non-null aktif teslimat stratejisine delege eder |
+| Concrete Strategy | `StandardDeliveryStrategy` | Ürün adedi, şehir ve premium politikasını uygular |
+| Concrete Strategy | `ExpressDeliveryStrategy` | Daha yüksek ücret ve daha kısa SLA hesaplar |
+| Typed veri | `Shipment`, `DeliveryQuote` | Girdi invariant’ı ve fiyat/SLA sonucunu isimlendirir |
 
-### Senaryo Akışı
+## Yapı
 
-1. `CalculatorContext`, başlangıçta `AddStrategy` ile oluşturulur.
-2. Aynı `calculate(a, b)` çağrısı ile toplama yapılır.
-3. `setStrategy(new SubtractStrategy())` ile algoritma runtime'da değiştirilir.
-4. Aynı çağrı bu kez çıkarma yapar.
-5. Strateji tekrar `MultiplyStrategy` yapılarak çarpma çalıştırılır.
+```mermaid
+classDiagram
+    class CalculationStrategy {
+        <<interface>>
+        +execute(a, b) int
+        +name() String
+    }
+    class CalculatorContext {
+        -strategy CalculationStrategy
+        +setStrategy(strategy)
+        +calculate(a, b) int
+        +getStrategyName() String
+    }
+    class DeliveryStrategy {
+        <<interface>>
+        +quote(Shipment) DeliveryQuote
+    }
+    class DeliveryPlanner {
+        -strategy DeliveryStrategy
+        +setStrategy(DeliveryStrategy)
+        +quote(Shipment) DeliveryQuote
+    }
+    class Shipment {
+        <<record>>
+        +itemCount() int
+        +sameCity() boolean
+        +premiumCustomer() boolean
+    }
+    class DeliveryQuote {
+        <<record>>
+        +serviceName() String
+        +feeInCents() long
+        +estimatedDays() int
+    }
+    CalculationStrategy <|.. AddStrategy
+    CalculationStrategy <|.. SubtractStrategy
+    CalculationStrategy <|.. MultiplyStrategy
+    CalculatorContext --> CalculationStrategy
+    DeliveryStrategy <|.. StandardDeliveryStrategy
+    DeliveryStrategy <|.. ExpressDeliveryStrategy
+    DeliveryPlanner --> DeliveryStrategy
+    DeliveryPlanner ..> Shipment : input
+    DeliveryPlanner ..> DeliveryQuote : result
+```
 
-Aynı context, farklı algoritmaları herhangi bir `if/switch` bloğu olmadan kullanır.
+## Runtime seçim akışı
 
----
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Planner as DeliveryPlanner
+    participant Standard as StandardDeliveryStrategy
+    participant Express as ExpressDeliveryStrategy
+    Client->>Planner: new DeliveryPlanner(Standard)
+    Client->>Planner: quote(Shipment(3, sameCity=true, premium=false))
+    Planner->>Standard: quote(shipment)
+    Standard-->>Planner: DeliveryQuote(5990 cent, 2 gün)
+    Planner-->>Client: standart teklif
+    Client->>Planner: setStrategy(Express)
+    Client->>Planner: quote(aynı shipment)
+    Planner->>Express: quote(shipment)
+    Express-->>Planner: DeliveryQuote(10990 cent, 1 gün)
+    Planner-->>Client: ekspres teklif
+```
 
-## Structure (Yapı)
+## Kod execution trace
 
-1. **Context**: Bir Strategy referansı tutar ve yalnızca arayüz üzerinden çağrı yapar.
-2. **Strategy Interface**: Tüm algoritmalar için ortak metodu tanımlar.
-3. **Concrete Strategies**: Algoritmanın farklı varyasyonlarını uygular.
-4. **Client**: İhtiyaca göre doğru stratejiyi seçip context'e verir.
+1. Client context’i `AddStrategy` ile oluşturur.
+2. Context `calculate(12, 4)` çağrısını strategy’ye iletir.
+3. Sonuç 16 döner.
+4. Client `setStrategy(new SubtractStrategy())` çağırır.
+5. Aynı calculate API’si bu kez 8 döner.
+6. Strategy `MultiplyStrategy` olduğunda sonuç 48 olur.
+7. Context hiçbir concrete strategy için `instanceof` veya switch kullanmaz.
 
----
+Seçim yine client tarafından yapılır.
+Pattern koşulu ortadan kaldırmaz; algoritma uygulamasını koşuldan ayırır.
 
-## Applicability (Ne zaman kullanılır?)
+Teslimat örneğinde aynı fikir domain verisiyle tekrar edilir:
 
-- Aynı işin farklı algoritmaları varsa ve runtime'da değiştirilecekse,
-- Büyük bir koşul yapısı (`if/switch`) algoritma seçimi yapıyorsa,
-- Benzer sınıflar sadece davranış farkı nedeniyle çoğalıyorsa,
-- İş kuralı ile algoritma detayı ayrıştırılmak isteniyorsa.
+1. Client üç ürünlü, aynı şehirde ve premium olmayan bir `Shipment` oluşturur.
+2. `DeliveryPlanner`, `StandardDeliveryStrategy` ile `5_990` cent ve iki günlük teklif üretir.
+3. Client planner üzerindeki strategy’yi `ExpressDeliveryStrategy` ile değiştirir.
+4. Aynı shipment bu kez `10_990` cent ve bir günlük teklif üretir.
+5. Planner yalnız `DeliveryStrategy` sözleşmesini bilir; premium ücretsiz teslimat kararı standart strategy’nin içinde kalır.
 
----
+## API, invariant ve sonuç semantiği
 
-## How to Implement (Adımlar)
+- Context çalışmak için non-null strategy’ye ihtiyaç duyar.
+- Mevcut constructor ve setter bu invariant’ı doğrulamaz.
+- Null verilirse hata `calculate` veya `getStrategyName` anında NPE olur.
+- `calculate` operand sırasını değiştirmeden strategy’ye iletir.
+- Subtraction için `a-b`, `b-a` ile aynı değildir.
+- Strategy runtime’da sınırsız kez değiştirilebilir.
+- `name()` hesaplamadan bağımsız Türkçe presentation metadata’sıdır.
+- Interface iki abstract metoda sahip olduğu için functional interface değildir.
+- Aritmetik örneğin sonucu `int`tir; `CalculatorContext` overflow kontrolü yapmaz.
+- Teslimat ücreti floating-point yerine cent cinsinden, nonnegative `long` olarak tutulur.
+- İki teslimat stratejisi ücreti `Math.addExact` ve `Math.multiplyExact` ile hesaplar; `Integer.MAX_VALUE` ürün sayısında bile exact `long` sonuç üretir.
+- `DeliveryQuote` negatif ücreti value object sınırında reddeder.
+- `Shipment` en az bir ürün invariant’ını constructor’da korur.
+- `DeliveryPlanner` constructor/setter’da null stratejiyi hemen reddeder.
+- Premium ücretsiz kargo yalnız standart stratejinin politikasıdır; ekspres stratejiye sızmaz.
 
-1. Sık değişen algoritmayı belirle.
-2. Ortak Strategy arayüzünü tanımla.
-3. Algoritmaları tek tek concrete strategy sınıflarına taşı.
-4. Context içine strategy referansı ve setter ekle.
-5. Client tarafında doğru strategy seçilip context'e verilsin.
+## Test kontrat haritası
 
----
+| `@Nested` grup | Korunan davranış |
+|---|---|
+| `Addition` | Pozitif/negatif toplama ve ad |
+| `Subtraction` | Operand sırası, negatif sonuç ve ad |
+| `Multiplication` | Normal/sıfır çarpımı ve ad |
+| `RuntimeSelection` | Strategy değiştirme ve custom interface implementasyonu |
+| `DeliveryPricing` | Runtime teslimat seçimi, premium politika izolasyonu, en az bir ürün invariant’ı, maksimum `int` ürün sayısında taşmayan exact `long` ücret ve negatif teklifin reddi |
 
-## Pros / Cons
+Custom strategy testi context’in concrete sınıfa değil interface’e delege ettiğini gösterir.
 
-### Avantajlar
+## Edge case, security, concurrency ve performans
 
-- Algoritmalar runtime'da değiştirilebilir.
-- Algoritma detayları, kullanan koddan izole edilir.
-- Composition sayesinde inheritance baskısı azalır.
-- OCP uyumludur: Yeni strateji eklemek için context'i değiştirmek gerekmez.
+- Aritmetik `AddStrategy` için `Integer.MAX_VALUE + 1` sessizce negatif değere taşar.
+- Aritmetik `MultiplyStrategy` içindeki büyük `int` çarpımlar da overflow üretir.
+- Teslimat tarafı ücreti `long` ve exact arithmetic ile hesaplar; mevcut `int itemCount` aralığının üst sınırı testle korunur.
+- `DeliveryQuote` negatif ücreti reddeder; service adı ve tahmini gün için ayrıca bir domain doğrulaması yoktur.
+- `CalculatorContext` null stratejide geç hata üretir; güçlendirilmiş `DeliveryPlanner` sınırda reddeder.
+- Context mutable olduğu için thread’ler strategy değişimini yarışmalı görebilir.
+- Concrete strategy’ler stateless’tir ve paylaşılabilir.
+- Her çağrı O(1)’dir; delegasyon maliyeti ihmal edilebilir.
+- Çok küçük algoritmalarda sınıf sayısı bilişsel maliyeti artırır.
+- `name()` localization değişikliğini domain interface’ine taşır.
+- Strateji dış kaynağa erişirse timeout/retry sorumluluğu ayrıca tanımlanmalıdır.
+- Kullanıcı girdisine göre strategy seçilecekse allow-list gerekir.
 
-### Dezavantajlar
+Production’da temel `CalculatorContext` için `Objects.requireNonNull`, bilinçli bir `int` overflow politikası ve immutable context seçeneği değerlendirilmelidir.
+Teslimat örneği null strategy ile negatif/taşan ücret sınırlarını güçlendirmiştir; currency, yuvarlama ve strateji uygunluğu hâlâ ayrı domain kararlarıdır.
 
-- Az sayıda ve sabit algoritma varsa gereksiz karmaşıklık oluşturabilir.
-- Client, stratejiler arasındaki farkları bilmelidir.
-- Çok sayıda strateji sınıfı kod tabanını büyütebilir.
+## Ne zaman kullan?
 
----
+- Aynı iş için birden çok anlamlı algoritma varsa,
+- algoritma runtime’da veya configuration ile seçilecekse,
+- büyük switch yalnız algoritma varyantlarını ayırıyorsa,
+- algoritmaların bağımsız test/dependency ihtiyacı varsa,
+- composition inheritance’dan daha esnek olacaksa.
 
-## Gerçek Hayat Analojisi
+## Ne zaman kullanma?
 
-Havalimanına gitmek için otobüs, taksi veya bisiklet seçenekleri düşünün.
-Hedef aynıdır; sadece hedefe gitme algoritması (stratejisi) değişir.
-Koşula göre uygun strateji seçilir.
+- Birkaç tek satırlık sabit işlem için enum/switch daha açıksa,
+- algoritmalar aynı sözleşmeyi dürüstçe paylaşamıyorsa,
+- seçim hiçbir zaman değişmeyecekse,
+- client strateji farklarını anlayamayacaksa,
+- sınıf patlaması davranıştan daha çok gürültü üretiyorsa.
 
----
+## Artılar ve bedeller
 
-## Diğer Pattern'lerle İlişki
+| Artı | Bedel |
+|---|---|
+| Algoritma context’ten ayrılır | Client seçenekleri bilmelidir |
+| Runtime değişim mümkündür | Null/lifecycle politikası gerekir |
+| Yeni strateji context’i değiştirmez | Sınıf sayısı artar |
+| Her algoritma ayrı test edilir | Ortak kod tekrar edebilir |
+| Composition esnektir | Mutable context concurrency riski taşır |
 
-- **Strategy vs State**: Yapı benzer olsa da Strategy algoritma seçimine, State durum geçişine odaklanır.
-- **Strategy vs Command**: Command işlemi nesneleştirir (queue/history gibi amaçlar), Strategy aynı işi yapmanın farklı yollarını sunar.
-- **Strategy vs Template Method**: Template Method kalıtım tabanlı ve sınıf seviyesinde; Strategy composition tabanlı ve nesne seviyesinde runtime değiştirilebilir.
+## En çok karışan desen: State
+
+| Strategy | State |
+|---|---|
+| Algoritma çoğunlukla client tarafından seçilir | Durum lifecycle içinde evrilir |
+| Stratejiler birbirini bilmez | State başka state’e geçiş başlatabilir |
+| “Nasıl hesaplayayım?” sorusudur | “Şu anda nasıl davranmalıyım?” sorusudur |
+| Değişim isteğe bağlı konfigürasyondur | Değişim domain yaşam döngüsüdür |
+
+## Yaygın hatalar
+
+1. Basit switch yeterliyken sınıf patlaması yaratmak.
+2. Null strategy kabul etmek.
+3. Strategy seçimini de context içine geri taşımak.
+4. Farklı amaçlı algoritmaları zorla aynı interface’e sokmak.
+5. Stateful strategy’yi güvenli biçimde paylaşmak.
+6. Overflow ve hata sözleşmesini unutmak.
+7. UI adını algoritma kontratıyla karıştırmak.
+
+## Alıştırmalar
+
+### Seviye 1 — Gözlemle
+
+Bölme stratejisi ekle.
+Operand sırası, sıfıra bölme ve ad kontratını test et.
+
+### Seviye 2 — Sadeleştir
+
+Aynı örneği `IntBinaryOperator` ile kur.
+Class tabanlı Strategy’nin ne zaman daha okunaklı olduğunu karşılaştır.
+
+### Seviye 3 — Gerçek algoritma
+
+Kargo ücreti için standart, hızlı ve uluslararası stratejiler tasarla.
+Her birine farklı dependency ve hata politikası ver.
+
+## Hafıza cümlesi
+
+**Strategy, aynı hedefe giden algoritmaları ortak bir direksiyonun arkasına koyar; client gerektiğinde sürücüyü değiştirir.**

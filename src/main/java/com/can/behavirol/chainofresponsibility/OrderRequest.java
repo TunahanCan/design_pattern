@@ -8,6 +8,8 @@ public class OrderRequest
     private final OrderOperation operation;
     private String payload;
     private User authenticatedUser;
+    private OrderRequestOutcome outcome = OrderRequestOutcome.PENDING;
+    private String outcomeMessage = "İstek henüz sonuçlanmadı.";
 
     public OrderRequest(String username, String password, String ipAddress, OrderOperation operation, String payload) {
         this.username = username;
@@ -47,5 +49,18 @@ public class OrderRequest
 
     public void setAuthenticatedUser(User authenticatedUser) {
         this.authenticatedUser = authenticatedUser;
+    }
+
+    public OrderRequestOutcome getOutcome() {
+        return outcome;
+    }
+
+    public String getOutcomeMessage() {
+        return outcomeMessage;
+    }
+
+    void completeAs(OrderRequestOutcome outcome, String outcomeMessage) {
+        this.outcome = outcome;
+        this.outcomeMessage = outcomeMessage;
     }
 }

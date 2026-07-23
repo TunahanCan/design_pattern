@@ -6,12 +6,13 @@ public class FacebookDecorator extends BaseNotifierDecorator {
 
     public FacebookDecorator(Notifier wrappee, String account) {
         super(wrappee);
-        this.account = account;
+        this.account = Notifier.requireText(account, "Facebook account");
     }
 
     @Override
     public String send(String message) {
-        return super.send(message) + System.lineSeparator()
-            + "Facebook -> " + account + " | mesaj=" + message;
+        String validatedMessage = Notifier.requireText(message, "message");
+        return super.send(validatedMessage) + System.lineSeparator()
+            + "Facebook -> " + account + " | mesaj=" + validatedMessage;
     }
 }

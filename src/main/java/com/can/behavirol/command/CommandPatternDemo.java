@@ -1,5 +1,7 @@
 package com.can.behavirol.command;
 
+import java.util.List;
+
 public class CommandPatternDemo {
 
     public static void main(String[] args) {
@@ -30,6 +32,21 @@ public class CommandPatternDemo {
 
         toolbar.click("undo");
         System.out.println("Undo sonrası: " + editor.getText());
+
+        toolbar.setButton(
+                "signature",
+                new MacroCommand(
+                        "İmza ekle",
+                        List.of(
+                                new WriteTextCommand(app, editor, "\n"),
+                                new WriteTextCommand(app, editor, "— Tasarım Ekibi")
+                        )
+                )
+        );
+        toolbar.click("signature");
+        System.out.println("Macro sonrası: " + editor.getText());
+        toolbar.click("undo");
+        System.out.println("Macro undo sonrası: " + editor.getText());
         System.out.println();
     }
 }

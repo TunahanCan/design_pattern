@@ -1,6 +1,7 @@
 package com.can.creational.builder;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ReportDirector {
 
@@ -14,7 +15,15 @@ public class ReportDirector {
     }
 
     public Report createIncidentPostmortemReport(String incidentId) {
-        return Report.builder("Incident Postmortem - " + incidentId)
+        String normalizedIncidentId = Objects.requireNonNull(
+                incidentId,
+                "incidentId cannot be null"
+        ).trim();
+        if (normalizedIncidentId.isBlank()) {
+            throw new IllegalArgumentException("incidentId cannot be blank");
+        }
+
+        return Report.builder("Incident Postmortem - " + normalizedIncidentId)
                 .summary("Olayın kök neden analizi ve iyileştirme aksiyonları")
                 .addSection("Timeline")
                 .addSection("Root Cause")

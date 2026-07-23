@@ -2,6 +2,7 @@ package com.can.behavirol.memento;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Objects;
 import java.util.Optional;
 
 public class EditorHistory {
@@ -19,6 +20,25 @@ public class EditorHistory {
             return Optional.empty();
         }
         return Optional.of(stack.pop());
+    }
+
+    /**
+     * Caretaker protokolünü tek yerde tutar: mevcut snapshot'ı kaldırır,
+     * bir önceki snapshot'ı stack üzerinde bırakıp originator'a geri yükler.
+     */
+    public boolean undo(TextEditor editor) {
+        Objects.requireNonNull(editor, "editor cannot be null");
+        if (stack.size() < 2) {
+            return false;
+        }
+
+        stack.pop();
+        editor.restore(stack.peek());
+        return true;
+    }
+
+    public int size() {
+        return stack.size();
     }
 
     public void printTimeline() {

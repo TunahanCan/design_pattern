@@ -20,6 +20,12 @@ public class StrategyPatternDemo {
 
         calculator.setStrategy(new MultiplyStrategy());
         System.out.println(calculator.getStrategyName() + ": " + first + " ve " + second + " => " + calculator.calculate(first, second));
+
+        Shipment shipment = new Shipment(3, true, false);
+        DeliveryPlanner deliveryPlanner = new DeliveryPlanner(new StandardDeliveryStrategy());
+        System.out.println("Standart teklif: " + deliveryPlanner.quote(shipment));
+        deliveryPlanner.setStrategy(new ExpressDeliveryStrategy());
+        System.out.println("Ekspres teklif: " + deliveryPlanner.quote(shipment));
         System.out.println();
     }
 }

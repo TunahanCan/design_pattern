@@ -19,6 +19,21 @@ public class ModerationState implements DocumentState {
     }
 
     @Override
+    public String reject(DocumentContext context, String reason) {
+        if (!"admin".equalsIgnoreCase(context.getCurrentUserRole())) {
+            return "Sadece admin moderasyondaki dokümanı reddedebilir.";
+        }
+
+        if (reason == null || reason.isBlank()) {
+            return "Reddetme nedeni zorunludur.";
+        }
+
+        context.recordReviewNote(reason.trim());
+        context.changeState(new DraftState());
+        return "Doküman düzeltme için taslağa geri gönderildi.";
+    }
+
+    @Override
     public String getName() {
         return "Moderation";
     }

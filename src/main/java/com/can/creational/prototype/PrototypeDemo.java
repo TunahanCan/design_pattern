@@ -23,18 +23,20 @@ public class PrototypeDemo {
 
         registry.register("java-default", javaTemplate);
 
-        CandidateProfile ahmet = registry.cloneOf("java-default")
+        System.out.println("Temel örnek — doğrudan deep copy:");
+        CandidateProfile ahmet = javaTemplate.copy()
                 .personalize("Ahmet Yılmaz", "Backend-focused developer with 5 years of experience.")
                 .addSkill("Kafka")
                 .relocateTo("Ankara", "TR");
+        System.out.println("Direct Copy : " + ahmet.exportCard());
 
+        System.out.println("Daha gerçekçi örnek — registry'den bağımsız çalışma kopyası:");
         CandidateProfile elif = registry.cloneOf("java-default")
                 .personalize("Elif Kaya", "Cloud-native projects and microservice architecture.")
                 .addSkill("Docker");
+        System.out.println("Registry Copy: " + elif.exportCard());
 
         System.out.println("Template : " + javaTemplate.exportCard());
-        System.out.println("Clone-1  : " + ahmet.exportCard());
-        System.out.println("Clone-2  : " + elif.exportCard());
         System.out.println();
     }
 }

@@ -30,6 +30,20 @@ public class StatePatternDemo {
 
         System.out.println(document.edit("Yayındaki içerik değişikliği"));
         System.out.println(document.publish());
+
+        DocumentContext reviewCopy = new DocumentContext(
+                "Gözden geçirme örneği",
+                "Kaynağı eksik taslak",
+                "admin"
+        );
+        reviewCopy.publish();
+        System.out.println(reviewCopy.reject("Kaynak bağlantısı eklenmeli."));
+        System.out.println(
+                "Ret sonrası: "
+                        + reviewCopy.getStateName()
+                        + " | not: "
+                        + reviewCopy.getLastReviewNote()
+        );
         System.out.println();
     }
 }

@@ -10,6 +10,10 @@ public class BruteForceProtectionHandler extends BaseOrderRequestHandler {
     @Override
     public boolean handle(OrderRequest request) {
         if (loginAttemptService.isBlocked(request.getIpAddress())) {
+            request.completeAs(
+                    OrderRequestOutcome.REJECTED,
+                    "IP adresi başarısız giriş sınırını aştı."
+            );
             System.out.println("[BruteForceProtection] IP engellendi: " + request.getIpAddress());
             return false;
         }

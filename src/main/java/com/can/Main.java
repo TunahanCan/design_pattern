@@ -1,58 +1,59 @@
 package com.can;
 
-import com.can.behavirol.chainofresponsibility.ChainOfResponsibilityDemo;
-import com.can.behavirol.command.CommandPatternDemo;
-import com.can.behavirol.iterator.IteratorPatternDemo;
-import com.can.behavirol.mediator.MediatorPatternDemo;
-import com.can.behavirol.memento.MementoPatternDemo;
-import com.can.behavirol.observer.ObserverPatternDemo;
-import com.can.behavirol.state.StatePatternDemo;
-import com.can.behavirol.strategy.StrategyPatternDemo;
-import com.can.behavirol.templatemethod.TemplateMethodPatternDemo;
-import com.can.behavirol.visitor.VisitorPatternDemo;
-import com.can.creational.abstractfactory.AbstractFactoryDemo;
-import com.can.creational.builder.BuilderDemo;
-import com.can.creational.factorymethod.FactoryMethodDemo;
-import com.can.creational.prototype.PrototypeDemo;
-import com.can.creational.singleton.SingletonDemo;
-import com.can.structural.adapter.AdapterPatternDemo;
-import com.can.structural.bridge.BridgePatternDemo;
-import com.can.structural.composite.CompositePatternDemo;
-import com.can.structural.decorator.DecoratorPatternDemo;
-import com.can.structural.facade.FacadePatternDemo;
-import com.can.structural.flyweight.FlyweightPatternDemo;
-import com.can.structural.proxy.ProxyPatternDemo;
+import com.can.catalog.PatternCatalog;
+import com.can.catalog.PatternExample;
 
-public class Main
-{
+import java.io.PrintStream;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Komut satırı ile pattern kataloğu arasındaki ince composition root.
+ */
+public class Main {
+
     public static void main(String[] args) {
-        System.out.println("=== CREATIONAL DESIGN PATTERNS ===\n");
+        int exitCode = run(args, System.out, System.err);
+        if (exitCode != 0) {
+            System.exit(exitCode);
+        }
+    }
 
-        FactoryMethodDemo.run();
-        AbstractFactoryDemo.run();
-        BuilderDemo.run();
-        PrototypeDemo.run();
-        SingletonDemo.run();
+    /**
+     * Argümanları işler ve process'ten bağımsız biçimde CLI exit kodunu döndürür.
+     *
+     * <p>Başarılı çağrılar {@code 0}, kullanıcı kaynaklı argüman hataları {@code 2}
+     * döndürür. Seçilmiş demonun kendi hatası burada yakalanmaz; böylece domain
+     * hataları yanlışlıkla selector hatası gibi gösterilmez.</p>
+     */
+    public static int run(String[] args, PrintStream output, PrintStream error) {
+        Objects.requireNonNull(args, "args boş olamaz");
+        Objects.requireNonNull(output, "output boş olamaz");
+        Objects.requireNonNull(error, "error boş olamaz");
 
-        System.out.println("=== STRUCTURAL DESIGN PATTERNS ===\n");
-        AdapterPatternDemo.run();
-        BridgePatternDemo.run();
-        CompositePatternDemo.run();
-        DecoratorPatternDemo.run();
-        FacadePatternDemo.run();
-        FlyweightPatternDemo.run();
-        ProxyPatternDemo.run();
+        if (args.length > 1) {
+            error.println("Aynı anda yalnızca bir aile veya pattern seçilebilir.");
+            PatternCatalog.printCatalog(error);
+            return 2;
+        }
 
-        System.out.println("=== BEHAVIORAL DESIGN PATTERNS ===\n");
-        ChainOfResponsibilityDemo.run();
-        CommandPatternDemo.run();
-        IteratorPatternDemo.run();
-        MediatorPatternDemo.run();
-        MementoPatternDemo.run();
-        ObserverPatternDemo.run();
-        StatePatternDemo.run();
-        StrategyPatternDemo.run();
-        TemplateMethodPatternDemo.run();
-        VisitorPatternDemo.run();
+        String selection = args.length == 0 ? "all" : args[0];
+        if ("--list".equals(selection) || "--help".equals(selection)) {
+            PatternCatalog.printCatalog(output);
+            return 0;
+        }
+
+        List<PatternExample> selected;
+        try {
+            selected = PatternCatalog.select(selection);
+        } catch (IllegalArgumentException exception) {
+            error.println(exception.getMessage());
+            PatternCatalog.printCatalog(error);
+            return 2;
+        }
+
+        int executed = PatternCatalog.run(selected, output);
+        output.printf("Toplam %d pattern demosu çalıştırıldı.%n", executed);
+        return 0;
     }
 }

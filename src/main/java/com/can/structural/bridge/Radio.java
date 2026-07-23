@@ -38,7 +38,7 @@ public class Radio implements Device {
 
     @Override
     public void setChannel(int channel) {
-        this.channel = Math.max(80, channel);
+        this.channel = Math.max(80, Math.min(108, channel));
     }
 
     @Override

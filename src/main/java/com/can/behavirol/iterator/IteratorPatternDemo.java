@@ -40,6 +40,13 @@ public class IteratorPatternDemo {
 
         System.out.println("Ali'nin iş arkadaşlarına duyuru:");
         spammer.send(network.createCoworkersIterator(ali.id()), "Sprint planning 10:00");
+
+        System.out.println("Ali'nin yalnız Acme'deki arkadaşlarına şirket buluşması:");
+        ProfileIterator acmeFriends = new CompanyProfileIterator(
+                network.createFriendsIterator(ali.id()),
+                "Acme"
+        );
+        spammer.send(acmeFriends, "Acme yaz buluşması");
         System.out.println();
     }
 }

@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Java ile Tasarım Desenleri — Uygulamalı Saha Rehberi</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --navy: #10243e;
+      --navy-2: #183a5a;
+      --teal: #0f766e;
+      --teal-soft: #e5f3f0;
+      --gold: #d1a13a;
+      --paper: #fffdf8;
+      --muted: #5e6878;
+      --line: #d9dee7;
+      --code: #111a2b;
+      --code-ink: #eaf2ff;
+      --warning: #9a5a13;
+      --warning-soft: #fff6df;
+      --danger: #9b2c2c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: #e8ebf0;
+    }
+
+    body {
+      margin: 0 auto;
+      max-width: 210mm;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      font-size: 10.3pt;
+      line-height: 1.52;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    main {
+      padding: 0 17mm 18mm;
+    }
+
+    @page {
+      size: A4;
+      margin: 16mm 17mm 18mm;
+
+      @top-left {
+        content: "JAVA İLE TASARIM DESENLERİ";
+        color: #6b7280;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        font-size: 7.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      @top-right {
+        content: "KOD · KARAR · TEST";
+        color: #0f766e;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        font-size: 7.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      @bottom-center {
+        content: counter(page);
+        color: #6b7280;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        font-size: 8pt;
+      }
+    }
+
+    @page cover {
+      margin: 0;
+
+      @top-left {
+        content: none;
+      }
+
+      @top-right {
+        content: none;
+      }
+
+      @bottom-center {
+        content: none;
+      }
+    }
+
+    .cover {
+      page: cover;
+      position: relative;
+      display: flex;
+      min-height: 297mm;
+      margin: 0 -17mm 18mm;
+      padding: 31mm 24mm 24mm;
+      overflow: hidden;
+      flex-direction: column;
+      justify-content: center;
+      color: #fff;
+      background:
+        radial-gradient(circle at 82% 15%, rgba(40, 198, 178, 0.38) 0 8%, transparent 8.3%),
+        radial-gradient(circle at 88% 24%, transparent 0 11%, rgba(209, 161, 58, 0.55) 11.2% 12%, transparent 12.2%),
+        linear-gradient(142deg, #0a172b 0%, #102b48 56%, #0b5c5c 100%);
+    }
+
+    .cover::before {
+      position: absolute;
+      top: -25mm;
+      right: -32mm;
+      width: 125mm;
+      height: 125mm;
+      border: 1.4mm solid rgba(255, 255, 255, 0.12);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .cover::after {
+      position: absolute;
+      bottom: -44mm;
+      left: -22mm;
+      width: 105mm;
+      height: 105mm;
+      border: 13mm solid rgba(15, 118, 110, 0.22);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .cover-kicker {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 15mm;
+      color: #b9f4e9;
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+    }
+
+    .cover h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 150mm;
+      margin: 0;
+      color: #fff;
+      font-size: 35pt;
+      font-weight: 750;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .cover-subtitle {
+      position: relative;
+      z-index: 1;
+      max-width: 145mm;
+      margin: 11mm 0 0;
+      color: #dce9f4;
+      font-size: 15pt;
+      line-height: 1.45;
+    }
+
+    .cover-rule {
+      position: relative;
+      z-index: 1;
+      width: 38mm;
+      height: 1.2mm;
+      margin: 17mm 0 8mm;
+      background: var(--gold);
+    }
+
+    .cover-metrics {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 14mm;
+      color: #d9e9f3;
+      font-size: 9pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .cover-metrics strong {
+      display: block;
+      margin-bottom: 1mm;
+      color: #fff;
+      font-size: 22pt;
+      line-height: 1;
+    }
+
+    .cover-note {
+      position: absolute;
+      z-index: 1;
+      right: 24mm;
+      bottom: 23mm;
+      left: 24mm;
+      margin: 0;
+      padding-top: 4mm;
+      border-top: 0.35mm solid rgba(255, 255, 255, 0.25);
+      color: #bbd5e5;
+      font-size: 8.5pt;
+      letter-spacing: 0.03em;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5 {
+      color: var(--navy);
+      font-weight: 750;
+      line-height: 1.2;
+      break-after: avoid-page;
+      page-break-after: avoid;
+    }
+
+    main > h1 {
+      margin: 18mm 0 6mm;
+      padding-bottom: 4mm;
+      border-bottom: 0.8mm solid var(--gold);
+      font-size: 24pt;
+      letter-spacing: -0.025em;
+    }
+
+    h2 {
+      margin: 11mm 0 4mm;
+      font-size: 18pt;
+      letter-spacing: -0.018em;
+    }
+
+    h3 {
+      margin: 8mm 0 3mm;
+      padding-left: 3mm;
+      border-left: 1mm solid var(--teal);
+      font-size: 13.5pt;
+    }
+
+    h4 {
+      margin: 6mm 0 2mm;
+      color: var(--navy-2);
+      font-size: 11.5pt;
+    }
+
+    h5 {
+      margin: 5mm 0 2mm;
+      color: var(--teal);
+      font-size: 10.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    p {
+      margin: 0 0 3.2mm;
+      orphans: 3;
+      widows: 3;
+    }
+
+    strong {
+      color: #101827;
+    }
+
+    a {
+      color: #0b6b71;
+      text-decoration-color: rgba(11, 107, 113, 0.35);
+      text-underline-offset: 0.12em;
+    }
+
+    ul,
+    ol {
+      margin: 1.5mm 0 4mm;
+      padding-left: 7mm;
+    }
+
+    li {
+      margin-bottom: 1.25mm;
+      padding-left: 1mm;
+      break-inside: avoid;
+    }
+
+    li::marker {
+      color: var(--teal);
+      font-weight: 800;
+    }
+
+    blockquote {
+      margin: 5mm 0;
+      padding: 4mm 5mm 3.4mm;
+      border: 0;
+      border-left: 1.1mm solid var(--teal);
+      border-radius: 0 2mm 2mm 0;
+      background: var(--teal-soft);
+      color: #193b41;
+      break-inside: avoid;
+    }
+
+    blockquote p:last-child {
+      margin-bottom: 0;
+    }
+
+    code {
+      padding: 0.35mm 1mm;
+      border-radius: 1mm;
+      background: #eef1f5;
+      color: #7b2447;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 0.88em;
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      position: relative;
+      margin: 4mm 0 5mm;
+      padding: 4.5mm 5mm;
+      overflow: visible;
+      border: 0.3mm solid #263653;
+      border-radius: 2.2mm;
+      background: var(--code);
+      box-shadow: 0 1.5mm 4mm rgba(16, 36, 62, 0.11);
+      break-inside: auto;
+      page-break-inside: auto;
+    }
+
+    pre code {
+      display: block;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--code-ink);
+      font-size: 8.2pt;
+      line-height: 1.48;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      tab-size: 4;
+    }
+
+    table {
+      width: 100%;
+      margin: 4mm 0 5mm;
+      border-spacing: 0;
+      border-collapse: separate;
+      border: 0.3mm solid #cad2dd;
+      border-radius: 2mm;
+      background: #fff;
+      font-size: 8.9pt;
+      line-height: 1.38;
+      break-inside: auto;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    th,
+    td {
+      padding: 2.5mm 2.7mm;
+      vertical-align: top;
+      border-right: 0.25mm solid #dfe4ea;
+      border-bottom: 0.25mm solid #dfe4ea;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: 0;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    th {
+      background: var(--navy);
+      color: #fff;
+      font-size: 8.5pt;
+      font-weight: 750;
+      letter-spacing: 0.015em;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f7f9fb;
+    }
+
+    hr {
+      height: 0.35mm;
+      margin: 10mm 0;
+      border: 0;
+      background: linear-gradient(90deg, var(--gold), var(--teal), transparent);
+    }
+
+    .chapter-break {
+      height: 0;
+    }
+
+    .chapter-break + h2 {
+      position: relative;
+      margin-top: 7mm;
+      padding: 16mm 8mm 7mm;
+      overflow: hidden;
+      border-radius: 3mm;
+      background:
+        linear-gradient(125deg, rgba(16, 36, 62, 0.98), rgba(15, 118, 110, 0.93));
+      color: #fff;
+      font-size: 24pt;
+      letter-spacing: -0.025em;
+      break-before: page;
+      page-break-before: always;
+      break-after: avoid-page;
+    }
+
+    .chapter-break + h2::after {
+      position: absolute;
+      top: -18mm;
+      right: -13mm;
+      width: 58mm;
+      height: 58mm;
+      border: 5mm solid rgba(255, 255, 255, 0.12);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .part-divider {
+      display: flex;
+      min-height: 170mm;
+      margin: 15mm 0 5mm;
+      padding: 14mm;
+      border-radius: 3mm;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(135deg, #10243e, #144d58);
+      color: #fff;
+      break-inside: avoid;
+    }
+
+    .part-divider span {
+      margin-bottom: 5mm;
+      color: #9de9dd;
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+    }
+
+    .part-divider strong {
+      max-width: 130mm;
+      color: #fff;
+      font-size: 24pt;
+      line-height: 1.2;
+    }
+
+    .mermaid {
+      display: flex;
+      min-height: 35mm;
+      margin: 5mm 0 6mm;
+      padding: 4mm;
+      overflow: visible;
+      border: 0.3mm solid #cfd9df;
+      border-radius: 2.5mm;
+      align-items: center;
+      justify-content: center;
+      background: #fbfefd;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .mermaid svg {
+      display: block;
+      width: 100% !important;
+      max-width: 170mm !important;
+      height: auto !important;
+      max-height: 205mm;
+    }
+
+    .mermaid-error {
+      padding: 4mm;
+      border-left: 1mm solid var(--danger);
+      background: #fff0f0;
+      color: var(--danger);
+      font-family: Menlo, Consolas, monospace;
+      font-size: 8pt;
+      white-space: pre-wrap;
+    }
+
+    .pdf-meta {
+      display: none;
+    }
+
+    @media screen {
+      main {
+        box-shadow: 0 0 18mm rgba(16, 24, 40, 0.18);
+      }
+    }
+
+    @media print {
+      html,
+      body {
+        width: auto;
+        max-width: none;
+        margin: 0;
+        background: var(--paper);
+      }
+
+      main {
+        width: auto;
+        padding: 0;
+      }
+
+      .cover {
+        width: 100%;
+        height: 297mm;
+        min-height: 297mm;
+        max-height: 297mm;
+        margin: 0;
+        break-after: page;
+        page-break-after: always;
+      }
+
+      a {
+        text-decoration: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="book">
+{{BOOK_BODY}}
+  </main>
+
+  <script>
+{{MERMAID_SCRIPT}}
+  </script>
+  <script>
+    (() => {
+      const slugCounts = new Map();
+      const slugify = (value) => {
+        const base = value
+          .toLocaleLowerCase("tr-TR")
+          .normalize("NFKD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9çğıöşü\s-]/g, "")
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-") || "bolum";
+        const count = slugCounts.get(base) || 0;
+        slugCounts.set(base, count + 1);
+        return count === 0 ? base : `${base}-${count}`;
+      };
+
+      document.querySelectorAll("h1, h2, h3, h4, h5").forEach((heading) => {
+        if (!heading.id) {
+          heading.id = slugify(heading.textContent || "");
+        }
+      });
+
+      document.querySelectorAll("a[href]").forEach((link) => {
+        const rawHref = link.getAttribute("href") || "";
+        const isInternalAnchor = rawHref.startsWith("#");
+        const isLocalFile =
+          rawHref.toLowerCase().startsWith("file:") ||
+          (!isInternalAnchor && link.href.startsWith("file:"));
+        if (isLocalFile) {
+          link.removeAttribute("href");
+          link.classList.add("local-reference");
+        }
+      });
+
+      const mermaidBlocks = [];
+      document.querySelectorAll("pre > code.language-mermaid").forEach((code) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "mermaid";
+        wrapper.textContent = code.textContent || "";
+        code.parentElement.replaceWith(wrapper);
+        mermaidBlocks.push(wrapper);
+      });
+
+      const finish = (status) => {
+        document.body.dataset.renderStatus = status;
+      };
+
+      if (!mermaidBlocks.length || typeof mermaid === "undefined") {
+        finish(mermaidBlocks.length ? "mermaid-missing" : "no-diagrams");
+        return;
+      }
+
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "base",
+        flowchart: { curve: "basis", htmlLabels: true },
+        sequence: { useMaxWidth: true, wrap: true },
+        themeVariables: {
+          background: "#fbfefd",
+          primaryColor: "#e5f3f0",
+          primaryTextColor: "#172033",
+          primaryBorderColor: "#0f766e",
+          secondaryColor: "#edf2f7",
+          tertiaryColor: "#fff6df",
+          lineColor: "#36546c",
+          textColor: "#172033",
+          fontFamily: "Avenir Next, Segoe UI, Helvetica Neue, Arial, sans-serif",
+          fontSize: "13px",
+          noteBkgColor: "#fff6df",
+          noteTextColor: "#172033",
+          noteBorderColor: "#d1a13a"
+        }
+      });
+
+      (async () => {
+        const errors = [];
+        for (let index = 0; index < mermaidBlocks.length; index += 1) {
+          const block = mermaidBlocks[index];
+          try {
+            await mermaid.parse(block.textContent || "");
+          } catch (error) {
+            const message = String(error?.message || error || "Bilinmeyen Mermaid hatası");
+            errors.push(`Diyagram ${index + 1}: ${message}`);
+            block.className = "mermaid-error";
+            block.textContent = `Diyagram ${index + 1} render hatası:\n${message}`;
+          }
+        }
+
+        if (errors.length) {
+          document.body.dataset.renderError = errors.join("\n\n");
+          finish("mermaid-error");
+        } else {
+          try {
+            await mermaid.run({ nodes: mermaidBlocks });
+            finish("ok");
+          } catch (error) {
+            document.body.dataset.renderError = String(
+              error?.message || error || "Bilinmeyen Mermaid render hatası",
+            );
+            finish("mermaid-error");
+          }
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>

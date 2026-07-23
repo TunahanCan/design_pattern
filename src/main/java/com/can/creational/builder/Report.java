@@ -55,6 +55,13 @@ public final class Report {
         return new Builder(title);
     }
 
+    /**
+     * Immutable bir rapordan güvenli biçimde yeni bir varyant türetir.
+     */
+    public Builder toBuilder() {
+        return new Builder(this);
+    }
+
     @Override
     public String toString() {
         return "Report{" +
@@ -77,6 +84,14 @@ public final class Report {
             this.title = normalize(title, "title");
         }
 
+        private Builder(Report source) {
+            this.title = source.title;
+            this.summary = source.summary;
+            this.sections = new ArrayList<>(source.sections);
+            this.includeChart = source.includeChart;
+            this.author = source.author;
+        }
+
         public Builder summary(String summary) {
             this.summary = normalize(summary, "summary");
             return this;
@@ -84,7 +99,9 @@ public final class Report {
 
         public Builder sections(List<String> sections) {
             Objects.requireNonNull(sections, "sections cannot be null");
-            this.sections = new ArrayList<>(sections);
+            this.sections = sections.stream()
+                    .map(section -> normalize(section, "section"))
+                    .toList();
             return this;
         }
 

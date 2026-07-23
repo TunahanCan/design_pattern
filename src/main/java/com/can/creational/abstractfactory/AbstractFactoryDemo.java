@@ -10,8 +10,12 @@ public class AbstractFactoryDemo {
     public static void run() {
         System.out.println("2) Abstract Factory");
 
+        System.out.println("Temel örnek — standart tema aileleri:");
         renderScreen(Theme.LIGHT);
         renderScreen(Theme.DARK);
+
+        System.out.println("Daha gerçekçi örnek — erişilebilirlik ailesi:");
+        renderScreen(Theme.HIGH_CONTRAST);
 
         System.out.println();
     }

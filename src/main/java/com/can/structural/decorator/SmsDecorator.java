@@ -6,12 +6,13 @@ public class SmsDecorator extends BaseNotifierDecorator {
 
     public SmsDecorator(Notifier wrappee, String phone) {
         super(wrappee);
-        this.phone = phone;
+        this.phone = Notifier.requireText(phone, "phone");
     }
 
     @Override
     public String send(String message) {
-        return super.send(message) + System.lineSeparator()
-            + "SMS -> " + phone + " | mesaj=" + message;
+        String validatedMessage = Notifier.requireText(message, "message");
+        return super.send(validatedMessage) + System.lineSeparator()
+            + "SMS -> " + phone + " | mesaj=" + validatedMessage;
     }
 }

@@ -1,5 +1,6 @@
 package com.can.creational.factorymethod;
 
+import java.util.List;
 import java.util.Map;
 
 public class FactoryMethodDemo {
@@ -18,20 +19,23 @@ public class FactoryMethodDemo {
                 NotificationChannel.PUSH, new PushNotificationCreator(sender)
         ));
 
+        System.out.println("Temel örnek — tek kanal:");
         notificationService.send(
                 NotificationChannel.EMAIL,
                 new NotificationRequest("can@example.com", "Order Ready", "Your order has been prepared.")
         );
 
-        notificationService.send(
-                NotificationChannel.SMS,
-                new NotificationRequest("+905551112233", "Shipping Update", "Your cargo is now in transit.")
-        );
-
-        notificationService.send(
-                NotificationChannel.PUSH,
-                new NotificationRequest("user-42", "Campaign", "A special discount is waiting for you.")
-        );
+        System.out.println("Daha gerçekçi örnek — sıralı bildirim işleri:");
+        notificationService.sendAll(List.of(
+                new NotificationJob(
+                        NotificationChannel.SMS,
+                        new NotificationRequest("+905551112233", "Shipping Update", "Your cargo is now in transit.")
+                ),
+                new NotificationJob(
+                        NotificationChannel.PUSH,
+                        new NotificationRequest("user-42", "Campaign", "A special discount is waiting for you.")
+                )
+        ));
 
         System.out.println();
     }

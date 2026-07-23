@@ -1,178 +1,300 @@
-# Builder (Creational Pattern)
+# Builder
 
-> Diğer adı: **Step-by-Step Construction**
+Builder, çok alanlı bir nesneyi okunabilir adımlarla kurup en sonda tutarlı bir ürün üretir.
+Bu repoda immutable `Report`, nested `Report.Builder` ile oluşturulur.
 
-## Niyet (Intent)
-Builder, karmaşık nesneleri adım adım oluşturur; okunabilir, doğrulanabilir ve esnek kurulum akışı sağlar.
+## 30 saniyelik kart
 
-Kısa versiyon: **"Nesneyi bir kerede değil, kontrollü adımlarla kur."**
+| Soru | Cevap |
+|---|---|
+| **Niyet** | Karmaşık bir nesnenin kurulumunu constructor kalabalığından ayırmak |
+| **Değişen eksen** | Report'a hangi opsiyonel alan ve section'ların ekleneceği |
+| **Sabit kalan** | `build()` sonunda immutable `Report` üretilmesi |
+| **Bedel** | Mutable builder durumu ve ek API yüzeyi oluşur |
+| **Bu repodaki giriş** | `Report.builder(title)` |
 
-## Problem
-Çok parametreli nesnelerde:
-- Constructor patlaması (telescoping constructors) olur.
-- Parametre sırası karışır.
-- Zorunlu/opsiyonel ayrımı belirsizleşir.
-- Geçersiz nesne oluşturma riski yükselir.
+> Kısa tanım: **Önce parçaları tezgâhta düzenle, hazır olduğunda ürünü mühürle.**
 
-## Çözüm
-Üretim adımlarını `Report.Builder` içine taşı:
-- Zorunlu alanı başlangıçta al (`builder(title)`).
-- Opsiyonelleri zincirli metotlarla kur.
-- `build()` ile immutable `Report` üret.
-- Tekrarlayan tarifleri `ReportDirector` ile merkezileştir.
+## Örnek haritası: temel → güçlendirilmiş → production
 
-## Zihinde Kalıcı Görsel (Hafıza Kartı)
+| Katman | Gerçek kod karşılığı | Ne öğretiyor? |
+|---|---|---|
+| **Temel örnek** | `Report.builder(title)` ve fluent adımlar | Zorunlu alanla başlayan mutable builder, `build()` anında immutable `Report` snapshot'ı üretir |
+| **Güçlendirilmiş örnek** | `Report#toBuilder()` ve normalize edilen `sections(List)` | Mevcut rapordan yalnız seçilen alanları değişen yeni varyant türetilir; tekli ve toplu section girişleri aynı kurala uyar |
+| **Production sınırı** | `ReportDirector` reçetelerinin ötesi | Cross-field kuralları, localization, kalıcı çıktı formatları ve çok büyük bölüm listelerinde kopyalama maliyeti bu küçük modelde çözülmez |
 
-<table>
-  <tr>
-    <td align="center"><b>🎯 Amaç</b><br/>Adım adım güvenli nesne kurmak</td>
-    <td align="center"><b>🧠 Mnemonic</b><br/>"Lego gibi parçaları sırayla tak"</td>
-    <td align="center"><b>⚠️ Risk</b><br/>Basit nesnede gereksiz karmaşıklık</td>
-  </tr>
-</table>
+`BuilderDemo`, custom kurulumu ve iki director reçetesini korurken quarterly rapordan bir executive-summary varyantı da türetir.
 
-```text
-[Builder başlar]
-   ├─ title("Q1")   (zorunlu)
-   ├─ summary(...)
-   ├─ sections(...)
-   ├─ author(...)
-   └─ build() ----> [Immutable Report]
+## Akılda kalıcı analoji: kişiselleştirilen sandviç
+
+Ekmek zorunludur; peynir, sos ve sebzeler seçime bağlıdır.
+Kasiyere on boolean parametre vermek yerine seçimler sırayla söylenir.
+Sipariş tamamlanınca mutfak değiştirilemeyen nihai sandviçi çıkarır.
+
+`Report.Builder` hazırlık tezgâhı, `Report` teslim edilmiş üründür.
+`ReportDirector` ise sık siparişler için kayıtlı reçeteleri temsil eder.
+
+Bu bir **kavramsal benzetmedir**; restoran sistemlerinin içeride mutlaka Builder kullandığını iddia etmez.
+
+## Pattern olmasaydı problem nasıl görünürdü?
+
+Çok parametreli constructor çağrısı şöyle olabilirdi:
+
+```java
+Report report = new Report(
+        "Q2 Satış Raporu",
+        "İkinci çeyrek metrikleri",
+        List.of("Revenue", "Churn"),
+        true,
+        "Analytics Team"
+);
 ```
 
-## Yapı
+Alanlar arttıkça:
+
+- Aynı tipteki parametrelerin sırası karışır.
+- `true` değerinin neyi açtığı çağrı yerinde görünmez.
+- Opsiyonel kombinasyonlar telescoping constructor üretir.
+- Default değerler farklı constructor'lara dağılır.
+- Mutable liste ürünün içine sızabilir.
+
+Named argument olmayan Java'da çağrının niyetini okumak zorlaşır.
+
+## Çözüm ve sınırı
+
+Gerçek API zorunlu title'ı başlangıçta alır:
+
+```java
+Report report = Report.builder("Q2 Satış Raporu")
+        .summary("İkinci çeyrek metrikleri")
+        .addSection("Revenue")
+        .addSection("Churn")
+        .includeChart(true)
+        .author("Analytics Team")
+        .build();
+```
+
+Builder şunları otomatik garanti etmez:
+
+- Her fluent API doğru doğrulama yapıyor değildir.
+- Builder'ın kendisi immutable değildir.
+- Adımların her sırada çağrılması domain açısından geçerli olmayabilir.
+- Basit bir nesnede sınıf ve metot sayısını gereksiz artırabilir.
+- Aynı builder eşzamanlı thread'lerde güvenle paylaşılamaz.
+
+Bu örnek, Effective Java tarzı nested fluent builder'dır.
+Klasik GoF Builder'daki ayrı `Builder` arayüzü ve birden fazla representation burada yoktur.
+
+## Repo sınıfları ve pattern rolleri
+
+| Sınıf / API | Rol | Sorumluluk |
+|---|---|---|
+| `Report` | Product | Kurulum sonrası immutable raporu temsil eder |
+| `Report.Builder` | Concrete Builder | Alanları toplar, normalize eder ve product üretir |
+| `Report.builder(String)` | Builder factory | Zorunlu title ile builder başlatır |
+| `Report#toBuilder()` | Varyant başlangıcı | Mevcut immutable raporun alanlarını yeni builder'a kopyalar |
+| `summary(String)` | Build step | Özeti ayarlar |
+| `sections(List<String>)` | Build step | Section listesinin kopyasını alır |
+| `addSection(String)` | Build step | Normalize edilmiş tek section ekler |
+| `includeChart(boolean)` | Build step | Chart bayrağını ayarlar |
+| `author(String)` | Build step | Yazarı ayarlar |
+| `build()` | Terminal step | Builder snapshot'ından `Report` üretir |
+| `ReportDirector` | Reçete helper'ı | İki hazır Report kurulumu sunar |
+| `BuilderDemo` | Client | Custom, hazır ve mevcut üründen türetilmiş reçeteleri karşılaştırır |
+
+## Yapı diyagramı
 
 ```mermaid
 classDiagram
     direction LR
 
     class Report {
-      -title
-      -summary
-      -sections
-      -includeChart
-      -author
-      +exportCard()
-      +builder(title)
+        -title: String
+        -summary: String
+        -sections: List~String~
+        -includeChart: boolean
+        -author: String
+        +builder(String) Builder
+        +toBuilder() Builder
+        +exportCard() String
     }
 
-    class ReportBuilder {
-      +summary(value)
-      +sections(values)
-      +addSection(value)
-      +includeChart(flag)
-      +author(name)
-      +build() Report
+    class Report_Builder {
+        -title: String
+        -summary: String
+        -sections: List~String~
+        +summary(String) Builder
+        +sections(List) Builder
+        +addSection(String) Builder
+        +includeChart(boolean) Builder
+        +author(String) Builder
+        +build() Report
     }
 
-    class ReportDirector {
-      +createQuarterlySalesReport()
-      +createIncidentPostmortemReport(incidentId)
-    }
-
-    Report --> ReportBuilder
-    ReportDirector --> ReportBuilder
+    Report *-- Report_Builder : nested type
+    Report_Builder ..> Report : creates
+    ReportDirector ..> Report_Builder : configures
+    BuilderDemo ..> ReportDirector
 ```
 
-## Runtime akışı
+## Çalışma zamanı akışı
 
 ```mermaid
 sequenceDiagram
-    participant C as Client
-    participant D as ReportDirector
-    participant B as Report.Builder
-    participant R as Report
+    actor Client
+    participant Builder as Report.Builder
+    participant Product as Report
 
-    C->>D: createQuarterlySalesReport()
-    D->>B: builder("Q1 Satış Raporu")
-    D->>B: summary(...)
-    D->>B: sections(...)
-    D->>B: includeChart(true)
-    D->>B: author(...)
-    D->>B: build()
-    B-->>D: Report
-    D-->>C: Report
+    Client->>Builder: Report.builder(title)
+    Client->>Builder: summary(value)
+    Client->>Builder: addSection(value)
+    Client->>Builder: includeChart(true)
+    Client->>Builder: author(name)
+    Client->>Builder: build()
+    Builder->>Product: new Report(this)
+    Product->>Product: List.copyOf(sections)
+    Product-->>Client: immutable Report
 ```
 
-## Bu projedeki model
-- `Report` → Product (immutable)
-- `Report.Builder` → Concrete Builder
-- `ReportDirector` → Director
-- `BuilderDemo` → Client
+## Kodu adım adım okuma
 
-## Teknik notlar
-- `normalize(...)` ile null/blank validasyonları tek yerde toplanır.
-- `sections` için defensive copy uygulanır (`new ArrayList`, `List.copyOf`).
-- Immutable final ürün sayesinde inşa sonrası state değişim riskleri azalır.
+### 1. Zorunlu alan girişte alınır
+
+`Report.builder(title)`, private builder constructor'ını çağırır.
+Title null veya blank olamaz ve `trim()` ile normalize edilir.
+
+### 2. Opsiyoneller anlamlı default'larla başlar
+
+- `summary`: `"No summary"`
+- `sections`: boş liste
+- `includeChart`: `false`
+- `author`: `"Unknown"`
+
+Client yalnız değiştirmek istediği alanları çağırır.
+
+### 3. Fluent metot aynı builder'ı döndürür
+
+Her setter `this` döndürdüğü için zincir kurulabilir.
+Bu, builder'ın mutable olduğu anlamına gelir; henüz `Report` değildir.
+
+### 4. Liste iki sınırda korunur
+
+`sections(values)`, her elemanı normalize eden yeni bir liste üreterek input listesinden ayrılır.
+`Report` constructor'ı `List.copyOf` ile değiştirilemez product snapshot'ı üretir.
+Builder sonradan kullanılsa bile önceki Report değişmez.
+
+### 5. `addSection` ile `sections` aynı doğrulamayı paylaşır
+
+`addSection` null/blank section'ı reddeder ve trim eder.
+`sections(List)` de listedeki her elemanı aynı `normalize(section, "section")` fonksiyonundan geçirir.
+Böylece tekli girişte kabul edilmeyen blank değer, toplu API üzerinden sisteme sızamaz.
+
+### 6. Director hazır reçete sağlar
+
+`createQuarterlySalesReport()` ve `createIncidentPostmortemReport(id)` tekrar eden adımları toplar.
+Bu sınıf generic bir GoF Director değil, `Report.Builder`a bağlı pratik bir reçete helper'ıdır.
+Incident ID null/blank olamaz ve başlığa eklenmeden önce trim edilir.
+
+### 7. `toBuilder()` güvenli bir varyant başlangıcıdır
+
+`toBuilder()`, raporun bütün scalar alanlarını ve section listesinin yeni kopyasını private builder constructor'ına taşır.
+Client yalnız değişen kararları çağırır; örneğin ayrıntılı quarterly rapordan daha kısa bir executive rapor üretir.
+Bu bir in-place güncelleme değildir: kaynak `Report` aynen kalır ve ikinci `build()` yeni bir object üretir.
+
+## Testlerin anlattığı kontratlar
+
+`BuilderDemoTest` şu kontratları korur:
+
+| `@Nested` grup | Korunan davranış |
+|---|---|
+| `FluentConstruction` | İsimli adımlarla bütün alanların kurulması, section ekleme sırası ve çağrılmayan opsiyonellerin belgelenen default’ları |
+| `ValidationBoundary` | Title/summary/author ile tekli ve toplu section girişlerinin aynı trim/doğrulama politikasına uyması; null/blank değerlerin doğru API sınırında reddi |
+| `ImmutableProduct` | Kaynak listenin ve accessor sonucunun ürünü değiştirememesi; builder tekrar kullanıldığında daha önce üretilen `Report`un snapshot olarak kalması |
+| `DerivedReportVariants` | `toBuilder()`ın bütün mevcut kararları taşıyıp kaynak raporu değiştirmeden yalnız seçilen alanları farklı yeni bir ürün üretmesi |
+| `DirectorRecipes` | Quarterly ve incident reçetelerinin beklenen bütün alanları kurması; incident ID’nin trim edilmesi ve eksik ID’nin erken reddi |
+
+Testler `Report` için `equals` olmadığı için alan accessor'larını `assertAll` ile karşılaştırır.
 
 ## Ne zaman kullanılır?
-- Opsiyonel alan sayısı fazlaysa.
-- Aynı ürünün farklı reçeteleri tekrar ediyorsa.
-- Kod okunabilirliği ve API ergonomisi önemliyse.
+
+- Zorunlu ve opsiyonel alanlar birlikteyse.
+- Aynı türden çok constructor parametresi varsa.
+- Okunabilir çağrı API'si önemliyse.
+- Nihai ürün immutable tutulacaksa.
+- Kurulum sonunda çapraz alan doğrulaması yapılacaksa.
 
 ## Ne zaman kullanma?
-- Çok basit DTO/VO yapılarında.
-- Üretim adımı zaten tek satır ve kararlıysa.
 
-## Artılar / Eksiler
+- İki alanlı basit value object için constructor yeterliyse.
+- Record canonical constructor niyeti açıkça anlatıyorsa.
+- Ürün adım adım değil tek factory çağrısıyla doğal oluşuyorsa.
+- Builder yalnız bütün alanları birebir tekrar eden boilerplate ise.
 
-**Artılar**
-- Okunabilir, akıcı kurulum
-- Geçerlilik kurallarını merkezileştirme
-- Immutable modelle iyi uyum
+## Artılar ve bedeller
 
-**Eksiler**
-- Basit nesnelerde ek sınıf/method yükü
-- Yanlış tasarımda aşırı fluent API karmaşası
+| Artı | Bedel |
+|---|---|
+| Çağrı yerinde alan adları görünür | Ek builder API'si bakım ister |
+| Default ve doğrulama merkezileşir | Builder mutable ve thread-safe değildir |
+| Immutable product üretmek kolaylaşır | Eksik doğrulama geç hataya dönüşebilir |
+| Constructor patlamasını önler | Çok sayıda fluent adım uzun zincir üretir |
+| Reçeteler tekrar kullanılabilir | Director yanlış adlandırılırsa beklenti karışır |
 
-## Kısa özet
-Builder, parametre kalabalığını yönetilebilir hale getirir; özellikle domain nesnesi doğruluğu ve okunabilirliğin kritik olduğu projelerde ciddi kalite artışı sağlar.
+## Production hardening
 
-## Gerçek Hayattan ve Yaygın Kullanılan Builder Pattern Örnekleri
+Güçlendirilmiş örnek artık şunları uygular:
 
-### 1. Pizza Siparişi (Domino's, Pizza Hut vb.)
-Bir pizza siparişinde hamur tipi, sos, peynir, ek malzeme gibi adımlar zincirleme eklenir:
+- `sections(List)` içindeki her elemanı `addSection` ile aynı şekilde doğrulamak.
+- `incidentId` için null/blank doğrulaması ve normalizasyon.
+- `toBuilder()` içinde listeyi kopyalayarak kaynak product ile yeni builder'ı ayırmak.
 
-```java
-Pizza pizza = new Pizza.Builder("Orta Boy")
-    .sos("Barbekü")
-    .peynir("Mozzarella")
-    .ekMalzeme("Sucuk")
-    .ekMalzeme("Mantar")
-    .build();
-```
+Production kararları olarak kalanlar:
 
-### 2. Araba Üretimi (Otomotiv Sektörü)
-Farklı donanım paketleri, motor, renk, opsiyonel özellikler adım adım eklenir:
+- `trim()` yerine Unicode-aware `strip()` kararını değerlendirmek.
+- Çok section ekleniyorsa her çağrıda liste kopyalamak yerine tek mutable buffer kullanmak.
+- Build sırasında çapraz alan kuralları uygulamak.
+- Hata mesajlarını domain diliyle standartlaştırmak.
+- `Report` için gerekiyorsa value equality veya record alternatifi değerlendirmek.
+- Director reçetelerinin sabit metinlerini configuration/localization katmanına taşımak.
 
-```java
-Car car = new Car.Builder("Sedan")
-    .motor("1.6 Turbo")
-    .renk("Kırmızı")
-    .sunroof(true)
-    .navigasyon(true)
-    .build();
-```
+Mevcut testler hem temel kurulum kontratını hem bu güçlendirmeleri ayrı `@Nested` bağlamlarda sabitler.
 
-### 3. SQL Sorgusu Oluşturucu (Jooq, QueryDSL, Hibernate Criteria)
-SQL sorguları zincirleme metotlarla güvenli ve okunabilir şekilde kurulur:
+## Benzer pattern'lerle karşılaştırma
 
-```java
-String sql = new SqlBuilder()
-    .select("name", "age")
-    .from("users")
-    .where("age > 18")
-    .orderBy("name")
-    .build();
-```
+| Pattern | Ana soru | Builder'dan farkı |
+|---|---|---|
+| Factory Method | Hangi concrete product oluşacak? | Builder tek product'ın nasıl kurulacağına odaklanır |
+| Abstract Factory | Hangi uyumlu ürün ailesi oluşacak? | Builder aile değil adım ve configuration yönetir |
+| Prototype | Hangi mevcut örnek kopyalanacak? | Builder çoğunlukla sıfırdan kurar |
+| Fluent Interface | API nasıl akıcı okunur? | Builder fluent olabilir; her fluent API Builder değildir |
+| Parameter Object | Parametreleri hangi nesnede taşıyayım? | Üretim süreci ve terminal `build()` şart değildir |
 
-### 4. HTTP İsteği Oluşturucu (OkHttp, Apache HttpClient)
-HTTP istekleri için builder ile header, parametre, body adım adım eklenir:
+## Yaygın hatalar
 
-```java
-Request request = new Request.Builder()
-    .url("https://api.example.com/data")
-    .header("Authorization", "Bearer ...")
-    .post(body)
-    .build();
-```
+1. Bütün alanları opsiyonel yapıp geçersiz product üretmek.
+2. `build()` sonrasında builder'ın mutable listesini product'a doğrudan vermek.
+3. Fluent setter içinde doğrulama, build içinde başka doğrulama kullanıp tutarsızlık yaratmak.
+4. Builder'ı thread'ler arasında paylaşmak.
+5. Her fluent API'yi GoF Builder sanmak.
+6. Reçete helper'ını birden fazla representation yöneten klasik Director gibi anlatmak.
+
+## Üç kademeli alıştırma
+
+### Seviye 1 — yeni alan
+
+Opsiyonel `department` alanı ekle.
+Default değerini, normalize kuralını, accessor'ını ve export testini tamamla.
+
+### Seviye 2 — çapraz alan kuralı
+
+`includeChart(true)` ise en az bir section zorunlu olsun.
+Kuralın fluent adımda mı `build()` aşamasında mı daha doğru olduğunu gerekçelendir.
+
+### Seviye 3 — iki representation
+
+Aynı rapor reçetesinden text ve HTML çıktı üreten iki builder tasarla.
+Bu kez generic bir Director'ın neden anlamlı hale geldiğini göster.
+
+## Tek cümlelik hafıza çengeli
+
+> **Builder: zorunlu parçayla başla, seçenekleri isimli adımlarla ekle, `build()` ile immutable ürünü mühürle.**

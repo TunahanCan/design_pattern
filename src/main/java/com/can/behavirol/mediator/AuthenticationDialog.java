@@ -1,6 +1,9 @@
 package com.can.behavirol.mediator;
 
+import java.util.Objects;
+
 public class AuthenticationDialog implements Mediator {
+    private final AuthenticationGateway authenticationGateway;
     private final Label title;
     private final Label resultMessage;
     private final Checkbox loginModeCheckbox;
@@ -10,6 +13,11 @@ public class AuthenticationDialog implements Mediator {
     private final Button okButton;
 
     public AuthenticationDialog() {
+        this(new DemoAuthenticationGateway());
+    }
+
+    public AuthenticationDialog(AuthenticationGateway authenticationGateway) {
+        this.authenticationGateway = Objects.requireNonNull(authenticationGateway);
         title = new Label(this, "Giriş Yap");
         resultMessage = new Label(this, "");
         loginModeCheckbox = new Checkbox(this);
@@ -52,7 +60,9 @@ public class AuthenticationDialog implements Mediator {
                 return;
             }
 
-            resultMessage.setText("Kullanıcı giriş yaptı: " + username.getText());
+            resultMessage.setText(
+                    authenticationGateway.login(username.getText(), password.getText())
+            );
             return;
         }
 
@@ -61,7 +71,13 @@ public class AuthenticationDialog implements Mediator {
             return;
         }
 
-        resultMessage.setText("Yeni kullanıcı kaydedildi: " + username.getText());
+        resultMessage.setText(
+                authenticationGateway.register(
+                        username.getText(),
+                        password.getText(),
+                        email.getText()
+                )
+        );
     }
 
     public Checkbox getLoginModeCheckbox() {

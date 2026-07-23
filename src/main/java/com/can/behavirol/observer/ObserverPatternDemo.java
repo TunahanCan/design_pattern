@@ -16,13 +16,13 @@ public class ObserverPatternDemo {
         Customer mehmet = new Customer("Mehmet", "Push");
 
         store.subscribe("iPhone 16", can);
-        store.subscribe("iPhone 16", ayse);
+        Subscription ayseSubscription = store.subscribeWithHandle("iPhone 16", ayse);
         store.subscribe("PlayStation 6", mehmet);
 
         System.out.println("iPhone 16 stok güncellemesi:");
         store.restockProduct("iPhone 16", 12);
 
-        store.unsubscribe("iPhone 16", ayse);
+        ayseSubscription.close();
 
         System.out.println("iPhone 16 ikinci stok güncellemesi:");
         store.restockProduct("iPhone 16", 5);

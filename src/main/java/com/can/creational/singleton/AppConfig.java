@@ -7,7 +7,7 @@ import java.util.Objects;
  *
  * Double-Checked Locking + volatile kombinasyonu ile thread-safe lazy initialization uygular.
  */
-public final class AppConfig {
+public final class AppConfig implements ApiClientConfig {
 
     private static volatile AppConfig instance;
 
@@ -30,10 +30,12 @@ public final class AppConfig {
         return instance;
     }
 
+    @Override
     public String getApiBaseUrl() {
         return apiBaseUrl;
     }
 
+    @Override
     public int getConnectionTimeoutMs() {
         return connectionTimeoutMs;
     }

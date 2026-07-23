@@ -1,5 +1,7 @@
 package com.can.structural.flyweight;
 
+import java.util.Objects;
+
 public class Tree {
 
     private final int x;
@@ -9,7 +11,7 @@ public class Tree {
     public Tree(int x, int y, TreeType type) {
         this.x = x;
         this.y = y;
-        this.type = type;
+        this.type = Objects.requireNonNull(type, "type cannot be null");
     }
 
     public String draw() {

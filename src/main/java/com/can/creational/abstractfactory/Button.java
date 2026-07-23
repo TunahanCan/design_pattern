@@ -1,6 +1,5 @@
 package com.can.creational.abstractfactory;
 
-public interface Button
-{
+public interface Button {
     String render();
 }

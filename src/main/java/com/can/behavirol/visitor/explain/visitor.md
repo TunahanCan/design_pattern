@@ -1,149 +1,288 @@
-# Visitor Pattern (Ziyaretçi Deseni)
+# Visitor — Ziyaretçi Deseni
 
-**Tür:** Behavioral (Davranışsal)
+> Bu örnek düz bir `List<GeoNode>` üzerinde farklı visitor operasyonları çalıştırır.
+> XML attribute değerleri escape edilir; çıktı yine de tam bir XML document/serializer değildir.
 
-## Intent (Amaç)
+## 30 saniyelik kart
 
-Visitor, bir algoritmayı bu algoritmanın çalıştığı nesnelerden ayırmanızı sağlar.
-Aynı nesne yapısı üzerinde farklı operasyonları (XML export, raporlama, validasyon, audit vb.) nesne sınıflarına dokunmadan eklemeye odaklanır.
+| Soru | Kısa cevap |
+|---|---|
+| Niyet | Farklı element tiplerine uygulanacak operasyonları element sınıflarından ayırmak |
+| Değişen eksen | Sabit element ailesine eklenen export, audit ve rapor operasyonları |
+| Ana bedel | Yeni element tipi eklemek bütün visitor’ları değiştirir |
+| Bu örnekte | City, Industry ve SightSeeing için XML export, risk audit ve toplu istatistik |
+| Hafıza ipucu | “Yeni işi her binaya öğretme; işi bilen uzman bütün binaları gezsin.” |
 
----
+## Örnek haritası: temel → güçlendirilmiş → production
 
-## Problem
+| Katman | Bu repoda ne var? | Öğrettiği sınır |
+|---|---|---|
+| Temel örnek | `XmlExportVisitor` ve `RiskAuditVisitor` | Double dispatch ile her concrete tipe özel operasyon |
+| Güçlendirilmiş örnek | XML attribute escaping’i, `GeoSummaryVisitor` ve `GeoSummary` | Elementleri değiştirmeden güvenli fragment ve heterojen koleksiyonda stateful aggregation |
+| Production sınırı | XML library, schema/encoding/root document, visitor lifecycle ve toplam overflow politikası | Elle String üretiminin tam serializer olmaması; yeni elementin bütün visitor’ları değiştirmesi |
 
-Büyük bir coğrafi grafik (graph) sistemi düşünün:
+## Akılda kalıcı analoji: denetim ekibi
 
-- `City` (şehir)
-- `Industry` (endüstri)
-- `SightSeeing` (turistik nokta)
+Aynı şehirde:
 
-Başta bu sınıflara birer `exportToXml()` metodu eklemek kolay görünür. Ama pratikte:
+- itfaiye denetçisi yangın riskine,
+- vergi denetçisi mali kayıtlara,
+- erişilebilirlik uzmanı fiziksel erişime
 
-1. **Production riski**: Çalışan sınıfları değiştirmek yeni bug riski doğurur.
-2. **Sorumluluk kirliliği**: Geodata sınıfının işi XML üretmek değildir.
-3. **Sürekli değişim baskısı**: Yarın JSON export, ertesi gün audit, sonra farklı raporlar istenir.
+bakar.
 
-Her yeni ihtiyaçta aynı sınıfları tekrar tekrar değiştirmek, bakım maliyetini yükseltir.
+Binaların tipleri sabittir, fakat zamanla yeni denetim operasyonları eklenir.
+Her uzman bina tipine göre farklı kontrol uygular.
+Visitor operasyonu uzmana, yapısal veriyi elemente bırakır.
 
----
+## Pattern olmasaydı problem ne olurdu?
+
+Her export, audit, validation ve rapor davranışı element sınıflarına eklenirse domain sınıfları ilgisiz operasyonlarla şişer.
+
+Bu yaklaşımda:
+
+- City ilgisiz operasyonlarla dolar,
+- aynı operasyon üç elemente dağılır,
+- yeni rapor bütün domain sınıflarını değiştirir,
+- operasyonun topladığı state merkezi tutulamaz.
 
 ## Çözüm
 
-Yeni davranışı nesnelerin içine gömmek yerine ayrı bir **Visitor** sınıfına taşı.
-
-- Elemanlar (`City`, `Industry`, `SightSeeing`) sadece `accept(visitor)` sağlar.
-- Visitor tarafında her somut tip için ayrı metot bulunur:
-    - `visitCity(City city)`
-    - `visitIndustry(Industry industry)`
-    - `visitSightSeeing(SightSeeing sightSeeing)`
-
-Böylece yeni davranış eklemek için yeni bir visitor sınıfı yazarsın.
-Örneğin bu projede:
-
-- `XmlExportVisitor` → XML satırları üretir.
-- `RiskAuditVisitor` → risk notları üretir.
-
-### Double Dispatch nasıl çalışır?
-
-İstemci tek bir çağrı yapar:
+Her element `accept(GeoNodeVisitor)` sunar.
+Visitor interface her concrete element için overload tanımlar.
+Concrete element kendi `accept` metodunda doğru overload’u çağırır:
 
 ```java
-node.accept(visitor);
+public void accept(GeoNodeVisitor visitor) {
+    visitor.visitCity(this);
+}
 ```
 
-Ama gerçek metot seçimi iki adımda olur:
+Yeni operasyon, yeni concrete visitor olarak eklenir.
+Örneğin `GeoSummaryVisitor`, elementlere rapor metodu eklemeden population ve visitor toplamlarını biriktirir.
 
-1. Runtime’da element tipi belirlenir (`City` / `Industry` / `SightSeeing`).
-2. Element içindeki `accept`, doğru visitor metodunu çağırır (`visitCity(this)` gibi).
+### Çözmediği şeyler
 
-Bu sayede `if/else instanceof` zinciri yazmadan doğru metot çağrılır.
+Visitor tek başına:
 
----
+- element koleksiyonunu gezmez,
+- yeni element ekleme maliyetini azaltmaz,
+- private verilere otomatik erişim vermez,
+- çıktı formatının tamamını veya schema validation’ı otomatik sağlamaz,
+- visitor instance’ını thread-safe yapmaz,
+- operation sonucunun lifecycle’ını belirlemez.
 
-## Projedeki OOP Örneği
+## Repodaki roller
 
-Paket: `com.can.behavirol.visitor`
+| Pattern rolü | Repodaki karşılığı | Sorumluluk |
+|---|---|---|
+| Element | `GeoNode` | `getName` ve `accept` sözleşmesi |
+| Concrete Element | `City` | Population verisi ve `visitCity` dispatch’i |
+| Concrete Element | `Industry` | Sector verisi ve `visitIndustry` dispatch’i |
+| Concrete Element | `SightSeeing` | Annual visitors ve `visitSightSeeing` dispatch’i |
+| Visitor | `GeoNodeVisitor` | Her concrete tipe özel visit metodu |
+| Concrete Visitor | `XmlExportVisitor` | XML fragment listesi biriktirir |
+| Concrete Visitor | `RiskAuditVisitor` | Risk notları biriktirir |
+| Concrete Visitor | `GeoSummaryVisitor` | Tip bazlı sayaç ve toplamları biriktirir |
+| Sonuç modeli | `GeoSummary` | Aggregation sonucunu immutable record olarak taşır |
+| Client | `VisitorPatternDemo` | Düz listeyi gezer ve üç visitor uygular |
 
-- **Element interface**: `GeoNode`
-- **Concrete elements**: `City`, `Industry`, `SightSeeing`
-- **Visitor interface**: `GeoNodeVisitor`
-- **Concrete visitors**: `XmlExportVisitor`, `RiskAuditVisitor`
-- **Client/Demo**: `VisitorPatternDemo`
+## Yapı
 
-### Senaryo
+```mermaid
+classDiagram
+    class GeoNode {
+        <<interface>>
+        +getName() String
+        +accept(visitor)
+    }
+    class GeoNodeVisitor {
+        <<interface>>
+        +visitCity(city)
+        +visitIndustry(industry)
+        +visitSightSeeing(sight)
+    }
+    GeoNode <|.. City
+    GeoNode <|.. Industry
+    GeoNode <|.. SightSeeing
+    GeoNodeVisitor <|.. XmlExportVisitor
+    GeoNodeVisitor <|.. RiskAuditVisitor
+    GeoNodeVisitor <|.. GeoSummaryVisitor
+    GeoSummaryVisitor ..> GeoSummary : creates snapshot
+    City --> GeoNodeVisitor : accept
+    Industry --> GeoNodeVisitor : accept
+    SightSeeing --> GeoNodeVisitor : accept
+```
 
-1. Farklı tipte `GeoNode` nesnelerinden bir liste oluşturulur.
-2. Aynı liste üzerinde iki farklı visitor çalıştırılır.
-3. Sonuç olarak:
-    - XML export alınır.
-    - Ayrı bir risk audit raporu alınır.
-4. Element sınıflarına yeni metot eklenmez; davranış visitor’larla gelir.
+## Double dispatch akışı
 
----
+```mermaid
+sequenceDiagram
+    participant Client
+    participant CityElement as City
+    participant Xml as XmlExportVisitor
+    participant Risk as RiskAuditVisitor
+    participant Summary as GeoSummaryVisitor
+    Client->>CityElement: accept(xmlVisitor)
+    CityElement->>Xml: visitCity(this)
+    Xml->>Xml: city fragment ekle
+    Client->>CityElement: accept(riskVisitor)
+    CityElement->>Risk: visitCity(this)
+    Risk->>Risk: yoğunluk notu ekle
+    Client->>CityElement: accept(summaryVisitor)
+    CityElement->>Summary: visitCity(this)
+    Summary->>Summary: cityCount++ ve population ekle
+    Client->>Summary: getSummary()
+    Summary-->>Client: immutable GeoSummary
+```
 
-## Structure (Yapı)
+## Double dispatch tam olarak nedir?
 
-1. **Visitor Interface**
-   Her concrete element için bir `visitXxx(...)` metodu tanımlar.
-2. **Concrete Visitor**
-   Aynı operasyonun elemente göre özelleştirilmiş versiyonlarını uygular.
-3. **Element Interface**
-   `accept(Visitor v)` metodu içerir.
-4. **Concrete Element**
-   `accept` içinde kendine karşılık gelen visitor metodunu çağırır.
-5. **Client**
-   Element koleksiyonu üzerinde visitor’ı dolaştırır.
+İlk seçim, `GeoNode` referansının runtime concrete tipine göre doğru `accept` implementasyonudur.
+`City.accept` içindeki `this` statik olarak `City` olduğu için `visitCity(City)` overload’u seçilir.
+Son olarak concrete visitor’ın `visitCity` implementasyonu dynamic dispatch ile çalışır.
 
----
+Bu iş birliği `instanceof` zinciri yazmadan hem element hem visitor tipini davranışa dahil eder.
 
-## Applicability (Ne zaman kullanılır?)
+## Kod execution trace
 
-- Karmaşık bir nesne yapısındaki tüm elemanlara operasyon uygulamak istediğinde,
-- Davranışları ana domain sınıflarından ayırmak istediğinde,
-- Aynı eleman yapısına sık sık yeni operasyon ekleniyorsa,
-- `instanceof` / `switch` ile tip kontrolü kalabalıklaşıyorsa.
+Client üç farklı `GeoNode` içeren düz listeyi gezer.
+Her node sırasıyla XML, risk ve summary visitor’ını kabul eder.
+Doğru overload çalışır; XML/risk sonuçları ziyaret sırasıyla internal listelerde birikirken summary visitor sayaç ve toplamlarını günceller.
 
----
+Adı `graph` olsa da mevcut koleksiyon tree/graph traversal yapmaz.
+Gezinme sorumluluğu client’taki for döngüsündedir.
 
-## How to Implement (Adımlar)
+## API, invariant ve sonuç semantiği
 
-1. Visitor arayüzünü tanımla; her concrete element için bir metot ekle.
-2. Element arayüzüne `accept(Visitor)` ekle.
-3. Tüm concrete elementlerde `accept` implement et ve uygun `visitXxx(this)` çağrısı yap.
-4. Her yeni davranış için yeni concrete visitor yaz.
-5. Client’ta element koleksiyonunu gezip `accept(visitor)` çağır.
+- Her concrete `accept`, eşleşen visit metodunu çağırır.
+- Visit metotları void’dur; sonuç visitor içinde birikir.
+- Aynı visitor tekrar kullanılırsa eski sonuçlara yenileri eklenir.
+- `getXmlRows/getNotes` unmodifiable fakat canlı view döndürür.
+- View’e `add` yapılamaz; sonraki visit’ler daha önce alınan view’de görünür.
+- Ziyaret sırası sonuç sırasını belirler.
+- Risk city eşiği `> 1_000_000`dur.
+- Tam 1.000.000 “Orta yoğunluk” sayılır.
+- SightSeeing eşiği `> 500_000`dur.
+- City, Industry ve SightSeeing adları; ayrıca Industry sektörü null/blank olamaz ve constructor’da trim edilir.
+- Population ile annual visitor sayısı negatif olamaz; hatalı değer visitor’a ulaşmadan reddedilir.
+- `chemical` sektör kontrolü normalize edilmiş değer üzerinde case-insensitive çalışır.
+- XML visitor `&`, `"`, `<`, `>` ve `'` karakterlerini attribute entity’lerine çevirir.
+- `GeoSummaryVisitor#getSummary`, çağrı anındaki sayaçları immutable `GeoSummary` record’una kopyalar.
 
----
+## Güçlendirme ve XML production sınırı
 
-## Pros / Cons
+XML visitor attribute değerlerini `escape` metodundan geçirir.
 
-### Avantajlar
+Şu karakterler XML entity’lerine dönüşür:
 
-- **OCP uyumlu**: Yeni davranış eklemek için element sınıfları değişmez.
-- **SRP iyileşir**: Yardımcı davranışlar ayrı sınıflara taşınır.
-- Ziyaret sırasında visitor içinde durum biriktirilebilir (rapor, sayaç, istatistik).
+- `&` → `&amp;`
+- `"` → `&quot;`
+- `<` → `&lt;`
+- `>` → `&gt;`
+- `'` → `&apos;`
 
-### Dezavantajlar
+Ancak fragment listesinde hâlâ:
 
-- Yeni element tipi eklendiğinde tüm visitor’ların güncellenmesi gerekir.
-- Visitor, elementin private verisine ihtiyaç duyarsa erişim/encapsulation gerilimi oluşabilir.
+- tek root element,
+- XML declaration,
+- encoding metadata,
+- schema validation
 
----
+yoktur.
 
-## Gerçek Hayat Analojisi
+Production’da elle String birleştirmek yerine XML writer/serializer library kullanılmalıdır.
 
-Tecrübeli bir sigorta acentesi mahalledeki binaları gezer:
+## Test kontrat haritası
 
-- Konuta sağlık poliçesi,
-- Bankaya hırsızlık poliçesi,
-- Kafeye yangın/sel poliçesi önerir.
+| `@Nested` grup | Korunan davranış |
+|---|---|
+| `DoubleDispatch` | Her elementin doğru visit metodunu seçmesi |
+| `DomainInvariants` | Null/blank ad ve sektörün, negatif population/annualVisitors değerlerinin erken reddi ve geçerli metinlerin trim edilmesi |
+| `XmlExport` | Üç tipin exact fragment’i ve unmodifiable sonuç |
+| `RiskAudit` | City, chemical, sightseeing branch’leri ve sıra |
+| `SummaryVisitor` | İki city ve iki sightseeing üzerinden typed aggregation sonucu |
 
-Aynı “ziyaret” operasyonu, farklı bina tiplerinde farklı davranış üretir.
+Testler “element değişmedi” gibi dolaylı isimler yerine dispatch ve sonuç kontratını doğrudan gözler.
 
----
+## Edge case, security, concurrency ve performans
 
-## Diğer Pattern’lerle İlişki
+- Null visitor `accept` içinde NPE üretir.
+- Null/blank ad veya sektör constructor’da açık `IllegalArgumentException` üretir; visitor kısmi/geçersiz element görmez.
+- Negatif population/annualVisitors constructor’da açık `IllegalArgumentException` üretir.
+- `" chemical "` constructor’da `"chemical"` olarak normalize edilir ve chemical branch’ine girer.
+- Visitor state’i için reset API’si yoktur.
+- Visitor’lar thread-safe değildir.
+- Unmodifiable view immutable snapshot değildir.
+- Her visit O(1), bütün liste traversal’ı node sayısı n için O(n)’dir.
+- Sonuç listeleri ziyaret sayısı kadar sınırsız büyür.
+- Çok uzun traversal’da `int` sayaçlar veya `long` toplamlar için overflow politikası yoktur.
+- Yeni element eklemek interface ve bütün concrete visitor’ları değiştirir.
 
-- **Visitor vs Command**: Command işlemi nesneleştirir; Visitor farklı tiplerdeki nesnelere operasyon uygular.
-- **Visitor + Composite**: Ağaç yapısının tamamına operasyon uygulamak için güçlü kombinasyondur.
-- **Visitor + Iterator**: Karmaşık yapıyı Iterator ile gezip Visitor ile işlemi uygularsın.
+## Ne zaman kullan?
+
+- Element tipleri sabit, yeni operasyonlar sık ekleniyorsa,
+- operasyon birden çok element tipi üzerinde birlikte çalışıyorsa,
+- domain sınıfları export/audit ayrıntısıyla kirlenmemeliyse,
+- double dispatch tip kontrolü zincirini temizleyecekse,
+- visitor traversal boyunca state biriktirecekse.
+
+## Ne zaman kullanma?
+
+- Yeni element tipleri sık ekleniyorsa,
+- yalnız tek basit operasyon varsa,
+- pattern için domain encapsulation’ı getter’larla delinmek zorundaysa,
+- dilin sealed type/pattern matching özelliği daha açık çözüm sunuyorsa,
+- traversal ile operation ayrımına ihtiyaç yoksa.
+
+## Artılar ve bedeller
+
+| Artı | Bedel |
+|---|---|
+| Yeni operasyon ayrı visitor olur | Yeni element bütün visitor’ları kırar |
+| İlgili operasyon kodu tek sınıfta kalır | Double dispatch öğrenme maliyeti vardır |
+| Visitor state biriktirebilir | Instance lifecycle/reset gerekir |
+| Domain export/audit ile kirlenmez | Element verisi daha çok açılabilir |
+| Farklı tipler tek operasyon altında işlenir | Boilerplate visit metotları artar |
+
+## En çok karışan desen: Iterator
+
+| Visitor | Iterator |
+|---|---|
+| Elemanda hangi operasyonun çalışacağını seçer | Elemanlara hangi sırayla ulaşılacağını seçer |
+| `accept/visit` ile double dispatch yapar | `hasNext/next` ile cursor taşır |
+| Sonuç/state visitor’da birikebilir | Gezinme state’i iterator’dadır |
+| Traversal yapması şart değildir | Asıl görevi traversal’dır |
+
+İkisi birlikte kullanılabilir: Iterator yapıyı gezer, her element Visitor’ı kabul eder.
+
+## Yaygın hatalar
+
+1. Visitor’ın traversal’ı otomatik yaptığı sanmak.
+2. Yeni element maliyetini görmezden gelmek.
+3. `accept` içinde yanlış visit overload’unu çağırmak.
+4. Stateful visitor’ı resetlemeden tekrar kullanmak.
+5. Unmodifiable view’i immutable snapshot sanmak.
+6. XML’i String concatenate edip escape etmemek.
+7. Basit pattern matching yeterliyken visitor boilerplate’i eklemek.
+
+## Alıştırmalar
+
+### Seviye 1 — Gözlemle
+
+Recording visitor yaz.
+Üç elementin doğru visit metodunu tam bir kez çağırdığını test et.
+
+### Seviye 2 — Yeni operasyon
+
+Population ve visitor toplamı üreten `StatisticsVisitor` ekle.
+Element sınıflarını değiştirmeden sonucu test et.
+
+### Seviye 3 — Yeni element
+
+`River` elementi ekle.
+Visitor interface ve bütün concrete visitor’lardaki değişiklik maliyetini kaydet; alternatif sealed switch ile karşılaştır.
+
+## Hafıza cümlesi
+
+**Visitor, yeni davranışı elementlere dağıtmaz; uzmanı elementlerin yanına gönderir ve her element doğru uzman metodunu seçer.**

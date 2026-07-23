@@ -19,7 +19,8 @@ public class FlyweightPatternDemo {
         }
 
         System.out.println("Toplam ağaç(context) sayısı: " + forest.getTreeCount());
-        System.out.println("Paylaşılan TreeType(flyweight) sayısı: " + forest.getUniqueTreeTypeCount());
+        System.out.println("Forest'ın kullandığı TreeType sayısı: " + forest.getUsedTreeTypeCount());
+        System.out.println("Factory havuzundaki TreeType sayısı: " + forest.getUniqueTreeTypeCount());
         System.out.println("Örnek çizim satırı: " + forest.drawAll().getFirst());
         System.out.println();
     }

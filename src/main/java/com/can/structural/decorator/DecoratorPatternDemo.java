@@ -14,6 +14,7 @@ public class DecoratorPatternDemo {
         Notifier notifier = new EmailNotifier(List.of("ops@company.com", "owner@company.com"));
         notifier = new SmsDecorator(notifier, "+90 555 111 22 33");
         notifier = new SlackDecorator(notifier, "#kritik-alarm");
+        notifier = new PriorityDecorator(notifier, "p1");
 
         String result = notifier.send("Sunucu CPU kullanımı %95 oldu!");
         System.out.println(result);

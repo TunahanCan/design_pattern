@@ -6,7 +6,10 @@ public class City implements GeoNode {
     private final int population;
 
     public City(String name, int population) {
-        this.name = name;
+        this.name = requireText(name, "name");
+        if (population < 0) {
+            throw new IllegalArgumentException("population cannot be negative");
+        }
         this.population = population;
     }
 
@@ -22,5 +25,12 @@ public class City implements GeoNode {
     @Override
     public void accept(GeoNodeVisitor visitor) {
         visitor.visitCity(this);
+    }
+
+    private static String requireText(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " cannot be blank");
+        }
+        return value.trim();
     }
 }

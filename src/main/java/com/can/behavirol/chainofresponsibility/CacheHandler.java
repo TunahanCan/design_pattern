@@ -11,6 +11,10 @@ public class CacheHandler extends BaseOrderRequestHandler {
     public boolean handle(OrderRequest request) {
         String signature = RequestCache.signatureOf(request);
         if (cache.has(signature)) {
+            request.completeAs(
+                    OrderRequestOutcome.DUPLICATE,
+                    "Aynı istek daha önce başarıyla işlendi."
+            );
             System.out.println("[Cache] Uygun cache bulundu, işlem kısa devre yapıldı.");
             return false;
         }

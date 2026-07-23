@@ -3,7 +3,7 @@ package com.can.creational.factorymethod;
 public class PushNotificationCreator extends NotificationCreator {
 
     public PushNotificationCreator(NotificationSender sender) {
-        super(sender);
+        super(sender, NotificationChannel.PUSH);
     }
 
     @Override

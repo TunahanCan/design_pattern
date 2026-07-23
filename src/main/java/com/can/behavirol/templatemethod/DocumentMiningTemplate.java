@@ -4,13 +4,29 @@ public abstract class DocumentMiningTemplate {
 
     public final String process(String fileName) {
         openFile(fileName);
-        String rawData = extractRawData(fileName);
-        beforeAnalyze(rawData);
-        String analyzedData = analyzeData(rawData);
-        String report = createReport(analyzedData);
-        afterReport(report);
-        closeFile(fileName);
-        return report;
+        Throwable primaryFailure = null;
+        try {
+            String rawData = extractRawData(fileName);
+            beforeAnalyze(rawData);
+            String analyzedData = analyzeData(rawData);
+            String report = createReport(analyzedData);
+            afterReport(report);
+            return report;
+        } catch (RuntimeException | Error failure) {
+            primaryFailure = failure;
+            throw failure;
+        } finally {
+            try {
+                closeFile(fileName);
+            } catch (RuntimeException | Error closeFailure) {
+                if (primaryFailure == null) {
+                    throw closeFailure;
+                }
+                if (primaryFailure != closeFailure) {
+                    primaryFailure.addSuppressed(closeFailure);
+                }
+            }
+        }
     }
 
     protected abstract void openFile(String fileName);

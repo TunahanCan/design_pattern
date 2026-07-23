@@ -3,7 +3,7 @@ package com.can.creational.factorymethod;
 public class EmailNotificationCreator extends NotificationCreator {
 
     public EmailNotificationCreator(NotificationSender sender) {
-        super(sender);
+        super(sender, NotificationChannel.EMAIL);
     }
 
     @Override
