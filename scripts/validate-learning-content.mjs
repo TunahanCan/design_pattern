@@ -38,6 +38,41 @@ const canonicalPatterns = Object.freeze([
   { family: "BEHAVIORAL", slug: "template-method" },
   { family: "BEHAVIORAL", slug: "visitor" },
 ]);
+const canonicalDemos = Object.freeze([
+  ["creational", "factorymethod", "FactoryMethodDemo"],
+  ["creational", "abstractfactory", "AbstractFactoryDemo"],
+  ["creational", "builder", "BuilderDemo"],
+  ["creational", "prototype", "PrototypeDemo"],
+  ["creational", "singleton", "SingletonDemo"],
+  ["structural", "adapter", "AdapterPatternDemo"],
+  ["structural", "bridge", "BridgePatternDemo"],
+  ["structural", "composite", "CompositePatternDemo"],
+  ["structural", "decorator", "DecoratorPatternDemo"],
+  ["structural", "facade", "FacadePatternDemo"],
+  ["structural", "flyweight", "FlyweightPatternDemo"],
+  ["structural", "proxy", "ProxyPatternDemo"],
+  ["behavioral", "chainofresponsibility", "ChainOfResponsibilityDemo"],
+  ["behavioral", "command", "CommandPatternDemo"],
+  ["behavioral", "iterator", "IteratorPatternDemo"],
+  ["behavioral", "mediator", "MediatorPatternDemo"],
+  ["behavioral", "memento", "MementoPatternDemo"],
+  ["behavioral", "observer", "ObserverPatternDemo"],
+  ["behavioral", "state", "StatePatternDemo"],
+  ["behavioral", "strategy", "StrategyPatternDemo"],
+  ["behavioral", "templatemethod", "TemplateMethodPatternDemo"],
+  ["behavioral", "visitor", "VisitorPatternDemo"],
+].map(([familyDirectory, patternPackage, className]) => {
+  const packageName = `com.can.demo.${familyDirectory}.${patternPackage}`;
+  return Object.freeze({
+    className,
+    familyDirectory,
+    fqcn: `${packageName}.${className}`,
+    packageName,
+    patternPackage,
+    sourcePath:
+      `src/main/java/${packageName.replaceAll(".", "/")}/${className}.java`,
+  });
+}));
 const canonicalSlugs = canonicalPatterns.map(({ slug }) => slug);
 const manifestPath = path.join(repositoryRoot, "docs", "chapter-manifest.txt");
 const manifestEntries = existsSync(manifestPath)
@@ -323,6 +358,139 @@ if (allTestFiles.length > expectedTestCount) {
   );
 }
 
+const escapeRegExp = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const normalizeRelativePath = (absolutePath) =>
+  path.relative(repositoryRoot, absolutePath).replaceAll("\\", "/");
+const demoRoot = path.join(
+  repositoryRoot,
+  "src",
+  "main",
+  "java",
+  "com",
+  "can",
+  "demo",
+);
+const expectedDemoSourcePaths = new Set(
+  canonicalDemos.map(({ sourcePath }) => sourcePath),
+);
+const demoJavaSources = existsSync(demoRoot)
+  ? walk(demoRoot).filter((file) => file.endsWith(".java"))
+  : [];
+const discoveredDemoSourcePaths = demoJavaSources
+  .filter((file) => path.basename(file).endsWith("Demo.java"))
+  .map(normalizeRelativePath)
+  .sort();
+
+if (!existsSync(demoRoot)) {
+  errors.push("src/main/java/com/can/demo: demo composition-root dizini eksik");
+}
+if (
+  discoveredDemoSourcePaths.length !== canonicalDemos.length
+  || discoveredDemoSourcePaths.some(
+    (sourcePath) => !expectedDemoSourcePaths.has(sourcePath),
+  )
+) {
+  errors.push(
+    "src/main/java/com/can/demo: tam olarak 22 kanonik *Demo.java "
+      + `bekleniyordu, bulunan ${discoveredDemoSourcePaths.length}`,
+  );
+}
+
+for (const sourcePath of discoveredDemoSourcePaths) {
+  if (!expectedDemoSourcePaths.has(sourcePath)) {
+    errors.push(`${sourcePath}: kanonik envanter dışında demo entry point bulundu`);
+  }
+}
+
+for (const demo of canonicalDemos) {
+  const absolutePath = path.join(repositoryRoot, demo.sourcePath);
+  if (!existsSync(absolutePath)) {
+    errors.push(`${demo.sourcePath}: kanonik demo entry point eksik`);
+    continue;
+  }
+
+  const source = readFileSync(absolutePath, "utf8");
+  const declaredPackage = source.match(
+    /^\s*package\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;/m,
+  )?.[1];
+  if (declaredPackage !== demo.packageName) {
+    errors.push(
+      `${demo.sourcePath}: package ${demo.packageName} olmalı, `
+        + `bulunan ${declaredPackage ?? "yok"}`,
+    );
+  }
+
+  const publicClassDeclaration = new RegExp(
+    `\\bpublic\\s+(?:final\\s+)?class\\s+${escapeRegExp(demo.className)}\\b`,
+  );
+  if (!publicClassDeclaration.test(source)) {
+    errors.push(
+      `${demo.sourcePath}: public ${demo.className} sınıf bildirimi yok`,
+    );
+  }
+  if (!/\bpublic\s+static\s+void\s+run\s*\(\s*\)/.test(source)) {
+    errors.push(`${demo.sourcePath}: public static void run() entry point'i yok`);
+  }
+  if (
+    !/\bpublic\s+static\s+void\s+main\s*\(\s*String\s*(?:\[\s*\]|\.\.\.)\s*[A-Za-z_$][\w$]*\s*\)/
+      .test(source)
+  ) {
+    errors.push(
+      `${demo.sourcePath}: public static void main(String[] args) entry point'i yok`,
+    );
+  }
+}
+
+for (const sourceFile of demoJavaSources) {
+  const sourcePath = normalizeRelativePath(sourceFile);
+  if (expectedDemoSourcePaths.has(sourcePath)) {
+    continue;
+  }
+  const source = readFileSync(sourceFile, "utf8");
+  if (
+    /^\s*(?:(?:public|protected|private|static|abstract|final|sealed|non-sealed)\s+)*class\s+[A-Za-z_$][\w$]*Demo\b/m
+      .test(source)
+  ) {
+    errors.push(
+      `${sourcePath}: kanonik envanter dışında adı Demo ile biten sınıf bulundu`,
+    );
+  }
+}
+
+const domainSourceRoots = [
+  "src/main/java/com/can/creational",
+  "src/main/java/com/can/structural",
+  "src/main/java/com/can/behavirol",
+];
+for (const relativeRoot of domainSourceRoots) {
+  const absoluteRoot = path.join(repositoryRoot, relativeRoot);
+  if (!existsSync(absoluteRoot)) {
+    errors.push(`${relativeRoot}: domain kaynak dizini eksik`);
+    continue;
+  }
+
+  for (const sourceFile of walk(absoluteRoot).filter((file) => file.endsWith(".java"))) {
+    const sourcePath = normalizeRelativePath(sourceFile);
+    const source = readFileSync(sourceFile, "utf8");
+    const leakageReasons = [];
+    if (path.basename(sourceFile).endsWith("Demo.java")) {
+      leakageReasons.push("*Demo.java dosyası");
+    }
+    if (
+      /^\s*(?:(?:public|protected|private|static|abstract|final|sealed|non-sealed)\s+)*class\s+Demo[A-Za-z0-9_$]*\b/m
+        .test(source)
+    ) {
+      leakageReasons.push("adı Demo ile başlayan sınıf");
+    }
+    if (leakageReasons.length) {
+      errors.push(
+        `${sourcePath}: domain paketinde demo sızıntısı (${leakageReasons.join(", ")})`,
+      );
+    }
+  }
+}
+
 const catalogSourcePath = path.join(
   repositoryRoot,
   "src",
@@ -353,6 +521,45 @@ if (!existsSync(catalogSourcePath)) {
     errors.push(
       "PatternCatalog kayıtları kanonik envanterle aynı slug, aile ve sırada değil",
     );
+  }
+
+  const catalogDemoImports = [
+    ...catalogSource.matchAll(
+      /^import\s+(com\.can\.demo\.[A-Za-z0-9_$.]+)\s*;/gm,
+    ),
+  ].map((match) => match[1]);
+  const expectedCatalogImports = new Set(
+    canonicalDemos.map(({ fqcn }) => fqcn),
+  );
+  if (
+    catalogDemoImports.length !== canonicalDemos.length
+    || new Set(catalogDemoImports).size !== canonicalDemos.length
+  ) {
+    errors.push(
+      "PatternCatalog içinde 22 benzersiz kanonik demo import'u "
+        + `bekleniyordu, bulunan ${catalogDemoImports.length}`,
+    );
+  }
+  for (const importedDemo of catalogDemoImports) {
+    if (!expectedCatalogImports.has(importedDemo)) {
+      errors.push(`PatternCatalog: kanonik olmayan demo import'u ${importedDemo}`);
+    }
+  }
+  for (const demo of canonicalDemos) {
+    if (!catalogDemoImports.includes(demo.fqcn)) {
+      errors.push(`PatternCatalog: ${demo.fqcn} import'u eksik`);
+    }
+    const runReference = new RegExp(
+      `\\b${escapeRegExp(demo.className)}\\s*::\\s*run\\b`,
+      "g",
+    );
+    const usageCount = [...catalogSource.matchAll(runReference)].length;
+    if (usageCount !== 1) {
+      errors.push(
+        `PatternCatalog: ${demo.className}::run bir kez kullanılmalı, `
+          + `bulunan ${usageCount}`,
+      );
+    }
   }
 }
 

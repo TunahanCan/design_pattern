@@ -89,13 +89,19 @@ Sınırlar:
 
 ## Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.flyweight.FlyweightPatternDemo`
+FQCN'indedir. Sınıf yalnız `TreeFactory` ile `Forest` graph'ını kuran ve paylaşım
+oranını gösteren **composition root / example driver**'dır; Flyweight rolü değildir.
+Intrinsic/extrinsic state modeli `com.can.structural.flyweight` paketinde sunum
+kodundan bağımsız kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
 | Client / container | `Forest` | Context oluşturur ve flyweight factory'yi kullanır |
 | Context | `Tree` | `x`, `y` ve `TreeType` referansını taşır |
 | Flyweight | `TreeType` | Ortak name/color/texture verisini ve draw davranışını taşır |
 | Flyweight Factory | `TreeFactory` | Anahtara göre `TreeType` üretir veya reuse eder |
-| Demo | `FlyweightPatternDemo` | 15 context ve 3 unique type örneğini gösterir |
+| Composition root / example driver | `com.can.demo.structural.flyweight.FlyweightPatternDemo` | 15 context ve 3 unique type örneğini gösterir |
 
 `TreeType` `final`, alanları `final` ve Stringler immutable olduğu için örnekte
 paylaşılabilir durumdadır. `signature()` yalnız okunabilir gösterimdir; delimiter

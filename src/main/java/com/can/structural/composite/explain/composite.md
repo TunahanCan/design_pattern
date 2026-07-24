@@ -94,9 +94,15 @@ Bu çözümün sınırı:
 
 ## Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.composite.CompositePatternDemo`
+FQCN'indedir. Sınıf, örnek sipariş ağacını kuran ve kök operasyona çağrı yapan
+**composition root / example driver**'dır; `Component`, `Leaf` veya `Composite`
+rollerinden biri değildir. Ağaç modeli `com.can.structural.composite` paketinde
+sunum kodundan bağımsız kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `CompositePatternDemo` | Sipariş ağacını kurup kökten fiyat ister |
+| Composition root / example driver | `com.can.demo.structural.composite.CompositePatternDemo` | Örnek ağacı kurup client çağrısını görünür kılar |
 | Component | `OrderComponent` | Geriye uyumlu `getPrice()`, exact `getPriceAmount()` ve `getName()` kontratı |
 | Leaf | `Product` | `BigDecimal` fiyatını ve adını döndürür |
 | Composite | `Box` | Çocukları yönetir, exact fiyatları ve packaging cost'u toplar |

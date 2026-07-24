@@ -3,6 +3,14 @@
 > Bu bölüm repodaki mini editörü temel alır.
 > Undo ve macro fikrini öğretir; mevcut implementasyon tam özellikli bir editör geçmişi değildir.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.command` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.command.CommandPatternDemo` sınıfıdır.
+- Demo; receiver, command, history ve invoker nesnelerini örnek veriyle bağlar. Bu wiring öğretim senaryosudur; `Command`, concrete command’lar ve `EditorToolbar` demo paketine bağımlı değildir.
+
+Production uygulamasında aynı domain nesneleri UI framework’ünün veya dependency-injection katmanının composition root’unda bağlanır. Testler demo çıktısını değil command/receiver/history kontratlarını doğrudan doğrular.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -82,7 +90,7 @@ Command tek başına:
 | Paylaşılan context | `ApplicationContext` | Clipboard state’ini tutar |
 | Invoker | `EditorToolbar` | Buton adı ile komutu eşler ve çalıştırır |
 | History | `CommandHistory` | Undo edilebilir komutları stack’te tutar |
-| Client | `CommandPatternDemo` | Nesneleri üretip birbirine bağlar |
+| Demo composition root | `com.can.demo.behavioral.command.CommandPatternDemo` | Nesneleri üretip birbirine bağlar |
 
 ## Yapı
 

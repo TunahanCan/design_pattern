@@ -25,6 +25,18 @@ Bu kitap bir “pattern kataloğu” olmanın ötesinde, repodaki çalışan kod
 
 Bu repoda GoF kataloğundaki 23 desenin 22’si bulunur. Davranışsal ailedeki **Interpreter** örneği bu çalışmanın kapsamında değildir. Aşağıdaki bütün anlatımlar yalnızca repoda gerçekten bulunan örneklerle eşleştirilmiştir.
 
+## İki okuma yüzeyi
+
+| Yüzey | Güçlü olduğu kullanım | Görsel davranış |
+|---|---|---|
+| `docs/design-patterns-java.pdf` | Baskı, tablet kalemi, sayfa referansı ve kesintisiz uzun okuma | Diyagramlar statik ve yüksek çözünürlüklüdür; hareket anlamı ok sırası ve numaralı storyboard ile kurulur |
+| `docs/design-patterns-java.html` | Tarayıcıda çevrimdışı çalışma ve ekrandan keşif | Görünür alandaki bağlantılar çizgi anlamı bozulmadan ritmik vurgulanır; azaltılmış hareket tercihi desteklenir |
+
+PDF dosya biçimi güvenilir animasyon taşımaz. Bu yüzden öğrenme anlamı harekete
+bağımlı değildir: aynı sıra, durum ve karşılaştırma bilgisi statik diyagramda da
+tamdır. HTML hareketi yalnızca dikkat yönlendiren, kapatılabilir ikinci bir
+katmandır.
+
 ## Hızlı başlangıç
 
 Proje Java 21 hedefler. Önce Maven’in doğru JDK ile çalıştığını doğrula:
@@ -88,8 +100,11 @@ Bir pattern’i yalnız açıklamasından okumak yerine üç dosya türü arası
 explain/<pattern>.md
         │  “Neden ve hangi bedelle?”
         ▼
-<Pattern>Demo.java + domain sınıfları
-        │  “Kim, kime, ne zaman çağrı yapıyor?”
+com.can.demo.<family>.<pattern>/<Pattern>Demo.java
+        │  “Örnek nesne graph’ı nasıl kuruluyor?”
+        ▼
+com.can.<family>.<pattern>/domain sınıfları
+        │  “Kim, kime, hangi sözleşmeyle çağrı yapıyor?”
         ▼
 <Pattern>DemoTest.java
            “Hangi davranış gerçekten kanıtlanıyor?”
@@ -102,7 +117,91 @@ explain/<pattern>.md
 - Üçüncü turda test adlarını bir gereksinim listesi gibi oku.
 - Son turda “production hardening” bölümünden bir madde seçip kendin uygula.
 
-> **Paket adı notu:** Davranışsal örnekler mevcut kodda `com.can.behavirol` altında duruyor. İngilizce doğru yazım `behavioral` olsa da bu kitap, çalışan paket ve import yollarıyla birebir eşleşmek için mevcut adı korur. Yeniden adlandırma ayrı ve kırıcı olabilecek bir refactoring’dir.
+> **Paket adı notu:** Davranışsal domain kodu geçmişten gelen
+> `com.can.behavirol` yolunda korunur. Çalıştırma/composition sınıfları ise domain
+> modelinden ayrıdır ve doğru yazımla `com.can.demo.behavioral` altında yaşar.
+> Böylece eski domain API’sini kırmadan yeni sınırın adını doğru kurarız.
+
+# Öğrenme bilimiyle çalışma protokolü
+
+Bu kitabın görsel ve uygulamalı yapısı “daha renkli görünmek” için kurulmadı.
+Amaç; yeni başlayan birinin aynı anda domain, sınıf rolleri, çağrı sırası ve
+trade-off düşünürken oluşan gereksiz bilişsel yükü azaltmak, ardından bilgiyi
+pasif okumadan aktif geri çağırmaya taşımaktır.
+
+Buradaki protokol, yazılım pattern’leri üzerinde doğrudan yapılmış tek bir
+deneyin sonucu değildir. Farklı öğrenme görevlerindeki araştırma bulgularından
+yazılım eğitimine yapılan, sınırları açık bir pedagojik uyarlamadır.
+
+<section class="learning-lab">
+  <span class="learning-lab-kicker">ÖĞRENME LABORATUVARI</span>
+  <strong>Önce tahmin et · sonra çalışan örneği izle · kitabı kapatıp geri çağır · benzer desenle karşılaştır</strong>
+  <p>Bir bölümü “okudum” diye değil, yeni bir gereksinimde doğru deseni gerekçesi ve bedeliyle seçebildiğinde tamamlanmış say.</p>
+</section>
+
+## Dört kanıt-temelli öğrenme hareketi
+
+| Hareket | Bu kitapta karşılığı | Uygulama biçimi | Araştırma sınırı |
+|---|---|---|---|
+| **Worked example** | “Kodu adım adım okuma” ve execution trace | Önce tamamlanmış akışı izle; sonra bir adımı kapatıp kendin tamamla | Etki özellikle acemiler ve benzer yapıya transfer için gösterilmiştir; uzmanlaştıkça rehberlik azaltılmalıdır |
+| **Retrieval practice** | 30 saniyelik kartı kapattıktan sonra niyet/bedel/rol soruları | Metne bakmadan deseni bir dakika içinde anlat; sonra cevabı karşılaştır | Anında akıcılık ile gecikmeli hatırlama aynı şey değildir |
+| **Spacing** | Aynı desene farklı günlerde kısa dönüşler | Tek oturumda tekrar okumak yerine gecikmeli mini tekrar yap | Tek bir evrensel “1-3-7” takvimi yoktur; uygun aralık hedeflenen saklama süresine bağlıdır |
+| **Interleaving** | En çok karıştırılan desenleri birlikte çözme | Strategy–State–Template veya Adapter–Decorator–Proxy sorularını karışık sırada çöz | İlk çalışma daha zor hissedilebilir; amaç yalnız hız değil, doğru problem türünü ayırt etmektir |
+
+Worked-example araştırmaları, acemi problem çözücülerde tamamlanmış çözüm
+adımlarının doğrudan problem aramaya göre şema edinimini kolaylaştırabildiğini
+gösterir. Bu nedenle kitap önce çalışan örneği görünür kılar, sonra “tamamlama”
+ve bağımsız alıştırmaya geçer. Geri çağırma araştırmaları ise tekrar okumanın
+yüksek güven hissi üretebilmesine rağmen gecikmeli hatırlamada kendini sınamanın
+daha etkili olabildiğini gösterir. Bu yüzden bölüm sonu soruları sınav değil,
+öğrenme adımıdır.
+
+## Beş geçişli pattern oturumu
+
+```mermaid
+flowchart LR
+    P["1 · TAHMİN<br/>Problem metninden pattern adını kapat"] --> W["2 · İZLE<br/>Worked example ve çağrı akışı"]
+    W --> C["3 · TAMAMLA<br/>Bir rolü veya testi kendin yaz"]
+    C --> R["4 · GERİ ÇAĞIR<br/>Kitabı kapat; niyet + bedel + roller"]
+    R --> I["5 · KARIŞTIR<br/>Benzer iki pattern ile karşılaştır"]
+    I -. "gecikmeli kısa tekrar" .-> P
+```
+
+Her geçişte sorulacak soru farklıdır:
+
+1. **Tahmin:** “Problemde gerçekten değişen karar ne?”
+2. **İzle:** “Hangi nesne hangi somut türü biliyor ve neden?”
+3. **Tamamla:** “Bir varyant eklesem hangi dosyalar değişir?”
+4. **Geri çağır:** “Pattern’in kazancı ve ödediğim tasarım vergisi ne?”
+5. **Karıştır:** “En benzer pattern neden burada yanlış seçim olur?”
+
+## Gecikmeli tekrar için pratik varsayılan
+
+Bu tablo bilimsel olarak tek doğru takvim iddiası taşımaz; çalışma alışkanlığı
+kurmak için başlangıç ayarıdır. Hedeflediğin hatırlama süresi uzadıkça aralığı
+ve bağlam çeşitliliğini artır.
+
+| Zaman | Kitaba bakmadan görev | Kanıt |
+|---|---|---|
+| Aynı oturumun sonu | Pattern’i 60 saniyede niyet → roller → bedel sırasıyla anlat | Eksik kalan kavramları hemen bul |
+| 2–3 gün sonra | Aynı aileden iki pattern’i örneksiz karşılaştır | Ayırt edici ipucunu geri çağır |
+| Yaklaşık 1 hafta sonra | Test adlarından sınıf işbirliğini yeniden çiz | Davranış sözleşmesini yapıya bağla |
+| 2–4 hafta sonra | Yeni bir domain gereksinimine pattern seç; “kullanmama” gerekçesini de yaz | Transfer ve aşırı pattern kullanımını sınama |
+
+## Kaynak notları
+
+- Henry L. Roediger III ve Jeffrey D. Karpicke, geri çağırma testlerinin gecikmeli
+  hatırlamadaki etkisini eğitimsel metinlerle iki deneyde inceledi:
+  [Test-Enhanced Learning (2006)](https://doi.org/10.1111/j.1467-9280.2006.01693.x).
+- Nicholas J. Cepeda ve çalışma arkadaşları, dağıtılmış alıştırma literatürünü
+  nicel olarak sentezledi:
+  [Distributed Practice in Verbal Recall Tasks (2006)](https://doi.org/10.1037/0033-2909.132.3.354).
+- Doug Rohrer ve Kelli Taylor, matematik problemlerinde aralıklı ve karışık
+  alıştırmayı iki deneyle karşılaştırdı:
+  [The Shuffling of Mathematics Problems Improves Learning (2007)](https://doi.org/10.1007/s11251-007-9015-8).
+- John Sweller ve Graham Cooper, acemilerde worked-example yaklaşımını cebir
+  görevleri üzerinde bir deney serisiyle inceledi:
+  [The Use of Worked Examples as a Substitute for Problem Solving in Learning Algebra (1985)](https://doi.org/10.1207/s1532690xci0201_3).
 
 ## Örnekleri üç katmanda okumak
 
@@ -120,23 +219,51 @@ güçlendirilmiş örnek mekanizmanın gerçek bir gereksinim altında neden var
 olduğunu gösterir; production notu ise eğitim koduyla ürün garantisini birbirine
 karıştırmayı önler.
 
-## Çalıştırılabilir katalog nasıl gruplanıyor?
+## Demo, domain ve test sınırı
 
 ```mermaid
-flowchart LR
-    CLI["Main argümanı<br/>all · aile · pattern slug"] --> Catalog[PatternCatalog]
-    Catalog --> C["Creational<br/>5 örnek"]
-    Catalog --> S["Structural<br/>7 örnek"]
-    Catalog --> B["Behavioral<br/>10 örnek"]
-    C --> C1["Factory Method … Singleton"]
-    S --> S1["Adapter … Proxy"]
-    B --> B1["Chain of Responsibility … Visitor"]
+flowchart TB
+    CLI["Main<br/>all · aile · pattern slug"] --> Catalog["PatternCatalog<br/>22 kayıt"]
+
+    subgraph Composition["com.can.demo — composition roots"]
+        CD["creational<br/>5 demo"]
+        SD["structural<br/>7 demo"]
+        BD["behavioral<br/>10 demo"]
+    end
+
+    subgraph Domain["Pattern/domain kodu"]
+        C["com.can.creational"]
+        S["com.can.structural"]
+        B["com.can.behavirol"]
+    end
+
+    Tests["src/test/java<br/>davranış sözleşmeleri"]
+
+    Catalog --> CD
+    Catalog --> SD
+    Catalog --> BD
+    CD --> C
+    SD --> S
+    BD --> B
+    Tests -. "doğrudan doğrular" .-> C
+    Tests -. "doğrudan doğrular" .-> S
+    Tests -. "doğrudan doğrular" .-> B
 ```
+
+Ok yönü burada bağımlılık yönüdür: demo sınıfları domain nesne graph’ını kurar;
+domain kodu demoyu bilmez. Testler de demoyu çalıştırarak dolaylı sonuç
+aramak yerine ilgili domain sözleşmesini doğrudan kurup doğrular. Bu ayrım üç
+kazanç sağlar:
+
+1. Eğitim senaryosunu değiştirmek pattern uygulamasını kirletmez.
+2. Domain sınıfları başka bir CLI, web veya test composition root’unda yeniden
+   kullanılabilir.
+3. Test hatası “sunum kodu mu, davranış sözleşmesi mi?” belirsizliğini azaltır.
 
 `Main`, 22 somut demo importunu ve sırasını taşımak yerine seçim davranışını
 `PatternCatalog` üzerinden yürütür. Katalog metadata ile çalıştırılabilir
-davranışı yan yana tutar; benzersiz slug, aile dağılımı ve değiştirilemez
-envanter sözleşmeleri `PatternCatalogTest` içinde ayrıca doğrulanır.
+davranışı yan yana tutar; benzersiz slug, aile dağılımı, demo paket sınırı ve
+değiştirilemez envanter sözleşmeleri otomatik doğrulamalarda korunur.
 
 ## Kısa terminoloji
 
@@ -596,18 +723,25 @@ Pattern Markdown’ları güncellendikten sonra birleşik kitabı üret:
 node scripts/validate-learning-content.mjs
 ```
 
-Node.js 22+, npm/npx, yerel Chrome/Chromium, internet bağlantısı ve macOS’taki
-Swift/PDFKit araçlarıyla görsel PDF’i yeniden oluştur:
+Node.js 22+, npm/npx, yerel Chrome/Chromium ve internet bağlantısıyla görsel
+çıktıları yeniden oluştur:
 
 ```bash
 node scripts/render-book.mjs
 ```
 
-Birleşik Markdown çıktısı `BOOK.md`, görsel olarak doğrulanacak PDF çıktısı ise `docs/design-patterns-java.pdf` dosyasıdır.
-PDFKit adımı tıklanabilir bölüm bağlantılarını denetler ve 22 bölümlük yer imi ağacını ekler.
+Birleşik Markdown çıktısı `BOOK.md`, hareket ve klavye odağı içeren çevrimdışı
+ekran çıktısı `docs/design-patterns-java.html`, baskı çıktısı ise
+`docs/design-patterns-java.pdf` dosyasıdır. Render aşaması tüm Mermaid
+diyagramlarını gerçek tarayıcıda parse eder; yerel bağlantı, taşma ve bölüm hedefi
+kontrolleri temizlenmeden çıktı yayımlanmaz.
+
+macOS’ta Swift/PDFKit, 22 bölümü ailelere ayıran özel outline’ı ekler ve PDF’i
+yapısal olarak denetler. Diğer platformlarda Chrome erişilebilir outline üretir;
+`pdfinfo`, `pdftotext` ve `pdftohtml` tabanlı taşınabilir denetim sayfa ölçüsünü,
+başlıkları, metin bütünlüğünü, iç bağlantıları ve yer imlerini kontrol eder.
 İçerik validator'ı kanonik 22 pattern sırasını, manifest/katalog/atlas
-eşleşmesini ve Markdown fence yapısını kontrol eder. Mermaid sözdiziminin tam
-parse/render doğrulaması PDF üretim aşamasında gerçekleştirilir.
+eşleşmesini, demo/domain sınırını ve Markdown fence yapısını kontrol eder.
 
 ---
 

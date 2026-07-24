@@ -3,6 +3,14 @@
 > Bu bölüm repodaki çalışan örneği anlatır.
 > Güvenlik isimleri taşısa da kod bir eğitim demosudur; production güvenlik katmanı değildir.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desenin üretim kodu `com.can.behavirol.chainofresponsibility` paketindedir.
+- Çalıştırılabilir senaryo `com.can.demo.behavioral.chainofresponsibility.ChainOfResponsibilityDemo` sınıfındadır; demo paketi pattern rollerinin parçası değildir.
+- Zincirin handler sırası, public `com.can.behavirol.chainofresponsibility.OrderRequestChainFactory` adlı composition factory içinde tanımlıdır. Demo yalnız concrete bağımlılıkları üretip bu factory’yi çağırır; testler de demo içindeki bir yardımcı metoda değil aynı public composition API’sine bağlanır.
+
+Bu ayrım, “deseni kullanan örnek uygulama” ile “desenin yeniden kullanılabilir modeli”ni fiziksel olarak görünür kılar. Gerçek uygulamada en dış composition root; repository, rate limiter ve cache implementasyonlarını configuration/DI üzerinden seçer, factory ise güvenlik açısından anlamlı handler sırasını tek yerde korur.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -49,7 +57,8 @@ Handler kendi sorumluluğunu yerine getirir ve iki sonuçtan birini seçer:
 - `checkNext(request)` ile sonraki handler’a geçirmek.
 
 `BaseOrderRequestHandler`, `next` referansını ve varsayılan geçiş davranışını tek yerde toplar.
-Client olan `ChainOfResponsibilityDemo`, concrete handler’ları çalışma anında sıraya dizer.
+`OrderRequestChainFactory`, concrete handler’ları çalışma anında sıraya dizer.
+Demo client bu topolojiyi yeniden yazmak yerine factory’den zincir kökünü ister.
 
 ### Çözmediği şeyler
 
@@ -81,7 +90,8 @@ Pattern iletişim yapısını düzenler; iş kurallarının doğruluğu yine gel
 | Sonuç modeli | `OrderRequestOutcome` | `PROCESSED`, `REJECTED` ve `DUPLICATE` nedenlerini ayırır |
 | Destek nesnesi | `LoginAttemptService` | IP başına başarısız deneme sayısını tutar |
 | Destek nesnesi | `RequestCache` | Başarılı istek imzalarını `Set` içinde saklar |
-| Client | `ChainOfResponsibilityDemo` | Zinciri kurar ve örnek istekleri gönderir |
+| Composition factory | `OrderRequestChainFactory` | Handler’ları güvenlik açısından anlamlı sırada bağlar ve zincir kökünü döndürür |
+| Demo composition root | `com.can.demo.behavioral.chainofresponsibility.ChainOfResponsibilityDemo` | Concrete bağımlılıkları üretir ve örnek istekleri gönderir |
 
 ## Yapı
 
@@ -116,6 +126,10 @@ classDiagram
         REJECTED
         DUPLICATE
     }
+    class OrderRequestChainFactory {
+        <<composition factory>>
+        +create(userRepository, loginAttemptService, cache) OrderRequestHandler
+    }
     OrderRequestHandler <|.. BaseOrderRequestHandler
     BaseOrderRequestHandler <|-- RequestValidationHandler
     BaseOrderRequestHandler <|-- BruteForceProtectionHandler
@@ -126,6 +140,7 @@ classDiagram
     BaseOrderRequestHandler <|-- OrderProcessingHandler
     OrderRequestHandler ..> OrderRequest : handles
     OrderRequest --> OrderRequestOutcome : current result
+    OrderRequestChainFactory ..> OrderRequestHandler : creates ordered chain
 ```
 
 ## Gerçek çalışma akışı
@@ -180,7 +195,8 @@ Bu son nokta önemlidir: örnek gerçek bir “sonuç cache’i” değil, tekra
 
 ## API, invariant ve sonuç semantiği
 
-- Zincirin kökü `buildChain` tarafından döndürülen `RequestValidationHandler`dır.
+- Zincirin kökü `OrderRequestChainFactory.create(...)` tarafından döndürülen `RequestValidationHandler`dır.
+- Factory zorunlu `UserRepository`, `LoginAttemptService` ve `RequestCache` bağımlılıklarını null kabul etmez.
 - Null request sonuç yazılabilecek context olmadığı için açık `IllegalArgumentException` üretir.
 - Null/blank username, password, IP veya payload ile null operation `REJECTED` olur; sonraki handler’lar çağrılmaz.
 - Validation ilk hatayı deterministik alan sırasıyla raporlar.
@@ -205,7 +221,7 @@ Production API’sinde sonucu mutable request’e yazmak yerine, handler’dan t
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
-| `RequestValidation` | Eksik alanın zincirin başında typed ret olması; null request ve geçersiz brute-force eşiğinin fail-fast davranışı |
+| `RequestValidation` | Public composition factory’nin validation-first kökü; eksik alanın zincirin başında typed ret olması; null request ve geçersiz brute-force eşiğinin fail-fast davranışı |
 | `SuccessfulRequests` | Create başarısı, admin erişimi, payload mutation |
 | `RejectedRequests` | Yanlış parola, yetki reddi, deneme eşiği, başarılı login reset’i ve sanitization sonrası boş payload |
 | `CacheShortCircuit` | İlk çağrı/tekrar sonucu ve payload’a bağlı imza |

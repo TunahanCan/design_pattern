@@ -20,6 +20,12 @@
       --warning: #9a5a13;
       --warning-soft: #fff6df;
       --danger: #9b2c2c;
+      --creational-a: #5f3214;
+      --creational-b: #a45a18;
+      --structural-a: #123a55;
+      --structural-b: #08767c;
+      --behavioral-a: #3d2d65;
+      --behavioral-b: #7352a5;
     }
 
     * {
@@ -367,7 +373,8 @@
       border-right: 0.25mm solid #dfe4ea;
       border-bottom: 0.25mm solid #dfe4ea;
       text-align: left;
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
+      word-break: normal;
     }
 
     th:last-child,
@@ -402,7 +409,7 @@
       height: 0;
     }
 
-    .chapter-break + h2 {
+    .chapter-break + .pattern-chapter-title {
       position: relative;
       margin-top: 7mm;
       padding: 16mm 8mm 7mm;
@@ -416,9 +423,21 @@
       break-before: page;
       page-break-before: always;
       break-after: avoid-page;
+      scroll-margin-top: 6mm;
     }
 
-    .chapter-break + h2::after {
+    .pattern-chapter-title::before {
+      position: absolute;
+      top: 6mm;
+      left: 8mm;
+      color: rgba(255, 255, 255, 0.82);
+      content: attr(data-chapter-label);
+      font-size: 8pt;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+    }
+
+    .chapter-break + .pattern-chapter-title::after {
       position: absolute;
       top: -18mm;
       right: -13mm;
@@ -427,6 +446,64 @@
       border: 5mm solid rgba(255, 255, 255, 0.12);
       border-radius: 50%;
       content: "";
+    }
+
+    .chapter-break + .family-creational {
+      background: linear-gradient(
+        125deg,
+        var(--creational-a),
+        var(--creational-b)
+      );
+    }
+
+    .chapter-break + .family-structural {
+      background: linear-gradient(
+        125deg,
+        var(--structural-a),
+        var(--structural-b)
+      );
+    }
+
+    .chapter-break + .family-behavioral {
+      background: linear-gradient(
+        125deg,
+        var(--behavioral-a),
+        var(--behavioral-b)
+      );
+    }
+
+    .learning-lab {
+      display: grid;
+      margin: 5mm 0 7mm;
+      padding: 5mm 6mm;
+      border: 0.35mm solid #b8d9d3;
+      border-left: 1.4mm solid var(--teal);
+      border-radius: 2.5mm;
+      gap: 2.2mm;
+      background:
+        linear-gradient(135deg, rgba(229, 243, 240, 0.98), rgba(255, 246, 223, 0.84));
+      box-shadow: 0 1.5mm 5mm rgba(16, 36, 62, 0.08);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .learning-lab-kicker {
+      color: var(--teal);
+      font-size: 7.8pt;
+      font-weight: 850;
+      letter-spacing: 0.16em;
+    }
+
+    .learning-lab strong {
+      color: var(--navy);
+      font-size: 12.5pt;
+      line-height: 1.35;
+    }
+
+    .learning-lab p {
+      margin: 0;
+      color: #34465a;
+      font-size: 9.2pt;
     }
 
     .part-divider {
@@ -495,8 +572,59 @@
     }
 
     @media screen {
+      body {
+        padding-bottom: 20mm;
+      }
+
       main {
         box-shadow: 0 0 18mm rgba(16, 24, 40, 0.18);
+      }
+
+      .pattern-chapter-title,
+      .learning-lab,
+      .mermaid {
+        transition:
+          opacity 420ms ease,
+          transform 420ms ease,
+          box-shadow 220ms ease;
+      }
+
+      .mermaid:hover {
+        border-color: rgba(15, 118, 110, 0.62);
+        box-shadow: 0 2mm 7mm rgba(16, 36, 62, 0.13);
+        outline: none;
+      }
+    }
+
+    @media screen and (prefers-reduced-motion: no-preference) {
+      .revealable {
+        opacity: 0.35;
+        transform: translateY(3mm);
+      }
+
+      .revealable.is-in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .mermaid.is-in-view svg path.flowchart-link,
+      .mermaid.is-in-view svg .edgePath path,
+      .mermaid.is-in-view svg .messageLine0,
+      .mermaid.is-in-view svg .messageLine1 {
+        animation: diagram-pulse 4.8s ease-in-out infinite;
+      }
+    }
+
+    @keyframes diagram-pulse {
+      0%,
+      100% {
+        opacity: 0.76;
+        filter: drop-shadow(0 0 0 rgba(15, 118, 110, 0));
+      }
+
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 0.7px rgba(15, 118, 110, 0.62));
       }
     }
 
@@ -526,6 +654,16 @@
 
       a {
         text-decoration: none;
+      }
+
+      .pattern-chapter-title,
+      .learning-lab,
+      .mermaid,
+      .mermaid svg path {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
       }
     }
   </style>
@@ -582,6 +720,62 @@
         mermaidBlocks.push(wrapper);
       });
 
+      const labelDiagrams = () => {
+        mermaidBlocks.forEach((block, index) => {
+          let previous = block.previousElementSibling;
+          while (previous && !previous.matches("h2, h3, h4")) {
+            previous = previous.previousElementSibling;
+          }
+          const context = previous?.textContent?.trim() || "Tasarım deseni";
+          block.setAttribute("role", "img");
+          block.setAttribute(
+            "aria-label",
+            `${context} — görsel açıklama ${index + 1}`,
+          );
+        });
+      };
+
+      const enableScreenMotion = () => {
+        const visuals = document.querySelectorAll(
+          ".pattern-chapter-title, .learning-lab, .mermaid",
+        );
+        visuals.forEach((visual) => visual.classList.add("revealable"));
+
+        const reducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        if (reducedMotion || typeof IntersectionObserver === "undefined") {
+          visuals.forEach((visual) => visual.classList.add("is-in-view"));
+          return;
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              entry.target.classList.toggle("is-in-view", entry.isIntersecting);
+            });
+          },
+          { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
+        );
+        visuals.forEach((visual) => observer.observe(visual));
+      };
+
+      const restoreDeepLinkAfterLayout = () => {
+        if (!window.location.hash) {
+          return;
+        }
+        let targetId;
+        try {
+          targetId = decodeURIComponent(window.location.hash.slice(1));
+        } catch {
+          targetId = window.location.hash.slice(1);
+        }
+        const target = document.getElementById(targetId);
+        if (target) {
+          requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+        }
+      };
+
       const finish = (status) => {
         document.body.dataset.renderStatus = status;
       };
@@ -634,6 +828,9 @@
         } else {
           try {
             await mermaid.run({ nodes: mermaidBlocks });
+            labelDiagrams();
+            enableScreenMotion();
+            restoreDeepLinkAfterLayout();
             finish("ok");
           } catch (error) {
             document.body.dataset.renderError = String(

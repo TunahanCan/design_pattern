@@ -25,6 +25,18 @@ Bu kitap bir “pattern kataloğu” olmanın ötesinde, repodaki çalışan kod
 
 Bu repoda GoF kataloğundaki 23 desenin 22’si bulunur. Davranışsal ailedeki **Interpreter** örneği bu çalışmanın kapsamında değildir. Aşağıdaki bütün anlatımlar yalnızca repoda gerçekten bulunan örneklerle eşleştirilmiştir.
 
+## İki okuma yüzeyi
+
+| Yüzey | Güçlü olduğu kullanım | Görsel davranış |
+|---|---|---|
+| `docs/design-patterns-java.pdf` | Baskı, tablet kalemi, sayfa referansı ve kesintisiz uzun okuma | Diyagramlar statik ve yüksek çözünürlüklüdür; hareket anlamı ok sırası ve numaralı storyboard ile kurulur |
+| `docs/design-patterns-java.html` | Tarayıcıda çevrimdışı çalışma ve ekrandan keşif | Görünür alandaki bağlantılar çizgi anlamı bozulmadan ritmik vurgulanır; azaltılmış hareket tercihi desteklenir |
+
+PDF dosya biçimi güvenilir animasyon taşımaz. Bu yüzden öğrenme anlamı harekete
+bağımlı değildir: aynı sıra, durum ve karşılaştırma bilgisi statik diyagramda da
+tamdır. HTML hareketi yalnızca dikkat yönlendiren, kapatılabilir ikinci bir
+katmandır.
+
 ## Hızlı başlangıç
 
 Proje Java 21 hedefler. Önce Maven’in doğru JDK ile çalıştığını doğrula:
@@ -88,8 +100,11 @@ Bir pattern’i yalnız açıklamasından okumak yerine üç dosya türü arası
 explain/<pattern>.md
         │  “Neden ve hangi bedelle?”
         ▼
-<Pattern>Demo.java + domain sınıfları
-        │  “Kim, kime, ne zaman çağrı yapıyor?”
+com.can.demo.<family>.<pattern>/<Pattern>Demo.java
+        │  “Örnek nesne graph’ı nasıl kuruluyor?”
+        ▼
+com.can.<family>.<pattern>/domain sınıfları
+        │  “Kim, kime, hangi sözleşmeyle çağrı yapıyor?”
         ▼
 <Pattern>DemoTest.java
            “Hangi davranış gerçekten kanıtlanıyor?”
@@ -102,7 +117,91 @@ explain/<pattern>.md
 - Üçüncü turda test adlarını bir gereksinim listesi gibi oku.
 - Son turda “production hardening” bölümünden bir madde seçip kendin uygula.
 
-> **Paket adı notu:** Davranışsal örnekler mevcut kodda `com.can.behavirol` altında duruyor. İngilizce doğru yazım `behavioral` olsa da bu kitap, çalışan paket ve import yollarıyla birebir eşleşmek için mevcut adı korur. Yeniden adlandırma ayrı ve kırıcı olabilecek bir refactoring’dir.
+> **Paket adı notu:** Davranışsal domain kodu geçmişten gelen
+> `com.can.behavirol` yolunda korunur. Çalıştırma/composition sınıfları ise domain
+> modelinden ayrıdır ve doğru yazımla `com.can.demo.behavioral` altında yaşar.
+> Böylece eski domain API’sini kırmadan yeni sınırın adını doğru kurarız.
+
+# Öğrenme bilimiyle çalışma protokolü
+
+Bu kitabın görsel ve uygulamalı yapısı “daha renkli görünmek” için kurulmadı.
+Amaç; yeni başlayan birinin aynı anda domain, sınıf rolleri, çağrı sırası ve
+trade-off düşünürken oluşan gereksiz bilişsel yükü azaltmak, ardından bilgiyi
+pasif okumadan aktif geri çağırmaya taşımaktır.
+
+Buradaki protokol, yazılım pattern’leri üzerinde doğrudan yapılmış tek bir
+deneyin sonucu değildir. Farklı öğrenme görevlerindeki araştırma bulgularından
+yazılım eğitimine yapılan, sınırları açık bir pedagojik uyarlamadır.
+
+<section class="learning-lab">
+  <span class="learning-lab-kicker">ÖĞRENME LABORATUVARI</span>
+  <strong>Önce tahmin et · sonra çalışan örneği izle · kitabı kapatıp geri çağır · benzer desenle karşılaştır</strong>
+  <p>Bir bölümü “okudum” diye değil, yeni bir gereksinimde doğru deseni gerekçesi ve bedeliyle seçebildiğinde tamamlanmış say.</p>
+</section>
+
+## Dört kanıt-temelli öğrenme hareketi
+
+| Hareket | Bu kitapta karşılığı | Uygulama biçimi | Araştırma sınırı |
+|---|---|---|---|
+| **Worked example** | “Kodu adım adım okuma” ve execution trace | Önce tamamlanmış akışı izle; sonra bir adımı kapatıp kendin tamamla | Etki özellikle acemiler ve benzer yapıya transfer için gösterilmiştir; uzmanlaştıkça rehberlik azaltılmalıdır |
+| **Retrieval practice** | 30 saniyelik kartı kapattıktan sonra niyet/bedel/rol soruları | Metne bakmadan deseni bir dakika içinde anlat; sonra cevabı karşılaştır | Anında akıcılık ile gecikmeli hatırlama aynı şey değildir |
+| **Spacing** | Aynı desene farklı günlerde kısa dönüşler | Tek oturumda tekrar okumak yerine gecikmeli mini tekrar yap | Tek bir evrensel “1-3-7” takvimi yoktur; uygun aralık hedeflenen saklama süresine bağlıdır |
+| **Interleaving** | En çok karıştırılan desenleri birlikte çözme | Strategy–State–Template veya Adapter–Decorator–Proxy sorularını karışık sırada çöz | İlk çalışma daha zor hissedilebilir; amaç yalnız hız değil, doğru problem türünü ayırt etmektir |
+
+Worked-example araştırmaları, acemi problem çözücülerde tamamlanmış çözüm
+adımlarının doğrudan problem aramaya göre şema edinimini kolaylaştırabildiğini
+gösterir. Bu nedenle kitap önce çalışan örneği görünür kılar, sonra “tamamlama”
+ve bağımsız alıştırmaya geçer. Geri çağırma araştırmaları ise tekrar okumanın
+yüksek güven hissi üretebilmesine rağmen gecikmeli hatırlamada kendini sınamanın
+daha etkili olabildiğini gösterir. Bu yüzden bölüm sonu soruları sınav değil,
+öğrenme adımıdır.
+
+## Beş geçişli pattern oturumu
+
+```mermaid
+flowchart LR
+    P["1 · TAHMİN<br/>Problem metninden pattern adını kapat"] --> W["2 · İZLE<br/>Worked example ve çağrı akışı"]
+    W --> C["3 · TAMAMLA<br/>Bir rolü veya testi kendin yaz"]
+    C --> R["4 · GERİ ÇAĞIR<br/>Kitabı kapat; niyet + bedel + roller"]
+    R --> I["5 · KARIŞTIR<br/>Benzer iki pattern ile karşılaştır"]
+    I -. "gecikmeli kısa tekrar" .-> P
+```
+
+Her geçişte sorulacak soru farklıdır:
+
+1. **Tahmin:** “Problemde gerçekten değişen karar ne?”
+2. **İzle:** “Hangi nesne hangi somut türü biliyor ve neden?”
+3. **Tamamla:** “Bir varyant eklesem hangi dosyalar değişir?”
+4. **Geri çağır:** “Pattern’in kazancı ve ödediğim tasarım vergisi ne?”
+5. **Karıştır:** “En benzer pattern neden burada yanlış seçim olur?”
+
+## Gecikmeli tekrar için pratik varsayılan
+
+Bu tablo bilimsel olarak tek doğru takvim iddiası taşımaz; çalışma alışkanlığı
+kurmak için başlangıç ayarıdır. Hedeflediğin hatırlama süresi uzadıkça aralığı
+ve bağlam çeşitliliğini artır.
+
+| Zaman | Kitaba bakmadan görev | Kanıt |
+|---|---|---|
+| Aynı oturumun sonu | Pattern’i 60 saniyede niyet → roller → bedel sırasıyla anlat | Eksik kalan kavramları hemen bul |
+| 2–3 gün sonra | Aynı aileden iki pattern’i örneksiz karşılaştır | Ayırt edici ipucunu geri çağır |
+| Yaklaşık 1 hafta sonra | Test adlarından sınıf işbirliğini yeniden çiz | Davranış sözleşmesini yapıya bağla |
+| 2–4 hafta sonra | Yeni bir domain gereksinimine pattern seç; “kullanmama” gerekçesini de yaz | Transfer ve aşırı pattern kullanımını sınama |
+
+## Kaynak notları
+
+- Henry L. Roediger III ve Jeffrey D. Karpicke, geri çağırma testlerinin gecikmeli
+  hatırlamadaki etkisini eğitimsel metinlerle iki deneyde inceledi:
+  [Test-Enhanced Learning (2006)](https://doi.org/10.1111/j.1467-9280.2006.01693.x).
+- Nicholas J. Cepeda ve çalışma arkadaşları, dağıtılmış alıştırma literatürünü
+  nicel olarak sentezledi:
+  [Distributed Practice in Verbal Recall Tasks (2006)](https://doi.org/10.1037/0033-2909.132.3.354).
+- Doug Rohrer ve Kelli Taylor, matematik problemlerinde aralıklı ve karışık
+  alıştırmayı iki deneyle karşılaştırdı:
+  [The Shuffling of Mathematics Problems Improves Learning (2007)](https://doi.org/10.1007/s11251-007-9015-8).
+- John Sweller ve Graham Cooper, acemilerde worked-example yaklaşımını cebir
+  görevleri üzerinde bir deney serisiyle inceledi:
+  [The Use of Worked Examples as a Substitute for Problem Solving in Learning Algebra (1985)](https://doi.org/10.1207/s1532690xci0201_3).
 
 ## Örnekleri üç katmanda okumak
 
@@ -120,23 +219,51 @@ güçlendirilmiş örnek mekanizmanın gerçek bir gereksinim altında neden var
 olduğunu gösterir; production notu ise eğitim koduyla ürün garantisini birbirine
 karıştırmayı önler.
 
-## Çalıştırılabilir katalog nasıl gruplanıyor?
+## Demo, domain ve test sınırı
 
 ```mermaid
-flowchart LR
-    CLI["Main argümanı<br/>all · aile · pattern slug"] --> Catalog[PatternCatalog]
-    Catalog --> C["Creational<br/>5 örnek"]
-    Catalog --> S["Structural<br/>7 örnek"]
-    Catalog --> B["Behavioral<br/>10 örnek"]
-    C --> C1["Factory Method … Singleton"]
-    S --> S1["Adapter … Proxy"]
-    B --> B1["Chain of Responsibility … Visitor"]
+flowchart TB
+    CLI["Main<br/>all · aile · pattern slug"] --> Catalog["PatternCatalog<br/>22 kayıt"]
+
+    subgraph Composition["com.can.demo — composition roots"]
+        CD["creational<br/>5 demo"]
+        SD["structural<br/>7 demo"]
+        BD["behavioral<br/>10 demo"]
+    end
+
+    subgraph Domain["Pattern/domain kodu"]
+        C["com.can.creational"]
+        S["com.can.structural"]
+        B["com.can.behavirol"]
+    end
+
+    Tests["src/test/java<br/>davranış sözleşmeleri"]
+
+    Catalog --> CD
+    Catalog --> SD
+    Catalog --> BD
+    CD --> C
+    SD --> S
+    BD --> B
+    Tests -. "doğrudan doğrular" .-> C
+    Tests -. "doğrudan doğrular" .-> S
+    Tests -. "doğrudan doğrular" .-> B
 ```
+
+Ok yönü burada bağımlılık yönüdür: demo sınıfları domain nesne graph’ını kurar;
+domain kodu demoyu bilmez. Testler de demoyu çalıştırarak dolaylı sonuç
+aramak yerine ilgili domain sözleşmesini doğrudan kurup doğrular. Bu ayrım üç
+kazanç sağlar:
+
+1. Eğitim senaryosunu değiştirmek pattern uygulamasını kirletmez.
+2. Domain sınıfları başka bir CLI, web veya test composition root’unda yeniden
+   kullanılabilir.
+3. Test hatası “sunum kodu mu, davranış sözleşmesi mi?” belirsizliğini azaltır.
 
 `Main`, 22 somut demo importunu ve sırasını taşımak yerine seçim davranışını
 `PatternCatalog` üzerinden yürütür. Katalog metadata ile çalıştırılabilir
-davranışı yan yana tutar; benzersiz slug, aile dağılımı ve değiştirilemez
-envanter sözleşmeleri `PatternCatalogTest` içinde ayrıca doğrulanır.
+davranışı yan yana tutar; benzersiz slug, aile dağılımı, demo paket sınırı ve
+değiştirilemez envanter sözleşmeleri otomatik doğrulamalarda korunur.
 
 ## Kısa terminoloji
 
@@ -596,18 +723,25 @@ Pattern Markdown’ları güncellendikten sonra birleşik kitabı üret:
 node scripts/validate-learning-content.mjs
 ```
 
-Node.js 22+, npm/npx, yerel Chrome/Chromium, internet bağlantısı ve macOS’taki
-Swift/PDFKit araçlarıyla görsel PDF’i yeniden oluştur:
+Node.js 22+, npm/npx, yerel Chrome/Chromium ve internet bağlantısıyla görsel
+çıktıları yeniden oluştur:
 
 ```bash
 node scripts/render-book.mjs
 ```
 
-Birleşik Markdown çıktısı `BOOK.md`, görsel olarak doğrulanacak PDF çıktısı ise `docs/design-patterns-java.pdf` dosyasıdır.
-PDFKit adımı tıklanabilir bölüm bağlantılarını denetler ve 22 bölümlük yer imi ağacını ekler.
+Birleşik Markdown çıktısı `BOOK.md`, hareket ve klavye odağı içeren çevrimdışı
+ekran çıktısı `docs/design-patterns-java.html`, baskı çıktısı ise
+`docs/design-patterns-java.pdf` dosyasıdır. Render aşaması tüm Mermaid
+diyagramlarını gerçek tarayıcıda parse eder; yerel bağlantı, taşma ve bölüm hedefi
+kontrolleri temizlenmeden çıktı yayımlanmaz.
+
+macOS’ta Swift/PDFKit, 22 bölümü ailelere ayıran özel outline’ı ekler ve PDF’i
+yapısal olarak denetler. Diğer platformlarda Chrome erişilebilir outline üretir;
+`pdfinfo`, `pdftotext` ve `pdftohtml` tabanlı taşınabilir denetim sayfa ölçüsünü,
+başlıkları, metin bütünlüğünü, iç bağlantıları ve yer imlerini kontrol eder.
 İçerik validator'ı kanonik 22 pattern sırasını, manifest/katalog/atlas
-eşleşmesini ve Markdown fence yapısını kontrol eder. Mermaid sözdiziminin tam
-parse/render doğrulaması PDF üretim aşamasında gerçekleştirilir.
+eşleşmesini, demo/domain sınırını ve Markdown fence yapısını kontrol eder.
 
 ---
 
@@ -620,7 +754,7 @@ parse/render doğrulaması PDF üretim aşamasında gerçekleştirilir.
 <!-- generated-chapter:01 slug:factory-method source:src/main/java/com/can/creational/factorymethod/explain/factorymethod.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-factory-method">Factory Method</h2>
+<h2 id="chapter-factory-method" class="pattern-chapter-title family-creational" data-chapter-label="01 · OLUŞTURUCU">Factory Method</h2>
 
 Factory Method, nesne oluşturma kararını ortak iş akışından ayıran yaratıcı tasarım kalıbıdır. Bu bölümdeki örnek, e-posta, SMS ve push bildirimlerini aynı gönderim akışında buluşturur.
 
@@ -644,7 +778,16 @@ Factory Method, nesne oluşturma kararını ortak iş akışından ayıran yarat
 | **Güçlendirilmiş örnek** | `NotificationService`, `NotificationJob` ve `sendAll(List<NotificationJob>)` | Built-in creator metadata'sı wiring aşamasında, gerçekten üretilen product ise her gönderimde seçilen kanala karşı doğrulanır |
 | **Production sınırı** | `NotificationSender` portunun arkasındaki henüz uygulanmamış altyapı | Retry, timeout, idempotency, outbox, rate limit ve hassas veri maskeleme factory'nin değil teslimat katmanının kararıdır |
 
-`FactoryMethodDemo` bu haritayı iki başlıkla çalıştırır: önce tek EMAIL gönderimi, sonra SMS ve PUSH işlerinden oluşan küçük bir batch.
+`com.can.demo.creational.factorymethod.FactoryMethodDemo` bu haritayı iki başlıkla çalıştırır: önce tek EMAIL gönderimi, sonra SMS ve PUSH işlerinden oluşan küçük bir batch.
+
+### Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Yeniden kullanılabilir product, creator, request ve service sınıfları `com.can.creational.factorymethod` domain paketinde kalır.
+`com.can.demo.creational.factorymethod.FactoryMethodDemo` ise yalnız `main` / `run` giriş noktası ve concrete wiring içerir; bağımlılık yönü **demo → domain** biçimindedir.
+Böylece örneği çalıştıran composition root, uygulamanın kullanacağı Factory Method API'sinin parçasıymış gibi görünmez.
+Diyagramlarda okunabilirlik için bu uzun FQCN yalnız `FactoryMethodDemo` kısa adıyla gösterilir.
+
+`src/test` altındaki `com.can.creational.factorymethod.FactoryMethodDemoTest` çalıştırılabilir demo değil, domain kontrat testidir; product/creator sınırına yakın kalması bu nedenle bilinçlidir.
 
 ### Akılda kalıcı analoji: aynı servis, farklı usta
 
@@ -771,7 +914,7 @@ Constructor, açık built-in metadata ile map anahtarı uyuşmazlığını produ
 | `NotificationService` | Router / client orkestrasyonu | Kanalı kayıtlı creator ile eşler |
 | `NotificationJob` | Batch değer nesnesi | Bir kanal ile o kanala özel isteği tek, doğrulanmış işte gruplar |
 | `NotificationService#sendAll` | Güçlendirilmiş client akışı | İşleri giriş sırasıyla mevcut `send` yoluna aktarır |
-| `FactoryMethodDemo` | Demo client | Tek gönderim ile sıralı iş listesini yan yana çalıştırır |
+| `com.can.demo.creational.factorymethod.FactoryMethodDemo` | Demo / composition root | Concrete creator'ları kurar; tek gönderim ile sıralı iş listesini yan yana çalıştırır |
 
 ### Yapı diyagramı
 
@@ -831,8 +974,24 @@ sequenceDiagram
     Creator->>Creator: selected EMAIL == actual EMAIL
     Creator->>Product: send(request)
     Product->>Product: formatPayload(request)
-    Product->>Sender: send(payload)
+Product->>Sender: send(payload)
 ```
+
+### Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Üretim kararı ortak akıştan bağımsız mı değişiyor?"}
+    A -- Hayır --> B["Doğrudan constructor veya küçük factory"]
+    A -- Evet --> C{"Değişen şey nedir?"}
+    C -- "Tek product varyantı" --> D["Factory Method"]
+    C -- "Uyumlu product ailesi" --> E["Abstract Factory"]
+    C -- "Tek product'ın kurulum adımları" --> F["Builder"]
+    D --> G["Creator üretir; ortak operasyon sabit kalır"]
+```
+
+Bu diyagram sınıf sayısına değil değişim eksenine bakar.
+Yalnız bir `new` çağrısını saklamak için creator hiyerarşisi kurmak Factory Method'un maliyetini üretir, faydasını üretmez.
 
 ### Kodu adım adım okuma
 
@@ -864,7 +1023,7 @@ Her `send(channel, request)` çağrısı seçilen kanalı creator'a geçirir; cr
 
 #### 6. Composition root somut tipleri bilir
 
-`FactoryMethodDemo` üç creator'ı oluşturup map'e koyar. Concrete sınıflardan habersiz olması gereken yer bütün uygulama değil, ortak iş akışıdır.
+`com.can.demo.creational.factorymethod.FactoryMethodDemo` üç creator'ı oluşturup map'e koyar. Concrete sınıflardan habersiz olması gereken yer bütün uygulama değil, ortak iş akışıdır.
 
 #### 7. Gerçekçi batch aynı güvenli yolu tekrar kullanır
 
@@ -981,7 +1140,7 @@ Enum'a bağımlı olmayan bir `NotificationChannelKey` ve registry tasarla; runt
 <!-- generated-chapter:02 slug:abstract-factory source:src/main/java/com/can/creational/abstractfactory/explain/abstractfactory.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-abstract-factory">Abstract Factory</h2>
+<h2 id="chapter-abstract-factory" class="pattern-chapter-title family-creational" data-chapter-label="02 · OLUŞTURUCU">Abstract Factory</h2>
 
 Abstract Factory, birlikte kullanılması gereken ürünleri uyumlu bir aile olarak üretir; bu repoda `Button` ile `Checkbox` LIGHT, DARK ve erişilebilir HIGH_CONTRAST temaları için birlikte oluşturulur.
 
@@ -1005,7 +1164,16 @@ Abstract Factory, birlikte kullanılması gereken ürünleri uyumlu bir aile ola
 | **Güçlendirilmiş örnek** | `HighContrastThemeFactory`, `HighContrastButton`, `HighContrastCheckbox` | Yeni bir erişilebilirlik ailesi eklenirken `GuiFactory` ve `UiScreen` değişmez; yalnız varyantlar ile composition seçimi genişler |
 | **Production sınırı** | `GuiFactoryProvider` + `UiScreen` fail-fast kontrollerinin ötesi | Gerçek component toolkit, design-token doğrulaması, WCAG testleri ve runtime theme cache bu metin tabanlı demoda uygulanmaz |
 
-`AbstractFactoryDemo`, standart LIGHT/DARK ailelerini “temel”, HIGH_CONTRAST ailesini “daha gerçekçi” başlığı altında render eder.
+`com.can.demo.creational.abstractfactory.AbstractFactoryDemo`, standart LIGHT/DARK ailelerini “temel”, HIGH_CONTRAST ailesini “daha gerçekçi” başlığı altında render eder.
+
+### Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Abstract product'lar, üç product ailesi, factory sözleşmesi ve `UiScreen` client'ı `com.can.creational.abstractfactory` domain paketindedir.
+`com.can.demo.creational.abstractfactory.AbstractFactoryDemo` yalnız tema seçimi ile concrete factory wiring'ini yapan çalıştırılabilir composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Bu ayrım, örneği başlatan sınıfı reusable Abstract Factory modelinden uzak tutar ve concrete seçim bilgisinin uygulama sınırında kalmasını görünür yapar.
+Diyagramlarda uzun FQCN yerine kısa `AbstractFactoryDemo` adı kullanılır.
+
+`src/test` altındaki `com.can.creational.abstractfactory.AbstractFactoryDemoTest` bir demo değil, aile uyumu ve client bağımsızlığı için domain kontrat testidir.
 
 ### Akılda kalıcı analoji: takım forma seti
 
@@ -1094,7 +1262,7 @@ Kalıbın sınırı önemlidir:
 | `Theme` | Varyant anahtarı | LIGHT, DARK ve HIGH_CONTRAST seçeneklerini taşır |
 | `GuiFactoryProvider` | Factory seçici | Temayı concrete factory ile eşler |
 | `UiScreen` | Client | Factory'den ürünleri alır ve abstract API ile kullanır |
-| `AbstractFactoryDemo` | Demo / composition root | Üç temayı kurup sonucu yazdırır |
+| `com.can.demo.creational.abstractfactory.AbstractFactoryDemo` | Demo / composition root | Üç concrete tema factory'sini uygulama sınırında seçip sonucu yazdırır |
 
 ### Yapı diyagramı
 
@@ -1157,6 +1325,23 @@ sequenceDiagram
     Screen->>Checkbox: render()
     Screen-->>Client: combined text
 ```
+
+### Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Birden çok product birlikte uyumlu kalmalı mı?"}
+    A -- Hayır --> B{"Yalnız concrete product türü mü değişiyor?"}
+    B -- Evet --> C["Factory Method veya küçük factory"]
+    B -- Hayır --> D["Doğrudan constructor"]
+    A -- Evet --> E{"Aileler aynı değişim eksenini paylaşıyor mu?"}
+    E -- Evet --> F["Abstract Factory"]
+    E -- Hayır --> G["Önce product sınırlarını yeniden tanımla"]
+    F --> H["Client yalnız abstract product'ları görür"]
+```
+
+Abstract Factory'nin sinyali “çok sınıf var” değil, **birlikte değişmesi ve birlikte uyumlu kalması gereken product ailesi** bulunmasıdır.
+Tek ürün türü için aile factory'si kurmak, yeni bir ürün kategorisi eklendiğinde bütün factory'leri değiştirme bedelini gereksiz yere getirir.
 
 ### Kodu adım adım okuma
 
@@ -1295,7 +1480,7 @@ Yanlış eşleşmeyi generic marker ile engelle; sağladığı güvenceyi API ka
 <!-- generated-chapter:03 slug:builder source:src/main/java/com/can/creational/builder/explain/builder.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-builder">Builder</h2>
+<h2 id="chapter-builder" class="pattern-chapter-title family-creational" data-chapter-label="03 · OLUŞTURUCU">Builder</h2>
 
 Builder, çok alanlı bir nesneyi okunabilir adımlarla kurup en sonda tutarlı bir ürün üretir.
 Bu repoda immutable `Report`, nested `Report.Builder` ile oluşturulur.
@@ -1320,7 +1505,16 @@ Bu repoda immutable `Report`, nested `Report.Builder` ile oluşturulur.
 | **Güçlendirilmiş örnek** | `Report#toBuilder()` ve normalize edilen `sections(List)` | Mevcut rapordan yalnız seçilen alanları değişen yeni varyant türetilir; tekli ve toplu section girişleri aynı kurala uyar |
 | **Production sınırı** | `ReportDirector` reçetelerinin ötesi | Cross-field kuralları, localization, kalıcı çıktı formatları ve çok büyük bölüm listelerinde kopyalama maliyeti bu küçük modelde çözülmez |
 
-`BuilderDemo`, custom kurulumu ve iki director reçetesini korurken quarterly rapordan bir executive-summary varyantı da türetir.
+`com.can.demo.creational.builder.BuilderDemo`, custom kurulumu ve iki director reçetesini korurken quarterly rapordan bir executive-summary varyantı da türetir.
+
+### Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Immutable product, nested builder ve tekrar kullanılabilir reçeteler `com.can.creational.builder` domain paketinde kalır.
+`com.can.demo.creational.builder.BuilderDemo` ise `main` / `run` giriş noktalarından bu API'yi kullanan composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Demo sınıfına davranış veya doğrulama kuralı konmaz; bu kurallar `Report.Builder` ve `ReportDirector` içinde test edilebilir kalır.
+Diyagramlarda uzun FQCN yerine kısa `BuilderDemo` adı gösterilir.
+
+`src/test` altındaki `com.can.creational.builder.BuilderDemoTest` çalıştırma demosunu değil, builder ve immutable product kontratlarını doğrular.
 
 ### Akılda kalıcı analoji: kişiselleştirilen sandviç
 
@@ -1397,7 +1591,7 @@ Klasik GoF Builder'daki ayrı `Builder` arayüzü ve birden fazla representation
 | `author(String)` | Build step | Yazarı ayarlar |
 | `build()` | Terminal step | Builder snapshot'ından `Report` üretir |
 | `ReportDirector` | Reçete helper'ı | İki hazır Report kurulumu sunar |
-| `BuilderDemo` | Client | Custom, hazır ve mevcut üründen türetilmiş reçeteleri karşılaştırır |
+| `com.can.demo.creational.builder.BuilderDemo` | Demo / composition root | Custom, hazır ve mevcut üründen türetilmiş reçeteleri karşılaştırır |
 
 ### Yapı diyagramı
 
@@ -1452,6 +1646,22 @@ sequenceDiagram
     Product->>Product: List.copyOf(sections)
     Product-->>Client: immutable Report
 ```
+
+### Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Kurulum çok sayıda isimli veya opsiyonel adımdan mı oluşuyor?"}
+    A -- Evet --> B{"Aynı kurulum reçetesi tekrar ediyor mu?"}
+    B -- Hayır --> C["Builder"]
+    B -- Evet --> D["Builder + Director reçetesi"]
+    A -- Hayır --> E{"Başlangıç noktası hazır runtime şablonu mu?"}
+    E -- Evet --> F["Prototype"]
+    E -- Hayır --> G["Constructor, record veya küçük factory"]
+```
+
+Builder'ın seçim sinyali fluent sözdizimi değil, **kurulum kararlarının okunabilir ve doğrulanabilir bir süreç olarak ayrılmasıdır**.
+İki alanlı bir value object için builder eklemek yalnız API yüzeyini büyütür; hazır bir nesneyi kopyalayarak başlamak gerekiyorsa Prototype daha doğru soruyu cevaplar.
 
 ### Kodu adım adım okuma
 
@@ -1600,7 +1810,7 @@ Bu kez generic bir Director'ın neden anlamlı hale geldiğini göster.
 <!-- generated-chapter:04 slug:prototype source:src/main/java/com/can/creational/prototype/explain/prototype.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-prototype">Prototype</h2>
+<h2 id="chapter-prototype" class="pattern-chapter-title family-creational" data-chapter-label="04 · OLUŞTURUCU">Prototype</h2>
 
 Prototype, yeni nesneyi kurulum adımlarını tekrarlamak yerine hazır örneği kopyalayarak üretir; burada aday profilleri kişiselleştirilir.
 
@@ -1624,7 +1834,16 @@ Prototype, yeni nesneyi kurulum adımlarını tekrarlamak yerine hazır örneği
 | **Güçlendirilmiş örnek** | `CandidateProfileRegistry#register`, defensive `address()` / `skills()` | Registry canlı referans değil template snapshot'ı saklar; accessor'lar iç mutable state'i dışarı açmaz |
 | **Production sınırı** | `HashMap` tabanlı küçük registry'nin ötesi | Duplicate-ID politikası, versioning, concurrent update, çok büyük/cyclic graph kopyası ve kopyalama maliyeti ayrıca tasarlanmalıdır |
 
-`PrototypeDemo`, doğrudan deep-copy fikrini ve registry'den alınan bağımsız çalışma kopyasını ayrı başlıklarla gösterir.
+`com.can.demo.creational.prototype.PrototypeDemo`, doğrudan deep-copy fikrini ve registry'den alınan bağımsız çalışma kopyasını ayrı başlıklarla gösterir.
+
+### Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Prototype kontratı, concrete profile, mutable nested value ve registry `com.can.creational.prototype` domain paketindedir.
+`com.can.demo.creational.prototype.PrototypeDemo` ise template'i hazırlayıp registry'ye kaydeden çalıştırılabilir composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Kopyalama politikası demo sınıfında değil `CandidateProfile#copy()` ve copy constructor'da yaşar; böylece politika bütün client'lar için tek ve doğrudan test edilebilir kalır.
+Diyagramlarda uzun FQCN yerine kısa `PrototypeDemo` adı kullanılır.
+
+`src/test` altındaki `com.can.creational.prototype.PrototypeDemoTest` bir çalıştırma demosu değil, identity ve copy-semantics kontrat testidir.
 
 ### Akılda kalıcı analoji: çalışma kâğıdının fotokopisi
 
@@ -1704,7 +1923,7 @@ Prototype şunları kendiliğinden çözmez:
 | `personalize` | Özelleştirme adımı | Kopyanın adını ve özetini değiştirir |
 | `addSkill` | Özelleştirme adımı | Kopyanın beceri listesine ekler |
 | `relocateTo` | Özelleştirme adımı | Kopyanın adresini değiştirir |
-| `PrototypeDemo` | Client | Template kaydeder ve iki bağımsız clone üretir |
+| `com.can.demo.creational.prototype.PrototypeDemo` | Demo / composition root | Template kaydeder ve iki bağımsız clone üretir |
 
 ### Yapı diyagramı
 
@@ -1757,6 +1976,23 @@ sequenceDiagram
     Client->>Clone: addSkill("Kafka")
     Client->>Clone: relocateTo("Ankara", "TR")
 ```
+
+### Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Başlangıç noktası runtime'da hazırlanmış bir nesne mi?"}
+    A -- Hayır --> B{"Kurulum çok adımlı mı?"}
+    B -- Evet --> C["Builder"]
+    B -- Hayır --> D["Constructor veya factory"]
+    A -- Evet --> E{"Paylaşılacak ve ayrılacak dalların copy politikası açık mı?"}
+    E -- Evet --> F["Prototype"]
+    E -- Hayır --> G["Önce shallow/deep copy kontratını tanımla"]
+    F --> H["Kopyayı özelleştir; template'i koru"]
+```
+
+Prototype'ın seçim sinyali yalnız alan sayısı değildir; **başlangıç konfigürasyonunun yaşayan bir instance üzerinde bulunması** ve bu instance'tan bağımsız varyantlar gerekmesidir.
+Copy politikası belirsizken kalıbı eklemek, constructor tekrarından daha tehlikeli biçimde sessiz aliasing hataları üretir.
 
 ### Kodu adım adım okuma
 
@@ -1923,7 +2159,7 @@ Referanslı profile/mentor grafiğinde cycle üretmeden kimliği koruyan copy co
 <!-- generated-chapter:05 slug:singleton source:src/main/java/com/can/creational/singleton/explain/singleton.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-singleton">Singleton</h2>
+<h2 id="chapter-singleton" class="pattern-chapter-title family-creational" data-chapter-label="05 · OLUŞTURUCU">Singleton</h2>
 
 Singleton, belirli kapsamda tek instance ve ortak erişim amaçlar; `AppConfig` thread-safe lazy initialization için double-checked locking kullanır.
 
@@ -1947,7 +2183,17 @@ Singleton, belirli kapsamda tek instance ve ortak erişim amaçlar; `AppConfig` 
 | **Güçlendirilmiş örnek** | `ApiClientConfig`, `ApiClient`, `ApiRequestPlan` | Singleton yalnız composition root'ta çözülür; iş sınıfı dar interface'i constructor'dan aldığı için fake config ile global state olmadan test edilir |
 | **Production sınırı** | Hard-coded immutable `AppConfig` değerlerinin ötesi | Secret yönetimi, config reload, initialization failure, DI scope ve farklı process'ler arasındaki koordinasyon Singleton tarafından çözülmez |
 
-`SingletonDemo`, önce iki erişimin identity eşitliğini, sonra aynı config'in enjekte edildiği test edilebilir bir API istek planını gösterir.
+`com.can.demo.creational.singleton.SingletonDemo`, önce iki erişimin identity eşitliğini, sonra aynı config'in enjekte edildiği test edilebilir bir API istek planını gösterir.
+
+### Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Singleton, dar config sözleşmesi ve onu kullanan client `com.can.creational.singleton` domain paketindedir.
+`com.can.demo.creational.singleton.SingletonDemo` global erişimi bir kez çözüp `ApiClient`a enjekte eden çalıştırılabilir composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Bu sınır `AppConfig.getInstance()` çağrısının iş sınıflarına yayılmasını önler ve global identity kararını wiring noktasında görünür tutar.
+Diyagramlarda uzun FQCN yerine kısa `SingletonDemo` adı kullanılır.
+
+`src/test` altındaki `com.can.creational.singleton.SingletonDemoTest` çalıştırılabilir demo değildir.
+Static yaşam döngüsünü izole eden package-private `resetForTests()` hook'una kontrollü erişmek ve domain kontratını doğrulamak için test paketinde kalır.
 
 ### Akılda kalıcı analoji: binanın ortak elektrik panosu
 
@@ -2027,7 +2273,7 @@ Singleton sınırları:
 | `ApiClientConfig` | Dar dependency contract | Client'ın static `AppConfig` tipine bağlanmasını önler |
 | `ApiClient` | Güçlendirilmiş client | Config'i constructor'dan alır, URI origin/base-path ve timeout sınırını doğrular |
 | `ApiRequestPlan` | Immutable sonuç | Gerçek ağ çağrısı olmadan method, URL ve timeout kararını gözlemlenebilir yapar |
-| `SingletonDemo` | Composition root | Singleton'ı bir kez çözüp client'a enjekte eder |
+| `com.can.demo.creational.singleton.SingletonDemo` | Demo / composition root | Singleton'ı bir kez çözüp client'a enjekte eder |
 
 ### Yapı diyagramı
 
@@ -2088,6 +2334,22 @@ sequenceDiagram
     B-->>B: same published instance
 ```
 
+### Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Tek object identity gerçekten domain invariant'ı mı?"}
+    A -- Hayır --> B["Normal instance veya DI ile paylaşılan scope"]
+    A -- Evet --> C{"Yaşam döngüsünü kim yönetmeli?"}
+    C -- "Sınıfın kendisi" --> D["Singleton"]
+    C -- "DI container" --> E["Container singleton scope"]
+    C -- "Birden çok process" --> F["Dağıtık koordinasyon veya dış servis"]
+    D --> G["Classloader kapsamını ve test izolasyonunu belgeleyin"]
+```
+
+Singleton seçimi “her yerden kolay erişim” arzusuna değil kanıtlanabilir bir identity invariant'ına dayanmalıdır.
+Yalnız tek konfigürasyon değeri paylaşmak gerekiyorsa immutable bir nesneyi composition root'tan enjekte etmek, global access point eklemeden aynı paylaşımı sağlayabilir.
+
 ### Kodu adım adım okuma
 
 #### 1. Constructor private'dır
@@ -2120,7 +2382,7 @@ Value equality'nin true olması iki referansın aynı nesne olduğunu söylemez;
 #### 7. Global erişim composition root'ta tutulur
 
 `ApiClient`, kendi içinde `AppConfig.getInstance()` çağırmaz; yalnız `ApiClientConfig` sözleşmesini constructor'dan alır.
-`SingletonDemo` wiring noktasında `new ApiClient(AppConfig.getInstance())` yazar.
+`com.can.demo.creational.singleton.SingletonDemo` wiring noktasında `new ApiClient(AppConfig.getInstance())` yazar.
 Böylece production tek instance'ı kullanırken test, static state'e dokunmadan fake config sağlayabilir.
 
 #### 8. İstek planı güvenli ve gözlemlenebilir bir sınırdır
@@ -2276,7 +2538,7 @@ Aynı class'ı iki classloader ile yükle; “tek” kelimesinin neden kapsam is
 <!-- generated-chapter:06 slug:adapter source:src/main/java/com/can/structural/adapter/explain/adapter.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-adapter">Adapter Pattern — Aynı İşi Farklı Dillerde Konuşturmak</h2>
+<h2 id="chapter-adapter" class="pattern-chapter-title family-structural" data-chapter-label="06 · YAPISAL">Adapter Pattern — Aynı İşi Farklı Dillerde Konuşturmak</h2>
 
 > Bölüm önce geometriyle arayüz uyumunu görünür kılar, sonra aynı fikri eski bir kargo API'sindeki birim ve model dönüşümüne taşır.
 
@@ -2411,9 +2673,16 @@ yalnız tip değil **ölçü birimi ve hassasiyet kontratı** da çevirdiğini g
 
 ### Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.adapter.AdapterPatternDemo`
+FQCN'indedir. Bu sınıf Adapter'ın bir domain katılımcısı değil; nesne graph'ını
+kuran ve iki senaryoyu konsola süren **composition root / example driver**'dır.
+Tekrar kullanılabilir Target, Adaptee ve Adapter tipleri
+`com.can.structural.adapter` paketinde kalır. Böylece `main`/sunum kaygısı ile
+desenin üretim kodundaki bağımlılık yönü birbirine karışmaz.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client / composition root | `AdapterPatternDemo` | Nesne graph'ını kurup örneği çalıştırır |
+| Composition root / example driver | `com.can.demo.structural.adapter.AdapterPatternDemo` | Nesne graph'ını kurup örneği çalıştırır; pattern rolü değildir |
 | Target tüketicisi | `RoundHole` | Yalnız `RoundPegShape` üzerinden uygunluk ölçer |
 | Target | `RoundPegShape` | Client'ın ihtiyaç duyduğu radius kontratı |
 | Uyumlu concrete tip | `RoundPeg` | Target'ı doğal olarak uygular |
@@ -2635,7 +2904,7 @@ hataları ayrı testlerle görünür yap.
 <!-- generated-chapter:07 slug:bridge source:src/main/java/com/can/structural/bridge/explain/bridge.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-bridge">Bridge Pattern — İki Değişim Eksenini Kompozisyonla Ayırmak</h2>
+<h2 id="chapter-bridge" class="pattern-chapter-title family-structural" data-chapter-label="07 · YAPISAL">Bridge Pattern — İki Değişim Eksenini Kompozisyonla Ayırmak</h2>
 
 > TV ve Radio kodu temel köprüyü; preset workflow'u ise üst seviye davranışın implementor'dan bağımsız büyümesini gösterir.
 
@@ -2726,9 +2995,16 @@ Sınırlar:
 
 ### Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.bridge.BridgePatternDemo`
+FQCN'indedir. Bu sınıf yalnız hangi Abstraction'ın hangi Implementation ile
+eşleşeceğini seçen **composition root / example driver**'dır; Bridge deseninin
+kalıcı rollerinden biri değildir. Kavramsal client, `RemoteControl` API'sini
+kullanan herhangi bir uygulama kodudur. Yeniden kullanılabilir iki eksen
+`com.can.structural.bridge` paketinde kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `BridgePatternDemo` | Abstraction–implementation eşleşmelerini kurar |
+| Composition root / example driver | `com.can.demo.structural.bridge.BridgePatternDemo` | Abstraction–implementation eşleşmelerini kurar ve örnek çağrıları sürer |
 | Abstraction | `RemoteControl` | Güç, ses ve kanal kullanım dilini sunar |
 | Refined Abstraction | `AdvancedRemoteControl` | `mute`, preset kaydetme/seçme workflow'unu ekler |
 | Implementation | `Device` | Ortak düşük seviye cihaz kontratı |
@@ -2955,7 +3231,7 @@ Gelişmiş kumandayla TV'yi aç, sesi iki kez artır, mute et ve exact state'i t
 <!-- generated-chapter:08 slug:composite source:src/main/java/com/can/structural/composite/explain/composite.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-composite">Composite Pattern — Tek Bir Parça ile Bütün Ağacı Aynı Dilde Kullanmak</h2>
+<h2 id="chapter-composite" class="pattern-chapter-title family-structural" data-chapter-label="08 · YAPISAL">Composite Pattern — Tek Bir Parça ile Bütün Ağacı Aynı Dilde Kullanmak</h2>
 
 > Sipariş ağacı temel Composite'i korurken parasal doğruluk, açık snapshot API'si ve cycle invariant'larıyla gerçek kullanıma bir adım yaklaştırılmıştır.
 
@@ -3051,9 +3327,15 @@ Bu çözümün sınırı:
 
 ### Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.composite.CompositePatternDemo`
+FQCN'indedir. Sınıf, örnek sipariş ağacını kuran ve kök operasyona çağrı yapan
+**composition root / example driver**'dır; `Component`, `Leaf` veya `Composite`
+rollerinden biri değildir. Ağaç modeli `com.can.structural.composite` paketinde
+sunum kodundan bağımsız kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `CompositePatternDemo` | Sipariş ağacını kurup kökten fiyat ister |
+| Composition root / example driver | `com.can.demo.structural.composite.CompositePatternDemo` | Örnek ağacı kurup client çağrısını görünür kılar |
 | Component | `OrderComponent` | Geriye uyumlu `getPrice()`, exact `getPriceAmount()` ve `getName()` kontratı |
 | Leaf | `Product` | `BigDecimal` fiyatını ve adını döndürür |
 | Composite | `Box` | Çocukları yönetir, exact fiyatları ve packaging cost'u toplar |
@@ -3266,7 +3548,7 @@ ayrı bir aggregate builder'ı ekle ve duplicate/multi-parent testlerini yaz.
 <!-- generated-chapter:09 slug:decorator source:src/main/java/com/can/structural/decorator/explain/decorator.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-decorator">Decorator Pattern — Davranışı Katman Katman Giydirmek</h2>
+<h2 id="chapter-decorator" class="pattern-chapter-title family-structural" data-chapter-label="09 · YAPISAL">Decorator Pattern — Davranışı Katman Katman Giydirmek</h2>
 
 > Bu örnek gerçek kanal entegrasyonu yapmaz; gönderimleri açıklayıcı String çıktılarıyla simüle eder.
 
@@ -3381,9 +3663,15 @@ Sınırlar:
 
 ### Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.decorator.DecoratorPatternDemo`
+FQCN'indedir. Bu sınıf dekoratör zincirlerinin sırasını seçen **composition root /
+example driver**'dır; `Notifier` hiyerarşisinin bir üyesi değildir. Component ve
+Decorator tipleri `com.can.structural.decorator` paketinde sunum/CLI ayrıntısından
+bağımsız kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `DecoratorPatternDemo` | İstenen stack'leri composition ile kurar |
+| Composition root / example driver | `com.can.demo.structural.decorator.DecoratorPatternDemo` | İstenen stack'leri kurar ve örnek client çağrısını sürer |
 | Component | `Notifier` | Bütün bildirimlerin `send` kontratı |
 | Concrete Component | `EmailNotifier` | Temel Email çıktısını üretir |
 | Base Decorator | `BaseNotifierDecorator` | Aynı kontratı korur ve wrappee'ye delege eder |
@@ -3576,7 +3864,7 @@ String yerine kanal bazlı başarı/hata taşıyan immutable `NotificationResult
 <!-- generated-chapter:10 slug:facade source:src/main/java/com/can/structural/facade/explain/facade.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-facade">Facade Pattern — Karmaşık Alt Sisteme Tek ve Sade Bir Kapı</h2>
+<h2 id="chapter-facade" class="pattern-chapter-title family-structural" data-chapter-label="10 · YAPISAL">Facade Pattern — Karmaşık Alt Sisteme Tek ve Sade Bir Kapı</h2>
 
 > Bu örnek gerçek medya dosyası okumaz veya codec çalıştırmaz. Dönüşüm hattını String değerleriyle görünür yapan bir eğitim simülasyonudur.
 
@@ -3685,9 +3973,15 @@ Facade'ın sınırı:
 
 ### Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.facade.FacadePatternDemo`
+FQCN'indedir. Bu sınıf `VideoConverterFacade` graph'ını kuran **composition root /
+example driver**'dır; Facade'ın veya medya alt sisteminin bir parçası değildir.
+Kavramsal client Facade'ın üst seviye API'sini çağıran koddur; tekrar kullanılabilir
+tipler `com.can.structural.facade` paketinde kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `FacadePatternDemo` | Tek `convert` çağrısıyla sonucu ister |
+| Composition root / example driver | `com.can.demo.structural.facade.FacadePatternDemo` | Facade'ı kurar ve tek `convert` çağrısını görünür kılar |
 | Facade | `VideoConverterFacade` | Kaynak analizi, codec seçimi, dönüşüm, audio ve adlandırmayı koordine eder |
 | Input vocabulary | `VideoFormat` | Desteklenen MP4/OGG kümesini ve normalize etmeyi açık tipte tutar |
 | Subsystem | `VideoFile` | Dosya segmentinden kaynak uzantısını çıkarır ve hedef formatlı çıktı adını üretir |
@@ -3702,7 +3996,9 @@ Facade'ın sınırı:
 
 ```mermaid
 classDiagram
-    class FacadePatternDemo
+    class FacadePatternDemo {
+        <<compositionRoot>>
+    }
     class VideoConverterFacade {
         +convert(String, String) ConvertedFile
         +convertTo(String, VideoFormat) ConvertedFile
@@ -3941,7 +4237,7 @@ edilip edilmeyeceğini tasarla.
 <!-- generated-chapter:11 slug:flyweight source:src/main/java/com/can/structural/flyweight/explain/flyweight.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-flyweight">Flyweight Pattern — Tekrarlanan Ağır Durumu Paylaşmak</h2>
+<h2 id="chapter-flyweight" class="pattern-chapter-title family-structural" data-chapter-label="11 · YAPISAL">Flyweight Pattern — Tekrarlanan Ağır Durumu Paylaşmak</h2>
 
 > Bu örnek bellek kazancını ölçmez; String alanlarıyla intrinsic/extrinsic state ayrımını görünür kılan bir eğitim modelidir.
 
@@ -4032,13 +4328,19 @@ Sınırlar:
 
 ### Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.flyweight.FlyweightPatternDemo`
+FQCN'indedir. Sınıf yalnız `TreeFactory` ile `Forest` graph'ını kuran ve paylaşım
+oranını gösteren **composition root / example driver**'dır; Flyweight rolü değildir.
+Intrinsic/extrinsic state modeli `com.can.structural.flyweight` paketinde sunum
+kodundan bağımsız kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
 | Client / container | `Forest` | Context oluşturur ve flyweight factory'yi kullanır |
 | Context | `Tree` | `x`, `y` ve `TreeType` referansını taşır |
 | Flyweight | `TreeType` | Ortak name/color/texture verisini ve draw davranışını taşır |
 | Flyweight Factory | `TreeFactory` | Anahtara göre `TreeType` üretir veya reuse eder |
-| Demo | `FlyweightPatternDemo` | 15 context ve 3 unique type örneğini gösterir |
+| Composition root / example driver | `com.can.demo.structural.flyweight.FlyweightPatternDemo` | 15 context ve 3 unique type örneğini gösterir |
 
 `TreeType` `final`, alanları `final` ve Stringler immutable olduğu için örnekte
 paylaşılabilir durumdadır. `signature()` yalnız okunabilir gösterimdir; delimiter
@@ -4262,7 +4564,7 @@ Bounded, thread-safe bir flyweight factory tasarla. Unique key saldırısını, 
 <!-- generated-chapter:12 slug:proxy source:src/main/java/com/can/structural/proxy/explain/proxy.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-proxy">Proxy Pattern — Gerçek Nesneye Giden Yolda Kontrollü Temsilci</h2>
+<h2 id="chapter-proxy" class="pattern-chapter-title family-structural" data-chapter-label="12 · YAPISAL">Proxy Pattern — Gerçek Nesneye Giden Yolda Kontrollü Temsilci</h2>
 
 > Bu örnekte uzak YouTube servisi ve download işlemi String/sayaçlarla simüle edilir; gerçek ağ, depolama veya YouTube API çağrısı yoktur.
 
@@ -4362,13 +4664,19 @@ metadata ve download entry'sini siler; `reset()` bütün bölgeleri temizler.
 
 ### Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.proxy.ProxyPatternDemo`
+FQCN'indedir. Bu sınıf Real Subject → Proxy → Client graph'ını kuran
+**composition root / example driver**'dır; Subject hiyerarşisinin bir parçası
+değildir. Asıl client `YouTubeManager`, tekrar kullanılabilir Subject tipleri ise
+`com.can.structural.proxy` paketinde kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
 | Subject | `ThirdPartyYouTubeLib` | Client ve iki servis için ortak kontrat |
 | Real Subject | `ThirdPartyYouTubeClass` | Sonuç üretir ve gerçek çağrı sayısını simüle eder |
 | Proxy | `CachedYouTubeClass` | Liste, bilgi ve download sonuçlarını cache'ler; hedefli/tam invalidation sunar |
 | Client | `YouTubeManager` | Yalnız Subject üzerinden panel/page/download üretir |
-| Composition root | `ProxyPatternDemo` | Real Subject, Proxy ve Client graph'ını kurar |
+| Composition root / example driver | `com.can.demo.structural.proxy.ProxyPatternDemo` | Real Subject, Proxy ve Client graph'ını kurar |
 
 Real service içindeki sayaçlar öğretici test gözlem noktalarıdır. Production remote client'ın ana sorumluluğuna test sayacı eklemek yerine metrics veya fake kullanılmalıdır.
 
@@ -4605,10 +4913,18 @@ sonuçlandığını test et.
 <!-- generated-chapter:13 slug:chain-of-responsibility source:src/main/java/com/can/behavirol/chainofresponsibility/explain/chainofresponsibility.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-chain-of-responsibility">Chain of Responsibility — Sorumluluk Zinciri</h2>
+<h2 id="chapter-chain-of-responsibility" class="pattern-chapter-title family-behavioral" data-chapter-label="13 · DAVRANIŞSAL">Chain of Responsibility — Sorumluluk Zinciri</h2>
 
 > Bu bölüm repodaki çalışan örneği anlatır.
 > Güvenlik isimleri taşısa da kod bir eğitim demosudur; production güvenlik katmanı değildir.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desenin üretim kodu `com.can.behavirol.chainofresponsibility` paketindedir.
+- Çalıştırılabilir senaryo `com.can.demo.behavioral.chainofresponsibility.ChainOfResponsibilityDemo` sınıfındadır; demo paketi pattern rollerinin parçası değildir.
+- Zincirin handler sırası, public `com.can.behavirol.chainofresponsibility.OrderRequestChainFactory` adlı composition factory içinde tanımlıdır. Demo yalnız concrete bağımlılıkları üretip bu factory’yi çağırır; testler de demo içindeki bir yardımcı metoda değil aynı public composition API’sine bağlanır.
+
+Bu ayrım, “deseni kullanan örnek uygulama” ile “desenin yeniden kullanılabilir modeli”ni fiziksel olarak görünür kılar. Gerçek uygulamada en dış composition root; repository, rate limiter ve cache implementasyonlarını configuration/DI üzerinden seçer, factory ise güvenlik açısından anlamlı handler sırasını tek yerde korur.
 
 ### 30 saniyelik kart
 
@@ -4656,7 +4972,8 @@ Handler kendi sorumluluğunu yerine getirir ve iki sonuçtan birini seçer:
 - `checkNext(request)` ile sonraki handler’a geçirmek.
 
 `BaseOrderRequestHandler`, `next` referansını ve varsayılan geçiş davranışını tek yerde toplar.
-Client olan `ChainOfResponsibilityDemo`, concrete handler’ları çalışma anında sıraya dizer.
+`OrderRequestChainFactory`, concrete handler’ları çalışma anında sıraya dizer.
+Demo client bu topolojiyi yeniden yazmak yerine factory’den zincir kökünü ister.
 
 #### Çözmediği şeyler
 
@@ -4688,7 +5005,8 @@ Pattern iletişim yapısını düzenler; iş kurallarının doğruluğu yine gel
 | Sonuç modeli | `OrderRequestOutcome` | `PROCESSED`, `REJECTED` ve `DUPLICATE` nedenlerini ayırır |
 | Destek nesnesi | `LoginAttemptService` | IP başına başarısız deneme sayısını tutar |
 | Destek nesnesi | `RequestCache` | Başarılı istek imzalarını `Set` içinde saklar |
-| Client | `ChainOfResponsibilityDemo` | Zinciri kurar ve örnek istekleri gönderir |
+| Composition factory | `OrderRequestChainFactory` | Handler’ları güvenlik açısından anlamlı sırada bağlar ve zincir kökünü döndürür |
+| Demo composition root | `com.can.demo.behavioral.chainofresponsibility.ChainOfResponsibilityDemo` | Concrete bağımlılıkları üretir ve örnek istekleri gönderir |
 
 ### Yapı
 
@@ -4723,6 +5041,10 @@ classDiagram
         REJECTED
         DUPLICATE
     }
+    class OrderRequestChainFactory {
+        <<composition factory>>
+        +create(userRepository, loginAttemptService, cache) OrderRequestHandler
+    }
     OrderRequestHandler <|.. BaseOrderRequestHandler
     BaseOrderRequestHandler <|-- RequestValidationHandler
     BaseOrderRequestHandler <|-- BruteForceProtectionHandler
@@ -4733,6 +5055,7 @@ classDiagram
     BaseOrderRequestHandler <|-- OrderProcessingHandler
     OrderRequestHandler ..> OrderRequest : handles
     OrderRequest --> OrderRequestOutcome : current result
+    OrderRequestChainFactory ..> OrderRequestHandler : creates ordered chain
 ```
 
 ### Gerçek çalışma akışı
@@ -4787,7 +5110,8 @@ Bu son nokta önemlidir: örnek gerçek bir “sonuç cache’i” değil, tekra
 
 ### API, invariant ve sonuç semantiği
 
-- Zincirin kökü `buildChain` tarafından döndürülen `RequestValidationHandler`dır.
+- Zincirin kökü `OrderRequestChainFactory.create(...)` tarafından döndürülen `RequestValidationHandler`dır.
+- Factory zorunlu `UserRepository`, `LoginAttemptService` ve `RequestCache` bağımlılıklarını null kabul etmez.
 - Null request sonuç yazılabilecek context olmadığı için açık `IllegalArgumentException` üretir.
 - Null/blank username, password, IP veya payload ile null operation `REJECTED` olur; sonraki handler’lar çağrılmaz.
 - Validation ilk hatayı deterministik alan sırasıyla raporlar.
@@ -4812,7 +5136,7 @@ Production API’sinde sonucu mutable request’e yazmak yerine, handler’dan t
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
-| `RequestValidation` | Eksik alanın zincirin başında typed ret olması; null request ve geçersiz brute-force eşiğinin fail-fast davranışı |
+| `RequestValidation` | Public composition factory’nin validation-first kökü; eksik alanın zincirin başında typed ret olması; null request ve geçersiz brute-force eşiğinin fail-fast davranışı |
 | `SuccessfulRequests` | Create başarısı, admin erişimi, payload mutation |
 | `RejectedRequests` | Yanlış parola, yetki reddi, deneme eşiği, başarılı login reset’i ve sanitization sonrası boş payload |
 | `CacheShortCircuit` | İlk çağrı/tekrar sonucu ve payload’a bağlı imza |
@@ -4911,10 +5235,18 @@ Thread safety, TTL, saat bağımlılığı ve test edilebilir clock kararların�
 <!-- generated-chapter:14 slug:command source:src/main/java/com/can/behavirol/command/explain/command.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-command">Command — Komut Deseni</h2>
+<h2 id="chapter-command" class="pattern-chapter-title family-behavioral" data-chapter-label="14 · DAVRANIŞSAL">Command — Komut Deseni</h2>
 
 > Bu bölüm repodaki mini editörü temel alır.
 > Undo ve macro fikrini öğretir; mevcut implementasyon tam özellikli bir editör geçmişi değildir.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.command` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.command.CommandPatternDemo` sınıfıdır.
+- Demo; receiver, command, history ve invoker nesnelerini örnek veriyle bağlar. Bu wiring öğretim senaryosudur; `Command`, concrete command’lar ve `EditorToolbar` demo paketine bağımlı değildir.
+
+Production uygulamasında aynı domain nesneleri UI framework’ünün veya dependency-injection katmanının composition root’unda bağlanır. Testler demo çıktısını değil command/receiver/history kontratlarını doğrudan doğrular.
 
 ### 30 saniyelik kart
 
@@ -4995,7 +5327,7 @@ Command tek başına:
 | Paylaşılan context | `ApplicationContext` | Clipboard state’ini tutar |
 | Invoker | `EditorToolbar` | Buton adı ile komutu eşler ve çalıştırır |
 | History | `CommandHistory` | Undo edilebilir komutları stack’te tutar |
-| Client | `CommandPatternDemo` | Nesneleri üretip birbirine bağlar |
+| Demo composition root | `com.can.demo.behavioral.command.CommandPatternDemo` | Nesneleri üretip birbirine bağlar |
 
 ### Yapı
 
@@ -5233,11 +5565,19 @@ Asıl execute hatasını primary tut, iki rollback hatasını suppressed olarak 
 <!-- generated-chapter:15 slug:iterator source:src/main/java/com/can/behavirol/iterator/explain/iterator.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-iterator">Iterator — Yineleyici Deseni</h2>
+<h2 id="chapter-iterator" class="pattern-chapter-title family-behavioral" data-chapter-label="15 · DAVRANIŞSAL">Iterator — Yineleyici Deseni</h2>
 
 > Temel örnek custom bir iterator sözleşmesi kullanır.
 > Geriye uyumlu `asJavaIterator()` adaptörü aynı traversal’ı standart Java
 > `Iterator` bitiş sözleşmesiyle de sunar.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.iterator` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.iterator.IteratorPatternDemo` sınıfıdır.
+- Demo örnek sosyal grafiği kurar ve farklı iterator’ları tüketiciye verir; iterator implementasyonları ile `SocialSpammer` demo paketine bağımlı değildir.
+
+Bu sınır önemlidir: graph fixture’ı öğretim verisidir, traversal kontratı ise yeniden kullanılabilir koddur. Testler demo `main` metoduna veya stdout’a bağlanmadan cursor, filtreleme, snapshot ve Java adapter davranışlarını domain API’si üzerinden ölçer.
 
 ### 30 saniyelik kart
 
@@ -5334,7 +5674,7 @@ Iterator tek başına:
 | Element | `Profile` | Gezilen immutable record |
 | Relation seçimi | `RelationType` | `FRIENDS` veya `COWORKERS` |
 | Client | `SocialSpammer` | Iterator’dan email adreslerini tüketir |
-| Composition root | `IteratorPatternDemo` | Örnek graph’ı kurar |
+| Demo composition root | `com.can.demo.behavioral.iterator.IteratorPatternDemo` | Örnek graph’ı kurar |
 
 ### Yapı
 
@@ -5594,10 +5934,19 @@ Cursor token, retry, cache ve rate-limit davranışlarını içeren lazy iterato
 <!-- generated-chapter:16 slug:mediator source:src/main/java/com/can/behavirol/mediator/explain/mediator.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-mediator">Mediator — Arabulucu Deseni</h2>
+<h2 id="chapter-mediator" class="pattern-chapter-title family-behavioral" data-chapter-label="16 · DAVRANIŞSAL">Mediator — Arabulucu Deseni</h2>
 
 > Bu bölüm küçük bir UI koordinasyon demosunu anlatır.
 > Gerçek authentication, email doğrulama veya parola güvenliği sağlamaz.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.mediator` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.mediator.MediatorPatternDemo` sınıfıdır.
+- Dış sistem olmadan çalışmayı sağlayan adapter `com.can.demo.behavioral.mediator.DemoAuthenticationGateway` sınıfıdır. Demo composition root bu adapter’ı açıkça `AuthenticationDialog` constructor’ına verir.
+- Component’ların koordinasyonu `AuthenticationDialog` mediator’ında, dış kimlik sistemi sınırı ise domain paketindeki `AuthenticationGateway` arayüzündedir; domain kodu demo adapter’ını bilmez.
+
+Production composition root gerçek gateway adapter’ını constructor üzerinden vermek zorundadır. Testler kendi test-scope stub/fake gateway’lerini kullanır; demo adapter’ına veya demo akışına bağlanmadan mediator’ın component görünürlüğü, doğrulama ve gateway delegasyonu kontratlarını ölçer.
 
 ### 30 saniyelik kart
 
@@ -5614,8 +5963,8 @@ Cursor token, retry, cache ve rate-limit davranışlarını içeren lazy iterato
 | Katman | Bu repoda ne var? | Öğrettiği sınır |
 |---|---|---|
 | Temel örnek | `AuthenticationDialog` ile checkbox, textbox, label ve button koordinasyonu | Colleague nesnelerinin birbirini bilmeden mediator’a olay göndermesi |
-| Güçlendirilmiş örnek | Enjekte edilen `AuthenticationGateway` ve varsayılan `DemoAuthenticationGateway` | UI koordinasyonu ile login/register yan etkisinin ayrı sınırlar olması |
-| Production sınırı | Typed UI event’leri, validation nesneleri, async durum, gerçek auth adapter’ı ve secret temizliği | String event ve demo gateway’in güvenli authentication sağlamaması |
+| Güçlendirilmiş örnek | Zorunlu constructor injection ile `AuthenticationGateway`; demo paketindeki `DemoAuthenticationGateway`; test-scope stub/fake | UI koordinasyonu ile login/register yan etkisinin ayrı sınırlar olması; domain’in demo adapter’ına bağımlı olmaması |
+| Production sınırı | Typed UI event’leri, validation nesneleri, async durum, gerçek auth adapter’ı ve secret temizliği | String event ve demo adapter’ın güvenli authentication sağlamaması |
 
 ### Akılda kalıcı analoji: hava trafik kontrol kulesi
 
@@ -5675,13 +6024,13 @@ Mediator tek başına:
 | Mediator | `Mediator` | `notify(sender, event)` sözleşmesi |
 | Concrete Mediator | `AuthenticationDialog` | Mod geçişi ve submit koordinasyonu |
 | Dış servis portu | `AuthenticationGateway` | Login/register yan etkisinin UI’dan bağımsız sözleşmesi |
-| Demo adapter | `DemoAuthenticationGateway` | Main akışını dış sistem olmadan çalıştıran cevaplar |
+| Demo adapter | `com.can.demo.behavioral.mediator.DemoAuthenticationGateway` | Yalnız demo akışını dış sistem olmadan çalıştıran cevaplar |
 | Base Colleague | `Component` | Mediator referansını taşır |
 | Colleague | `Checkbox` | Checked state ve `"check"` olayı |
 | Colleague | `Textbox` | Text/visibility state ve `"input"` olayı |
 | Colleague | `Button` | Ad ve `"click"` olayı |
 | Colleague | `Label` | Başlık/sonuç metni |
-| Client | `MediatorPatternDemo` | Kullanıcı etkileşimlerini simüle eder |
+| Demo composition root | `com.can.demo.behavioral.mediator.MediatorPatternDemo` | Kullanıcı etkileşimlerini simüle eder |
 
 ### Yapı
 
@@ -5706,13 +6055,20 @@ classDiagram
         +login(username, password) String
         +register(username, password, email) String
     }
-    class DemoAuthenticationGateway
+    class DemoAuthenticationGateway {
+        <<demo adapter>>
+    }
+    class MediatorPatternDemo {
+        <<demo composition root>>
+    }
     class Component {
         #mediator Mediator
     }
     Mediator <|.. AuthenticationDialog
     AuthenticationGateway <|.. DemoAuthenticationGateway
     AuthenticationDialog --> AuthenticationGateway : delegates valid submit
+    MediatorPatternDemo ..> DemoAuthenticationGateway : creates
+    MediatorPatternDemo ..> AuthenticationDialog : injects gateway
     Component <|-- Checkbox
     Component <|-- Textbox
     Component <|-- Button
@@ -5780,8 +6136,9 @@ Başlangıç result label’ı önce boş oluşturulsa da constructor sonunda bo
 - Bilinmeyen sender/event sessizce yok sayılır.
 - Result string hem doğrulama hem başarı bilgisini taşır.
 - Mod değişiminde textbox içerikleri temizlenmez.
-- Parametresiz constructor `DemoAuthenticationGateway` kullanarak eski Main akışını korur.
-- Constructor injection kullanılan test/uygulama gerçek servisi veya test double’ını verebilir.
+- `AuthenticationDialog` yalnız `AuthenticationGateway` alan constructor sunar; adapter seçimi gizli bir default değildir.
+- Null gateway constructor sınırında reddedilir.
+- Demo composition root demo adapter’ını, production composition root gerçek adapter’ı, test ise test-scope stub/fake’i açıkça enjekte eder.
 
 ### Dışarı açılan component riski
 
@@ -5800,13 +6157,14 @@ Production tasarımında kullanıcı aksiyon API’si ile internal component mut
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
-| `InitialState` | Login başlangıcı, görünürlük ve constructor mesajı |
+| `InitialState` | Test-scope stub enjekte edildiğinde login başlangıcı, görünürlük ve constructor mesajı |
 | `ModeSwitching` | Register’a geçiş ve login’e dönüş |
 | `LoginSubmission` | Zorunlu alan reddi ve başarı |
 | `RegistrationSubmission` | Email zorunluluğu ve başarı |
 | `GatewayBoundary` | Geçerli login’in delege edilmesi ve invalid formda servisin çağrılmaması |
 
 Testler UI framework’ü başlatmadan mediator state’ini doğrudan gözler.
+Başarı metni gereken senaryolar küçük bir `StubAuthenticationGateway`, çağrı ayrıntısı gereken sınır senaryoları ise recording fake kullanır; production ve demo adapter’ları test source set’ine sızmaz.
 
 ### Edge case, security, concurrency ve performans
 
@@ -5890,10 +6248,18 @@ Mediator’ın hangi katmanda kalacağını bir sequence diagram ile göster.
 <!-- generated-chapter:17 slug:memento source:src/main/java/com/can/behavirol/memento/explain/memento.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-memento">Memento — Anlık Görüntü Deseni</h2>
+<h2 id="chapter-memento" class="pattern-chapter-title family-behavioral" data-chapter-label="17 · DAVRANIŞSAL">Memento — Anlık Görüntü Deseni</h2>
 
 > Bu bölüm repodaki editör snapshot demosunu anlatır.
 > Demo tek adım gösterir; `EditorHistory#undo` ardışık geri almayı yönetir, fakat redo sunmaz.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.memento` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.memento.MementoPatternDemo` sınıfıdır.
+- Demo, originator ile caretaker’ı bağlayıp snapshot alınacak iş anlarını seçer; `TextEditor` ve `EditorHistory` demo paketini bilmez.
+
+Production composition root history kapasitesi ve persistence politikasını ayrıca seçmelidir. Testler sunum metnine değil snapshot’ın kapsadığı state’e, kapsüllemeye ve undo zaman çizelgesine doğrudan bağlanır.
 
 ### 30 saniyelik kart
 
@@ -5966,7 +6332,7 @@ Memento tek başına:
 | Narrow Memento | `TextEditor.EditorMemento` | Caretaker’a yalnız action adını gösterir |
 | Concrete Memento | `TextEditor.Snapshot` | Text, cursor ve selection state’ini immutable tutar |
 | Caretaker | `EditorHistory` | Snapshot’ları LIFO saklar ve ardışık undo protokolünü yönetir |
-| Client | `MementoPatternDemo` | Snapshot zamanını seçer ve caretaker’dan undo ister |
+| Demo composition root | `com.can.demo.behavioral.memento.MementoPatternDemo` | Snapshot zamanını seçer ve caretaker’dan undo ister |
 
 ### Yapı
 
@@ -6165,10 +6531,18 @@ Undo sonrası yeni edit yapıldığında redo geçmişinin neden temizlenmesi ge
 <!-- generated-chapter:18 slug:observer source:src/main/java/com/can/behavirol/observer/explain/observer.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-observer">Observer — Gözlemci Deseni</h2>
+<h2 id="chapter-observer" class="pattern-chapter-title family-behavioral" data-chapter-label="18 · DAVRANIŞSAL">Observer — Gözlemci Deseni</h2>
 
 > Bu örnek synchronous, process içi ve stdout tabanlı bir bildirim demosudur.
 > Gerçek SMS, e-posta, push altyapısı veya güvenilir event delivery sağlamaz.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.observer` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.observer.ObserverPatternDemo` sınıfıdır.
+- Demo customer subscriber’larını örnek ürün kanallarına bağlar; publisher, subscription handle ve subscriber kontratı demo paketinden bağımsızdır.
+
+Production composition root subscriber yaşam döngüsünü, hata izolasyonunu ve sync/async delivery politikasını seçer. Testler demo stdout’u yerine abonelik, unsubscribe ve bildirim snapshot davranışlarını domain API’sinden doğrular.
 
 ### 30 saniyelik kart
 
@@ -6241,7 +6615,7 @@ Observer tek başına:
 | Abonelik handle’ı | `Subscription` | `close()` ile yalnız kendi abonelik referansını idempotent sonlandırır |
 | Subscriber | `Subscriber` | `update(productName, message)` callback’i |
 | Concrete Subscriber | `Customer` | Bildirimi kanal etiketiyle stdout’a yazar |
-| Client | `ObserverPatternDemo` | Abonelik ve restock senaryosunu kurar |
+| Demo composition root | `com.can.demo.behavioral.observer.ObserverPatternDemo` | Abonelik ve restock senaryosunu kurar |
 
 ### Yapı
 
@@ -6474,10 +6848,18 @@ Hata toplama, retry ve callback sırasında unsubscribe kararlarını dokümante
 <!-- generated-chapter:19 slug:state source:src/main/java/com/can/behavirol/state/explain/state.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-state">State — Durum Deseni</h2>
+<h2 id="chapter-state" class="pattern-chapter-title family-behavioral" data-chapter-label="19 · DAVRANIŞSAL">State — Durum Deseni</h2>
 
 > Bu örnek bir dokümanın yayın yaşam döngüsünü modeller.
 > Rol ve geçiş API’leri eğitim için sadedir; production yetkilendirme sistemi değildir.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.state` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.state.StatePatternDemo` sınıfıdır.
+- Demo farklı rol ve olayları sırayla gönderir; transition kuralları demo driver’da değil `DocumentState` implementasyonlarındadır.
+
+Production composition root document’i kalıcı depodan yükleme ve state’i serialize etme politikasını seçer. Testler demo metnine değil izin verilen/yasaklanan transition’lara ve context invariant’larına doğrudan bağlanır.
 
 ### 30 saniyelik kart
 
@@ -6556,7 +6938,7 @@ State deseni tek başına:
 | Concrete State | `DraftState` | Edit’e izin verir, publish ile moderation’a geçer |
 | Concrete State | `ModerationState` | Edit/publish yanında gerekçeli ret ile Draft’a döner |
 | Concrete State | `PublishedState` | Edit ve tekrar publish’i no-op yapar |
-| Client | `StatePatternDemo` | Rol değişikliği ve geçişleri yürütür |
+| Demo composition root | `com.can.demo.behavioral.state.StatePatternDemo` | Rol değişikliği ve geçişleri yürütür |
 
 ### Yapı
 
@@ -6748,9 +7130,17 @@ Transition sonucu ve hata nedenini String yerine typed bir modelle ifade et.
 <!-- generated-chapter:20 slug:strategy source:src/main/java/com/can/behavirol/strategy/explain/strategy.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-strategy">Strategy — Strateji Deseni</h2>
+<h2 id="chapter-strategy" class="pattern-chapter-title family-behavioral" data-chapter-label="20 · DAVRANIŞSAL">Strategy — Strateji Deseni</h2>
 
 > Aritmetik örnek mekanizmayı görünür kılar; teslimat örneği aynı fikrin gerçek iş kuralındaki karşılığını gösterir.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.strategy` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.strategy.StrategyPatternDemo` sınıfıdır.
+- Demo calculator ve teslimat context’lerine concrete strategy seçer; context’ler çalıştırılabilir örneği veya seçim arayüzünü bilmez.
+
+Production composition root strategy’yi kullanıcı tercihi, feature flag ya da iş kuralından seçebilir. Testler demo stdout’u yerine her algoritmanın sonucu ile runtime strategy değişiminin context kontratını doğrular.
 
 ### 30 saniyelik kart
 
@@ -6839,7 +7229,7 @@ Strategy tek başına:
 | Concrete Strategy | `SubtractStrategy` | `a - b` |
 | Concrete Strategy | `MultiplyStrategy` | `a * b` |
 | Context | `CalculatorContext` | Aktif stratejiyi saklar ve delege eder |
-| Client | `StrategyPatternDemo` | Runtime strateji seçimini yapar |
+| Demo composition root | `com.can.demo.behavioral.strategy.StrategyPatternDemo` | Runtime strateji seçimini yapar |
 | Gerçekçi Strategy | `DeliveryStrategy` | `Shipment` için `DeliveryQuote` sözleşmesi |
 | Gerçekçi Context | `DeliveryPlanner` | Non-null aktif teslimat stratejisine delege eder |
 | Concrete Strategy | `StandardDeliveryStrategy` | Ürün adedi, şehir ve premium politikasını uygular |
@@ -7052,10 +7442,18 @@ Her birine farklı dependency ve hata politikası ver.
 <!-- generated-chapter:21 slug:template-method source:src/main/java/com/can/behavirol/templatemethod/explain/templatemethod.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-template-method">Template Method — Şablon Metot Deseni</h2>
+<h2 id="chapter-template-method" class="pattern-chapter-title family-behavioral" data-chapter-label="21 · DAVRANIŞSAL">Template Method — Şablon Metot Deseni</h2>
 
 > Bu bölüm dosya madenciliği akışını simüle eder.
 > Concrete sınıflar gerçek dosya açmaz; stdout ve sabit metinlerle pattern’i görünür kılar.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.templatemethod` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.templatemethod.TemplateMethodPatternDemo` sınıfıdır.
+- Demo concrete miner seçip ortak `process` API’sini çağırır; algoritmanın sabit sırası `DocumentMiningTemplate` içinde kalır ve demo paketinden bağımsızdır.
+
+Production composition root dosya türünden doğru miner’ı seçen factory/registry sağlayabilir. Testler demo çıktısını değil template sırasını, hook’ları ve exception-safe cleanup invariant’ını recording subclass üzerinden doğrular.
 
 ### 30 saniyelik kart
 
@@ -7138,7 +7536,7 @@ Template Method:
 | Template Method | `process` | Yedi adımı sabit sırada çağırır |
 | Concrete Class | `PdfDocumentMiner` | PDF açma/çıkarma/kapama ve OCR hook’u |
 | Concrete Class | `CsvDocumentMiner` | CSV’ye özel analiz, rapor ve after hook |
-| Client | `TemplateMethodPatternDemo` | İki miner’ı aynı API ile çalıştırır |
+| Demo composition root | `com.can.demo.behavioral.templatemethod.TemplateMethodPatternDemo` | İki miner’ı aynı API ile çalıştırır |
 
 ### Yapı
 
@@ -7337,10 +7735,18 @@ Ardından aynı davranışı iki `AutoCloseable` kaynağı ters sırada kapatan 
 <!-- generated-chapter:22 slug:visitor source:src/main/java/com/can/behavirol/visitor/explain/visitor.md -->
 <div class="chapter-break"></div>
 
-<h2 id="chapter-visitor">Visitor — Ziyaretçi Deseni</h2>
+<h2 id="chapter-visitor" class="pattern-chapter-title family-behavioral" data-chapter-label="22 · DAVRANIŞSAL">Visitor — Ziyaretçi Deseni</h2>
 
 > Bu örnek düz bir `List<GeoNode>` üzerinde farklı visitor operasyonları çalıştırır.
 > XML attribute değerleri escape edilir; çıktı yine de tam bir XML document/serializer değildir.
+
+### Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.visitor` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.visitor.VisitorPatternDemo` sınıfıdır.
+- Demo heterojen element koleksiyonunu ve visitor instance’larını üretip traversal’ı başlatır; element/visitor double-dispatch kontratı demo paketinden bağımsızdır.
+
+Production composition root visitor yaşam döngüsünü ve traversal kaynağını seçer. Testler demo rapor metnine değil doğru overload dispatch’ine, escaping’e ve typed aggregation sonucuna doğrudan bağlanır.
 
 ### 30 saniyelik kart
 
@@ -7424,7 +7830,7 @@ Visitor tek başına:
 | Concrete Visitor | `RiskAuditVisitor` | Risk notları biriktirir |
 | Concrete Visitor | `GeoSummaryVisitor` | Tip bazlı sayaç ve toplamları biriktirir |
 | Sonuç modeli | `GeoSummary` | Aggregation sonucunu immutable record olarak taşır |
-| Client | `VisitorPatternDemo` | Düz listeyi gezer ve üç visitor uygular |
+| Demo composition root | `com.can.demo.behavioral.visitor.VisitorPatternDemo` | Düz listeyi gezer ve üç visitor uygular |
 
 ### Yapı
 

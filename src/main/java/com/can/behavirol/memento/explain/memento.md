@@ -3,6 +3,14 @@
 > Bu bölüm repodaki editör snapshot demosunu anlatır.
 > Demo tek adım gösterir; `EditorHistory#undo` ardışık geri almayı yönetir, fakat redo sunmaz.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.memento` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.memento.MementoPatternDemo` sınıfıdır.
+- Demo, originator ile caretaker’ı bağlayıp snapshot alınacak iş anlarını seçer; `TextEditor` ve `EditorHistory` demo paketini bilmez.
+
+Production composition root history kapasitesi ve persistence politikasını ayrıca seçmelidir. Testler sunum metnine değil snapshot’ın kapsadığı state’e, kapsüllemeye ve undo zaman çizelgesine doğrudan bağlanır.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -74,7 +82,7 @@ Memento tek başına:
 | Narrow Memento | `TextEditor.EditorMemento` | Caretaker’a yalnız action adını gösterir |
 | Concrete Memento | `TextEditor.Snapshot` | Text, cursor ve selection state’ini immutable tutar |
 | Caretaker | `EditorHistory` | Snapshot’ları LIFO saklar ve ardışık undo protokolünü yönetir |
-| Client | `MementoPatternDemo` | Snapshot zamanını seçer ve caretaker’dan undo ister |
+| Demo composition root | `com.can.demo.behavioral.memento.MementoPatternDemo` | Snapshot zamanını seçer ve caretaker’dan undo ister |
 
 ## Yapı
 

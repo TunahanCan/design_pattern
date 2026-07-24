@@ -3,6 +3,14 @@
 > Bu örnek synchronous, process içi ve stdout tabanlı bir bildirim demosudur.
 > Gerçek SMS, e-posta, push altyapısı veya güvenilir event delivery sağlamaz.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.observer` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.observer.ObserverPatternDemo` sınıfıdır.
+- Demo customer subscriber’larını örnek ürün kanallarına bağlar; publisher, subscription handle ve subscriber kontratı demo paketinden bağımsızdır.
+
+Production composition root subscriber yaşam döngüsünü, hata izolasyonunu ve sync/async delivery politikasını seçer. Testler demo stdout’u yerine abonelik, unsubscribe ve bildirim snapshot davranışlarını domain API’sinden doğrular.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -74,7 +82,7 @@ Observer tek başına:
 | Abonelik handle’ı | `Subscription` | `close()` ile yalnız kendi abonelik referansını idempotent sonlandırır |
 | Subscriber | `Subscriber` | `update(productName, message)` callback’i |
 | Concrete Subscriber | `Customer` | Bildirimi kanal etiketiyle stdout’a yazar |
-| Client | `ObserverPatternDemo` | Abonelik ve restock senaryosunu kurar |
+| Demo composition root | `com.can.demo.behavioral.observer.ObserverPatternDemo` | Abonelik ve restock senaryosunu kurar |
 
 ## Yapı
 

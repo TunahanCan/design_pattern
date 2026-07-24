@@ -1,0 +1,72 @@
+package com.can.demo.behavioral.iterator;
+
+import com.can.behavirol.iterator.CompanyProfileIterator;
+import com.can.behavirol.iterator.Facebook;
+import com.can.behavirol.iterator.Profile;
+import com.can.behavirol.iterator.ProfileIterator;
+import com.can.behavirol.iterator.SocialGraph;
+import com.can.behavirol.iterator.SocialNetwork;
+import com.can.behavirol.iterator.SocialSpammer;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+public final class IteratorPatternDemo {
+
+    private IteratorPatternDemo() {
+    }
+
+    public static void main(String[] args) {
+        run();
+    }
+
+    public static void run() {
+        System.out.println("3) Iterator");
+
+        Profile ali = new Profile("1", "Ali", "ali@acme.com", "Acme");
+        Profile ayse = new Profile("2", "Ayşe", "ayse@acme.com", "Acme");
+        Profile mehmet = new Profile("3", "Mehmet", "mehmet@globex.com", "Globex");
+        Profile zeynep = new Profile("4", "Zeynep", "zeynep@acme.com", "Acme");
+
+        SocialGraph graph = new SocialGraph(
+                Map.of(
+                        ali.id(), ali,
+                        ayse.id(), ayse,
+                        mehmet.id(), mehmet,
+                        zeynep.id(), zeynep
+                ),
+                Map.of(
+                        ali.id(), List.of(ayse.id(), mehmet.id(), zeynep.id())
+                ),
+                Map.of(
+                        ali.id(), List.of(ayse.id(), zeynep.id())
+                )
+        );
+
+        SocialNetwork network = new Facebook(graph);
+        SocialSpammer spammer = new SocialSpammer();
+
+        System.out.println("Ali'nin arkadaşlarına kampanya mesajı:");
+        spammer.send(network.createFriendsIterator(ali.id()), "Hafta sonu etkinliği var!");
+
+        System.out.println("Ali'nin iş arkadaşlarına duyuru:");
+        spammer.send(network.createCoworkersIterator(ali.id()), "Sprint planning 10:00");
+
+        System.out.println("Ali'nin yalnız Acme'deki arkadaşlarına şirket buluşması:");
+        ProfileIterator acmeFriends = new CompanyProfileIterator(
+                network.createFriendsIterator(ali.id()),
+                "Acme"
+        );
+        spammer.send(acmeFriends, "Acme yaz buluşması");
+
+        Iterator<Profile> standardIterator = network
+                .createFriendsIterator(ali.id())
+                .asJavaIterator();
+        System.out.println(
+                "Standart Java Iterator ile ilk arkadaş: "
+                        + standardIterator.next().name()
+        );
+        System.out.println();
+    }
+}

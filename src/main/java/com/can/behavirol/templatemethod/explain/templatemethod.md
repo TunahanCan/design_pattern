@@ -3,6 +3,14 @@
 > Bu bölüm dosya madenciliği akışını simüle eder.
 > Concrete sınıflar gerçek dosya açmaz; stdout ve sabit metinlerle pattern’i görünür kılar.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.templatemethod` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.templatemethod.TemplateMethodPatternDemo` sınıfıdır.
+- Demo concrete miner seçip ortak `process` API’sini çağırır; algoritmanın sabit sırası `DocumentMiningTemplate` içinde kalır ve demo paketinden bağımsızdır.
+
+Production composition root dosya türünden doğru miner’ı seçen factory/registry sağlayabilir. Testler demo çıktısını değil template sırasını, hook’ları ve exception-safe cleanup invariant’ını recording subclass üzerinden doğrular.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -84,7 +92,7 @@ Template Method:
 | Template Method | `process` | Yedi adımı sabit sırada çağırır |
 | Concrete Class | `PdfDocumentMiner` | PDF açma/çıkarma/kapama ve OCR hook’u |
 | Concrete Class | `CsvDocumentMiner` | CSV’ye özel analiz, rapor ve after hook |
-| Client | `TemplateMethodPatternDemo` | İki miner’ı aynı API ile çalıştırır |
+| Demo composition root | `com.can.demo.behavioral.templatemethod.TemplateMethodPatternDemo` | İki miner’ı aynı API ile çalıştırır |
 
 ## Yapı
 

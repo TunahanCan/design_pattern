@@ -3,6 +3,7 @@ package com.can.behavirol.chainofresponsibility;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +21,52 @@ class ChainOfResponsibilityDemoTest {
     @Nested
     @DisplayName("İstek zincire ilk kez girdiğinde")
     class RequestValidation {
+
+        @Test
+        @DisplayName("composition factory zincirin doğrulama handler'ından başlayan kökünü üretir")
+        void factoryCreatesAValidationFirstChain() {
+            // Arrange & Act
+            OrderRequestHandler chain = createChain();
+
+            // Assert
+            assertInstanceOf(RequestValidationHandler.class, chain);
+        }
+
+        @Test
+        @DisplayName("composition factory zorunlu collaborator eksikliğini kurulum anında reddeder")
+        void factoryRejectsMissingCollaborators() {
+            // Arrange
+            UserRepository repository = testUsers();
+            LoginAttemptService attempts = new LoginAttemptService(3);
+            RequestCache cache = new RequestCache();
+
+            // Act
+            NullPointerException repositoryError = assertThrows(
+                    NullPointerException.class,
+                    () -> OrderRequestChainFactory.create(null, attempts, cache)
+            );
+            NullPointerException attemptsError = assertThrows(
+                    NullPointerException.class,
+                    () -> OrderRequestChainFactory.create(repository, null, cache)
+            );
+            NullPointerException cacheError = assertThrows(
+                    NullPointerException.class,
+                    () -> OrderRequestChainFactory.create(repository, attempts, null)
+            );
+
+            // Assert
+            assertAll(
+                    () -> assertEquals(
+                            "userRepository cannot be null",
+                            repositoryError.getMessage()
+                    ),
+                    () -> assertEquals(
+                            "loginAttemptService cannot be null",
+                            attemptsError.getMessage()
+                    ),
+                    () -> assertEquals("cache cannot be null", cacheError.getMessage())
+            );
+        }
 
         @Test
         @DisplayName("eksik payload authentication'dan önce typed ret sonucuna dönüşür")
@@ -430,10 +477,13 @@ class ChainOfResponsibilityDemoTest {
     }
 
     private static OrderRequestHandler createChain(LoginAttemptService attempts, RequestCache cache) {
-        UserRepository userRepository = new UserRepository(Map.of(
+        return OrderRequestChainFactory.create(testUsers(), attempts, cache);
+    }
+
+    private static UserRepository testUsers() {
+        return new UserRepository(Map.of(
                 "can", new User("can", "1234", false),
                 "admin", new User("admin", "root", true)
         ));
-        return ChainOfResponsibilityDemo.buildChain(userRepository, attempts, cache);
     }
 }

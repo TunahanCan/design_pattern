@@ -98,13 +98,19 @@ metadata ve download entry'sini siler; `reset()` bütün bölgeleri temizler.
 
 ## Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.proxy.ProxyPatternDemo`
+FQCN'indedir. Bu sınıf Real Subject → Proxy → Client graph'ını kuran
+**composition root / example driver**'dır; Subject hiyerarşisinin bir parçası
+değildir. Asıl client `YouTubeManager`, tekrar kullanılabilir Subject tipleri ise
+`com.can.structural.proxy` paketinde kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
 | Subject | `ThirdPartyYouTubeLib` | Client ve iki servis için ortak kontrat |
 | Real Subject | `ThirdPartyYouTubeClass` | Sonuç üretir ve gerçek çağrı sayısını simüle eder |
 | Proxy | `CachedYouTubeClass` | Liste, bilgi ve download sonuçlarını cache'ler; hedefli/tam invalidation sunar |
 | Client | `YouTubeManager` | Yalnız Subject üzerinden panel/page/download üretir |
-| Composition root | `ProxyPatternDemo` | Real Subject, Proxy ve Client graph'ını kurar |
+| Composition root / example driver | `com.can.demo.structural.proxy.ProxyPatternDemo` | Real Subject, Proxy ve Client graph'ını kurar |
 
 Real service içindeki sayaçlar öğretici test gözlem noktalarıdır. Production remote client'ın ana sorumluluğuna test sayacı eklemek yerine metrics veya fake kullanılmalıdır.
 

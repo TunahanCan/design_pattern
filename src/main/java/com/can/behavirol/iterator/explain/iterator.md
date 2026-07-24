@@ -4,6 +4,14 @@
 > Geriye uyumlu `asJavaIterator()` adaptörü aynı traversal’ı standart Java
 > `Iterator` bitiş sözleşmesiyle de sunar.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.iterator` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.iterator.IteratorPatternDemo` sınıfıdır.
+- Demo örnek sosyal grafiği kurar ve farklı iterator’ları tüketiciye verir; iterator implementasyonları ile `SocialSpammer` demo paketine bağımlı değildir.
+
+Bu sınır önemlidir: graph fixture’ı öğretim verisidir, traversal kontratı ise yeniden kullanılabilir koddur. Testler demo `main` metoduna veya stdout’a bağlanmadan cursor, filtreleme, snapshot ve Java adapter davranışlarını domain API’si üzerinden ölçer.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -99,7 +107,7 @@ Iterator tek başına:
 | Element | `Profile` | Gezilen immutable record |
 | Relation seçimi | `RelationType` | `FRIENDS` veya `COWORKERS` |
 | Client | `SocialSpammer` | Iterator’dan email adreslerini tüketir |
-| Composition root | `IteratorPatternDemo` | Örnek graph’ı kurar |
+| Demo composition root | `com.can.demo.behavioral.iterator.IteratorPatternDemo` | Örnek graph’ı kurar |
 
 ## Yapı
 

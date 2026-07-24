@@ -3,6 +3,14 @@
 > Bu örnek düz bir `List<GeoNode>` üzerinde farklı visitor operasyonları çalıştırır.
 > XML attribute değerleri escape edilir; çıktı yine de tam bir XML document/serializer değildir.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.visitor` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.visitor.VisitorPatternDemo` sınıfıdır.
+- Demo heterojen element koleksiyonunu ve visitor instance’larını üretip traversal’ı başlatır; element/visitor double-dispatch kontratı demo paketinden bağımsızdır.
+
+Production composition root visitor yaşam döngüsünü ve traversal kaynağını seçer. Testler demo rapor metnine değil doğru overload dispatch’ine, escaping’e ve typed aggregation sonucuna doğrudan bağlanır.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -85,7 +93,7 @@ Visitor tek başına:
 | Concrete Visitor | `RiskAuditVisitor` | Risk notları biriktirir |
 | Concrete Visitor | `GeoSummaryVisitor` | Tip bazlı sayaç ve toplamları biriktirir |
 | Sonuç modeli | `GeoSummary` | Aggregation sonucunu immutable record olarak taşır |
-| Client | `VisitorPatternDemo` | Düz listeyi gezer ve üç visitor uygular |
+| Demo composition root | `com.can.demo.behavioral.visitor.VisitorPatternDemo` | Düz listeyi gezer ve üç visitor uygular |
 
 ## Yapı
 

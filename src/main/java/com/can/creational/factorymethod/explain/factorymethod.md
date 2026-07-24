@@ -22,7 +22,16 @@ Factory Method, nesne oluşturma kararını ortak iş akışından ayıran yarat
 | **Güçlendirilmiş örnek** | `NotificationService`, `NotificationJob` ve `sendAll(List<NotificationJob>)` | Built-in creator metadata'sı wiring aşamasında, gerçekten üretilen product ise her gönderimde seçilen kanala karşı doğrulanır |
 | **Production sınırı** | `NotificationSender` portunun arkasındaki henüz uygulanmamış altyapı | Retry, timeout, idempotency, outbox, rate limit ve hassas veri maskeleme factory'nin değil teslimat katmanının kararıdır |
 
-`FactoryMethodDemo` bu haritayı iki başlıkla çalıştırır: önce tek EMAIL gönderimi, sonra SMS ve PUSH işlerinden oluşan küçük bir batch.
+`com.can.demo.creational.factorymethod.FactoryMethodDemo` bu haritayı iki başlıkla çalıştırır: önce tek EMAIL gönderimi, sonra SMS ve PUSH işlerinden oluşan küçük bir batch.
+
+## Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Yeniden kullanılabilir product, creator, request ve service sınıfları `com.can.creational.factorymethod` domain paketinde kalır.
+`com.can.demo.creational.factorymethod.FactoryMethodDemo` ise yalnız `main` / `run` giriş noktası ve concrete wiring içerir; bağımlılık yönü **demo → domain** biçimindedir.
+Böylece örneği çalıştıran composition root, uygulamanın kullanacağı Factory Method API'sinin parçasıymış gibi görünmez.
+Diyagramlarda okunabilirlik için bu uzun FQCN yalnız `FactoryMethodDemo` kısa adıyla gösterilir.
+
+`src/test` altındaki `com.can.creational.factorymethod.FactoryMethodDemoTest` çalıştırılabilir demo değil, domain kontrat testidir; product/creator sınırına yakın kalması bu nedenle bilinçlidir.
 
 ## Akılda kalıcı analoji: aynı servis, farklı usta
 
@@ -149,7 +158,7 @@ Constructor, açık built-in metadata ile map anahtarı uyuşmazlığını produ
 | `NotificationService` | Router / client orkestrasyonu | Kanalı kayıtlı creator ile eşler |
 | `NotificationJob` | Batch değer nesnesi | Bir kanal ile o kanala özel isteği tek, doğrulanmış işte gruplar |
 | `NotificationService#sendAll` | Güçlendirilmiş client akışı | İşleri giriş sırasıyla mevcut `send` yoluna aktarır |
-| `FactoryMethodDemo` | Demo client | Tek gönderim ile sıralı iş listesini yan yana çalıştırır |
+| `com.can.demo.creational.factorymethod.FactoryMethodDemo` | Demo / composition root | Concrete creator'ları kurar; tek gönderim ile sıralı iş listesini yan yana çalıştırır |
 
 ## Yapı diyagramı
 
@@ -209,8 +218,24 @@ sequenceDiagram
     Creator->>Creator: selected EMAIL == actual EMAIL
     Creator->>Product: send(request)
     Product->>Product: formatPayload(request)
-    Product->>Sender: send(payload)
+Product->>Sender: send(payload)
 ```
+
+## Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Üretim kararı ortak akıştan bağımsız mı değişiyor?"}
+    A -- Hayır --> B["Doğrudan constructor veya küçük factory"]
+    A -- Evet --> C{"Değişen şey nedir?"}
+    C -- "Tek product varyantı" --> D["Factory Method"]
+    C -- "Uyumlu product ailesi" --> E["Abstract Factory"]
+    C -- "Tek product'ın kurulum adımları" --> F["Builder"]
+    D --> G["Creator üretir; ortak operasyon sabit kalır"]
+```
+
+Bu diyagram sınıf sayısına değil değişim eksenine bakar.
+Yalnız bir `new` çağrısını saklamak için creator hiyerarşisi kurmak Factory Method'un maliyetini üretir, faydasını üretmez.
 
 ## Kodu adım adım okuma
 
@@ -242,7 +267,7 @@ Her `send(channel, request)` çağrısı seçilen kanalı creator'a geçirir; cr
 
 ### 6. Composition root somut tipleri bilir
 
-`FactoryMethodDemo` üç creator'ı oluşturup map'e koyar. Concrete sınıflardan habersiz olması gereken yer bütün uygulama değil, ortak iş akışıdır.
+`com.can.demo.creational.factorymethod.FactoryMethodDemo` üç creator'ı oluşturup map'e koyar. Concrete sınıflardan habersiz olması gereken yer bütün uygulama değil, ortak iş akışıdır.
 
 ### 7. Gerçekçi batch aynı güvenli yolu tekrar kullanır
 

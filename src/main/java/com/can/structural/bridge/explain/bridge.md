@@ -89,9 +89,16 @@ Sınırlar:
 
 ## Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.bridge.BridgePatternDemo`
+FQCN'indedir. Bu sınıf yalnız hangi Abstraction'ın hangi Implementation ile
+eşleşeceğini seçen **composition root / example driver**'dır; Bridge deseninin
+kalıcı rollerinden biri değildir. Kavramsal client, `RemoteControl` API'sini
+kullanan herhangi bir uygulama kodudur. Yeniden kullanılabilir iki eksen
+`com.can.structural.bridge` paketinde kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `BridgePatternDemo` | Abstraction–implementation eşleşmelerini kurar |
+| Composition root / example driver | `com.can.demo.structural.bridge.BridgePatternDemo` | Abstraction–implementation eşleşmelerini kurar ve örnek çağrıları sürer |
 | Abstraction | `RemoteControl` | Güç, ses ve kanal kullanım dilini sunar |
 | Refined Abstraction | `AdvancedRemoteControl` | `mute`, preset kaydetme/seçme workflow'unu ekler |
 | Implementation | `Device` | Ortak düşük seviye cihaz kontratı |

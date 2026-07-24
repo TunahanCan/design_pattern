@@ -22,7 +22,16 @@ Abstract Factory, birlikte kullanılması gereken ürünleri uyumlu bir aile ola
 | **Güçlendirilmiş örnek** | `HighContrastThemeFactory`, `HighContrastButton`, `HighContrastCheckbox` | Yeni bir erişilebilirlik ailesi eklenirken `GuiFactory` ve `UiScreen` değişmez; yalnız varyantlar ile composition seçimi genişler |
 | **Production sınırı** | `GuiFactoryProvider` + `UiScreen` fail-fast kontrollerinin ötesi | Gerçek component toolkit, design-token doğrulaması, WCAG testleri ve runtime theme cache bu metin tabanlı demoda uygulanmaz |
 
-`AbstractFactoryDemo`, standart LIGHT/DARK ailelerini “temel”, HIGH_CONTRAST ailesini “daha gerçekçi” başlığı altında render eder.
+`com.can.demo.creational.abstractfactory.AbstractFactoryDemo`, standart LIGHT/DARK ailelerini “temel”, HIGH_CONTRAST ailesini “daha gerçekçi” başlığı altında render eder.
+
+## Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Abstract product'lar, üç product ailesi, factory sözleşmesi ve `UiScreen` client'ı `com.can.creational.abstractfactory` domain paketindedir.
+`com.can.demo.creational.abstractfactory.AbstractFactoryDemo` yalnız tema seçimi ile concrete factory wiring'ini yapan çalıştırılabilir composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Bu ayrım, örneği başlatan sınıfı reusable Abstract Factory modelinden uzak tutar ve concrete seçim bilgisinin uygulama sınırında kalmasını görünür yapar.
+Diyagramlarda uzun FQCN yerine kısa `AbstractFactoryDemo` adı kullanılır.
+
+`src/test` altındaki `com.can.creational.abstractfactory.AbstractFactoryDemoTest` bir demo değil, aile uyumu ve client bağımsızlığı için domain kontrat testidir.
 
 ## Akılda kalıcı analoji: takım forma seti
 
@@ -111,7 +120,7 @@ Kalıbın sınırı önemlidir:
 | `Theme` | Varyant anahtarı | LIGHT, DARK ve HIGH_CONTRAST seçeneklerini taşır |
 | `GuiFactoryProvider` | Factory seçici | Temayı concrete factory ile eşler |
 | `UiScreen` | Client | Factory'den ürünleri alır ve abstract API ile kullanır |
-| `AbstractFactoryDemo` | Demo / composition root | Üç temayı kurup sonucu yazdırır |
+| `com.can.demo.creational.abstractfactory.AbstractFactoryDemo` | Demo / composition root | Üç concrete tema factory'sini uygulama sınırında seçip sonucu yazdırır |
 
 ## Yapı diyagramı
 
@@ -174,6 +183,23 @@ sequenceDiagram
     Screen->>Checkbox: render()
     Screen-->>Client: combined text
 ```
+
+## Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Birden çok product birlikte uyumlu kalmalı mı?"}
+    A -- Hayır --> B{"Yalnız concrete product türü mü değişiyor?"}
+    B -- Evet --> C["Factory Method veya küçük factory"]
+    B -- Hayır --> D["Doğrudan constructor"]
+    A -- Evet --> E{"Aileler aynı değişim eksenini paylaşıyor mu?"}
+    E -- Evet --> F["Abstract Factory"]
+    E -- Hayır --> G["Önce product sınırlarını yeniden tanımla"]
+    F --> H["Client yalnız abstract product'ları görür"]
+```
+
+Abstract Factory'nin sinyali “çok sınıf var” değil, **birlikte değişmesi ve birlikte uyumlu kalması gereken product ailesi** bulunmasıdır.
+Tek ürün türü için aile factory'si kurmak, yeni bir ürün kategorisi eklendiğinde bütün factory'leri değiştirme bedelini gereksiz yere getirir.
 
 ## Kodu adım adım okuma
 

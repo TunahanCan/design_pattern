@@ -113,9 +113,15 @@ Sınırlar:
 
 ## Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.decorator.DecoratorPatternDemo`
+FQCN'indedir. Bu sınıf dekoratör zincirlerinin sırasını seçen **composition root /
+example driver**'dır; `Notifier` hiyerarşisinin bir üyesi değildir. Component ve
+Decorator tipleri `com.can.structural.decorator` paketinde sunum/CLI ayrıntısından
+bağımsız kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `DecoratorPatternDemo` | İstenen stack'leri composition ile kurar |
+| Composition root / example driver | `com.can.demo.structural.decorator.DecoratorPatternDemo` | İstenen stack'leri kurar ve örnek client çağrısını sürer |
 | Component | `Notifier` | Bütün bildirimlerin `send` kontratı |
 | Concrete Component | `EmailNotifier` | Temel Email çıktısını üretir |
 | Base Decorator | `BaseNotifierDecorator` | Aynı kontratı korur ve wrappee'ye delege eder |

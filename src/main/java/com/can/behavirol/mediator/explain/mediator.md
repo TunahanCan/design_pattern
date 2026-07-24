@@ -3,6 +3,15 @@
 > Bu bölüm küçük bir UI koordinasyon demosunu anlatır.
 > Gerçek authentication, email doğrulama veya parola güvenliği sağlamaz.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.mediator` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.mediator.MediatorPatternDemo` sınıfıdır.
+- Dış sistem olmadan çalışmayı sağlayan adapter `com.can.demo.behavioral.mediator.DemoAuthenticationGateway` sınıfıdır. Demo composition root bu adapter’ı açıkça `AuthenticationDialog` constructor’ına verir.
+- Component’ların koordinasyonu `AuthenticationDialog` mediator’ında, dış kimlik sistemi sınırı ise domain paketindeki `AuthenticationGateway` arayüzündedir; domain kodu demo adapter’ını bilmez.
+
+Production composition root gerçek gateway adapter’ını constructor üzerinden vermek zorundadır. Testler kendi test-scope stub/fake gateway’lerini kullanır; demo adapter’ına veya demo akışına bağlanmadan mediator’ın component görünürlüğü, doğrulama ve gateway delegasyonu kontratlarını ölçer.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -18,8 +27,8 @@
 | Katman | Bu repoda ne var? | Öğrettiği sınır |
 |---|---|---|
 | Temel örnek | `AuthenticationDialog` ile checkbox, textbox, label ve button koordinasyonu | Colleague nesnelerinin birbirini bilmeden mediator’a olay göndermesi |
-| Güçlendirilmiş örnek | Enjekte edilen `AuthenticationGateway` ve varsayılan `DemoAuthenticationGateway` | UI koordinasyonu ile login/register yan etkisinin ayrı sınırlar olması |
-| Production sınırı | Typed UI event’leri, validation nesneleri, async durum, gerçek auth adapter’ı ve secret temizliği | String event ve demo gateway’in güvenli authentication sağlamaması |
+| Güçlendirilmiş örnek | Zorunlu constructor injection ile `AuthenticationGateway`; demo paketindeki `DemoAuthenticationGateway`; test-scope stub/fake | UI koordinasyonu ile login/register yan etkisinin ayrı sınırlar olması; domain’in demo adapter’ına bağımlı olmaması |
+| Production sınırı | Typed UI event’leri, validation nesneleri, async durum, gerçek auth adapter’ı ve secret temizliği | String event ve demo adapter’ın güvenli authentication sağlamaması |
 
 ## Akılda kalıcı analoji: hava trafik kontrol kulesi
 
@@ -79,13 +88,13 @@ Mediator tek başına:
 | Mediator | `Mediator` | `notify(sender, event)` sözleşmesi |
 | Concrete Mediator | `AuthenticationDialog` | Mod geçişi ve submit koordinasyonu |
 | Dış servis portu | `AuthenticationGateway` | Login/register yan etkisinin UI’dan bağımsız sözleşmesi |
-| Demo adapter | `DemoAuthenticationGateway` | Main akışını dış sistem olmadan çalıştıran cevaplar |
+| Demo adapter | `com.can.demo.behavioral.mediator.DemoAuthenticationGateway` | Yalnız demo akışını dış sistem olmadan çalıştıran cevaplar |
 | Base Colleague | `Component` | Mediator referansını taşır |
 | Colleague | `Checkbox` | Checked state ve `"check"` olayı |
 | Colleague | `Textbox` | Text/visibility state ve `"input"` olayı |
 | Colleague | `Button` | Ad ve `"click"` olayı |
 | Colleague | `Label` | Başlık/sonuç metni |
-| Client | `MediatorPatternDemo` | Kullanıcı etkileşimlerini simüle eder |
+| Demo composition root | `com.can.demo.behavioral.mediator.MediatorPatternDemo` | Kullanıcı etkileşimlerini simüle eder |
 
 ## Yapı
 
@@ -110,13 +119,20 @@ classDiagram
         +login(username, password) String
         +register(username, password, email) String
     }
-    class DemoAuthenticationGateway
+    class DemoAuthenticationGateway {
+        <<demo adapter>>
+    }
+    class MediatorPatternDemo {
+        <<demo composition root>>
+    }
     class Component {
         #mediator Mediator
     }
     Mediator <|.. AuthenticationDialog
     AuthenticationGateway <|.. DemoAuthenticationGateway
     AuthenticationDialog --> AuthenticationGateway : delegates valid submit
+    MediatorPatternDemo ..> DemoAuthenticationGateway : creates
+    MediatorPatternDemo ..> AuthenticationDialog : injects gateway
     Component <|-- Checkbox
     Component <|-- Textbox
     Component <|-- Button
@@ -184,8 +200,9 @@ Başlangıç result label’ı önce boş oluşturulsa da constructor sonunda bo
 - Bilinmeyen sender/event sessizce yok sayılır.
 - Result string hem doğrulama hem başarı bilgisini taşır.
 - Mod değişiminde textbox içerikleri temizlenmez.
-- Parametresiz constructor `DemoAuthenticationGateway` kullanarak eski Main akışını korur.
-- Constructor injection kullanılan test/uygulama gerçek servisi veya test double’ını verebilir.
+- `AuthenticationDialog` yalnız `AuthenticationGateway` alan constructor sunar; adapter seçimi gizli bir default değildir.
+- Null gateway constructor sınırında reddedilir.
+- Demo composition root demo adapter’ını, production composition root gerçek adapter’ı, test ise test-scope stub/fake’i açıkça enjekte eder.
 
 ## Dışarı açılan component riski
 
@@ -204,13 +221,14 @@ Production tasarımında kullanıcı aksiyon API’si ile internal component mut
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
-| `InitialState` | Login başlangıcı, görünürlük ve constructor mesajı |
+| `InitialState` | Test-scope stub enjekte edildiğinde login başlangıcı, görünürlük ve constructor mesajı |
 | `ModeSwitching` | Register’a geçiş ve login’e dönüş |
 | `LoginSubmission` | Zorunlu alan reddi ve başarı |
 | `RegistrationSubmission` | Email zorunluluğu ve başarı |
 | `GatewayBoundary` | Geçerli login’in delege edilmesi ve invalid formda servisin çağrılmaması |
 
 Testler UI framework’ü başlatmadan mediator state’ini doğrudan gözler.
+Başarı metni gereken senaryolar küçük bir `StubAuthenticationGateway`, çağrı ayrıntısı gereken sınır senaryoları ise recording fake kullanır; production ve demo adapter’ları test source set’ine sızmaz.
 
 ## Edge case, security, concurrency ve performans
 

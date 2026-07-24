@@ -145,10 +145,25 @@ for token in expectedChapterTokens where !fullText.localizedCaseInsensitiveConta
 
 let chapterCardMarker = "30 saniyelik kart"
 let chapterCardCount = fullText.components(separatedBy: chapterCardMarker).count - 1
-if chapterCardCount != 23 {
+let repositoryRoot = inputURL
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+let bookURL = repositoryRoot.appendingPathComponent("BOOK.md")
+let expectedChapterCardCount: Int?
+if let book = try? String(contentsOf: bookURL, encoding: .utf8) {
+    expectedChapterCardCount =
+        book.components(separatedBy: chapterCardMarker).count - 1
+} else {
+    expectedChapterCardCount = nil
+    failures.append("BOOK.md okunamadı: \(bookURL.path)")
+}
+if let expectedChapterCardCount,
+   chapterCardCount != expectedChapterCardCount
+{
     failures.append(
         "Bölüm gövdesi bütünlüğü beklenen sayıda değil: "
-            + "'\(chapterCardMarker)' \(chapterCardCount) kez bulundu, 23 bekleniyordu"
+            + "'\(chapterCardMarker)' \(chapterCardCount) kez bulundu, "
+            + "\(expectedChapterCardCount) bekleniyordu"
     )
 }
 

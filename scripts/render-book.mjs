@@ -21,6 +21,12 @@ const repositoryRoot = path.resolve(scriptDirectory, "..");
 const markdownPath = path.join(repositoryRoot, "BOOK.md");
 const templatePath = path.join(repositoryRoot, "docs", "assets", "book-template.html");
 const pdfPath = path.join(repositoryRoot, "docs", "design-patterns-java.pdf");
+const htmlOutputPath = path.join(repositoryRoot, "docs", "design-patterns-java.html");
+const htmlStagingPath = path.join(
+  repositoryRoot,
+  "docs",
+  `.design-patterns-java.${process.pid}.html`,
+);
 const rawPdfStagingPath = path.join(
   repositoryRoot,
   "docs",
@@ -168,6 +174,20 @@ const waitForFile = async (file, timeoutMilliseconds) => {
     await delay(100);
   }
   throw new Error(`Dosya beklenirken zaman aşımı: ${file}`);
+};
+
+const commandIsAvailable = (command, args = ["--version"]) => {
+  try {
+    execFileSync(command, args, {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+      stdio: "ignore",
+      timeout: 15_000,
+    });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const readCdpStream = async (client, handle) => {
@@ -375,8 +395,8 @@ const renderPdfWithChrome = async ({ chrome, htmlPath, pdfPath, profilePath }) =
         "Page.printToPDF",
         {
           displayHeaderFooter: false,
-          generateDocumentOutline: false,
-          generateTaggedPDF: false,
+          generateDocumentOutline: true,
+          generateTaggedPDF: true,
           preferCSSPageSize: true,
           printBackground: true,
           // Büyük kitaplarda tek bir Base64 WebSocket frame'i istemci sınırını
@@ -492,33 +512,62 @@ try {
     );
   }
 
-  execFileSync(
-    "swift",
-    [
-      path.join(scriptDirectory, "add-pdf-outline.swift"),
-      rawPdfStagingPath,
-      pdfStagingPath,
-      path.join(repositoryRoot, "docs", "chapter-manifest.txt"),
-    ],
-    {
-      cwd: repositoryRoot,
-      encoding: "utf8",
-      stdio: "inherit",
-      timeout: 120_000,
-    },
+  writeFileSync(htmlStagingPath, html, "utf8");
+  renameSync(htmlStagingPath, htmlOutputPath);
+  console.log(
+    `Etkileşimli HTML üretildi: ${path.relative(repositoryRoot, htmlOutputPath)} `
+      + `(${Buffer.byteLength(html, "utf8")} bayt)`,
   );
 
-  execFileSync("swift", [path.join(scriptDirectory, "audit-pdf.swift"), pdfStagingPath], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-    stdio: "inherit",
-    timeout: 120_000,
-  });
-  const pdf = readFileSync(pdfStagingPath);
-  renameSync(pdfStagingPath, pdfPath);
+  let finalizedPdfPath;
+  if (process.platform === "darwin" && commandIsAvailable("swift")) {
+    execFileSync(
+      "swift",
+      [
+        path.join(scriptDirectory, "add-pdf-outline.swift"),
+        rawPdfStagingPath,
+        pdfStagingPath,
+        path.join(repositoryRoot, "docs", "chapter-manifest.txt"),
+      ],
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        stdio: "inherit",
+        timeout: 120_000,
+      },
+    );
+
+    execFileSync(
+      "swift",
+      [path.join(scriptDirectory, "audit-pdf.swift"), pdfStagingPath],
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        stdio: "inherit",
+        timeout: 120_000,
+      },
+    );
+    finalizedPdfPath = pdfStagingPath;
+  } else {
+    execFileSync(
+      process.execPath,
+      [path.join(scriptDirectory, "audit-pdf-portable.mjs"), rawPdfStagingPath],
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        stdio: "inherit",
+        timeout: 180_000,
+      },
+    );
+    finalizedPdfPath = rawPdfStagingPath;
+  }
+
+  const pdf = readFileSync(finalizedPdfPath);
+  renameSync(finalizedPdfPath, pdfPath);
 
   console.log(`PDF üretildi: ${path.relative(repositoryRoot, pdfPath)} (${pdf.length} bayt)`);
 } finally {
+  rmSync(htmlStagingPath, { force: true });
   rmSync(rawPdfStagingPath, { force: true });
   rmSync(pdfStagingPath, { force: true });
   rmSync(temporaryDirectory, { recursive: true, force: true });

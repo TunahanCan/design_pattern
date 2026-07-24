@@ -22,7 +22,16 @@ Prototype, yeni nesneyi kurulum adımlarını tekrarlamak yerine hazır örneği
 | **Güçlendirilmiş örnek** | `CandidateProfileRegistry#register`, defensive `address()` / `skills()` | Registry canlı referans değil template snapshot'ı saklar; accessor'lar iç mutable state'i dışarı açmaz |
 | **Production sınırı** | `HashMap` tabanlı küçük registry'nin ötesi | Duplicate-ID politikası, versioning, concurrent update, çok büyük/cyclic graph kopyası ve kopyalama maliyeti ayrıca tasarlanmalıdır |
 
-`PrototypeDemo`, doğrudan deep-copy fikrini ve registry'den alınan bağımsız çalışma kopyasını ayrı başlıklarla gösterir.
+`com.can.demo.creational.prototype.PrototypeDemo`, doğrudan deep-copy fikrini ve registry'den alınan bağımsız çalışma kopyasını ayrı başlıklarla gösterir.
+
+## Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Prototype kontratı, concrete profile, mutable nested value ve registry `com.can.creational.prototype` domain paketindedir.
+`com.can.demo.creational.prototype.PrototypeDemo` ise template'i hazırlayıp registry'ye kaydeden çalıştırılabilir composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Kopyalama politikası demo sınıfında değil `CandidateProfile#copy()` ve copy constructor'da yaşar; böylece politika bütün client'lar için tek ve doğrudan test edilebilir kalır.
+Diyagramlarda uzun FQCN yerine kısa `PrototypeDemo` adı kullanılır.
+
+`src/test` altındaki `com.can.creational.prototype.PrototypeDemoTest` bir çalıştırma demosu değil, identity ve copy-semantics kontrat testidir.
 
 ## Akılda kalıcı analoji: çalışma kâğıdının fotokopisi
 
@@ -102,7 +111,7 @@ Prototype şunları kendiliğinden çözmez:
 | `personalize` | Özelleştirme adımı | Kopyanın adını ve özetini değiştirir |
 | `addSkill` | Özelleştirme adımı | Kopyanın beceri listesine ekler |
 | `relocateTo` | Özelleştirme adımı | Kopyanın adresini değiştirir |
-| `PrototypeDemo` | Client | Template kaydeder ve iki bağımsız clone üretir |
+| `com.can.demo.creational.prototype.PrototypeDemo` | Demo / composition root | Template kaydeder ve iki bağımsız clone üretir |
 
 ## Yapı diyagramı
 
@@ -155,6 +164,23 @@ sequenceDiagram
     Client->>Clone: addSkill("Kafka")
     Client->>Clone: relocateTo("Ankara", "TR")
 ```
+
+## Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Başlangıç noktası runtime'da hazırlanmış bir nesne mi?"}
+    A -- Hayır --> B{"Kurulum çok adımlı mı?"}
+    B -- Evet --> C["Builder"]
+    B -- Hayır --> D["Constructor veya factory"]
+    A -- Evet --> E{"Paylaşılacak ve ayrılacak dalların copy politikası açık mı?"}
+    E -- Evet --> F["Prototype"]
+    E -- Hayır --> G["Önce shallow/deep copy kontratını tanımla"]
+    F --> H["Kopyayı özelleştir; template'i koru"]
+```
+
+Prototype'ın seçim sinyali yalnız alan sayısı değildir; **başlangıç konfigürasyonunun yaşayan bir instance üzerinde bulunması** ve bu instance'tan bağımsız varyantlar gerekmesidir.
+Copy politikası belirsizken kalıbı eklemek, constructor tekrarından daha tehlikeli biçimde sessiz aliasing hataları üretir.
 
 ## Kodu adım adım okuma
 

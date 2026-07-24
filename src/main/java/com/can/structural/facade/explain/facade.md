@@ -107,9 +107,15 @@ Facade'ın sınırı:
 
 ## Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.facade.FacadePatternDemo`
+FQCN'indedir. Bu sınıf `VideoConverterFacade` graph'ını kuran **composition root /
+example driver**'dır; Facade'ın veya medya alt sisteminin bir parçası değildir.
+Kavramsal client Facade'ın üst seviye API'sini çağıran koddur; tekrar kullanılabilir
+tipler `com.can.structural.facade` paketinde kalır.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client | `FacadePatternDemo` | Tek `convert` çağrısıyla sonucu ister |
+| Composition root / example driver | `com.can.demo.structural.facade.FacadePatternDemo` | Facade'ı kurar ve tek `convert` çağrısını görünür kılar |
 | Facade | `VideoConverterFacade` | Kaynak analizi, codec seçimi, dönüşüm, audio ve adlandırmayı koordine eder |
 | Input vocabulary | `VideoFormat` | Desteklenen MP4/OGG kümesini ve normalize etmeyi açık tipte tutar |
 | Subsystem | `VideoFile` | Dosya segmentinden kaynak uzantısını çıkarır ve hedef formatlı çıktı adını üretir |
@@ -124,7 +130,9 @@ Facade'ın sınırı:
 
 ```mermaid
 classDiagram
-    class FacadePatternDemo
+    class FacadePatternDemo {
+        <<compositionRoot>>
+    }
     class VideoConverterFacade {
         +convert(String, String) ConvertedFile
         +convertTo(String, VideoFormat) ConvertedFile

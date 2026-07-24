@@ -23,7 +23,16 @@ Bu repoda immutable `Report`, nested `Report.Builder` ile oluşturulur.
 | **Güçlendirilmiş örnek** | `Report#toBuilder()` ve normalize edilen `sections(List)` | Mevcut rapordan yalnız seçilen alanları değişen yeni varyant türetilir; tekli ve toplu section girişleri aynı kurala uyar |
 | **Production sınırı** | `ReportDirector` reçetelerinin ötesi | Cross-field kuralları, localization, kalıcı çıktı formatları ve çok büyük bölüm listelerinde kopyalama maliyeti bu küçük modelde çözülmez |
 
-`BuilderDemo`, custom kurulumu ve iki director reçetesini korurken quarterly rapordan bir executive-summary varyantı da türetir.
+`com.can.demo.creational.builder.BuilderDemo`, custom kurulumu ve iki director reçetesini korurken quarterly rapordan bir executive-summary varyantı da türetir.
+
+## Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Immutable product, nested builder ve tekrar kullanılabilir reçeteler `com.can.creational.builder` domain paketinde kalır.
+`com.can.demo.creational.builder.BuilderDemo` ise `main` / `run` giriş noktalarından bu API'yi kullanan composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Demo sınıfına davranış veya doğrulama kuralı konmaz; bu kurallar `Report.Builder` ve `ReportDirector` içinde test edilebilir kalır.
+Diyagramlarda uzun FQCN yerine kısa `BuilderDemo` adı gösterilir.
+
+`src/test` altındaki `com.can.creational.builder.BuilderDemoTest` çalıştırma demosunu değil, builder ve immutable product kontratlarını doğrular.
 
 ## Akılda kalıcı analoji: kişiselleştirilen sandviç
 
@@ -100,7 +109,7 @@ Klasik GoF Builder'daki ayrı `Builder` arayüzü ve birden fazla representation
 | `author(String)` | Build step | Yazarı ayarlar |
 | `build()` | Terminal step | Builder snapshot'ından `Report` üretir |
 | `ReportDirector` | Reçete helper'ı | İki hazır Report kurulumu sunar |
-| `BuilderDemo` | Client | Custom, hazır ve mevcut üründen türetilmiş reçeteleri karşılaştırır |
+| `com.can.demo.creational.builder.BuilderDemo` | Demo / composition root | Custom, hazır ve mevcut üründen türetilmiş reçeteleri karşılaştırır |
 
 ## Yapı diyagramı
 
@@ -155,6 +164,22 @@ sequenceDiagram
     Product->>Product: List.copyOf(sections)
     Product-->>Client: immutable Report
 ```
+
+## Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Kurulum çok sayıda isimli veya opsiyonel adımdan mı oluşuyor?"}
+    A -- Evet --> B{"Aynı kurulum reçetesi tekrar ediyor mu?"}
+    B -- Hayır --> C["Builder"]
+    B -- Evet --> D["Builder + Director reçetesi"]
+    A -- Hayır --> E{"Başlangıç noktası hazır runtime şablonu mu?"}
+    E -- Evet --> F["Prototype"]
+    E -- Hayır --> G["Constructor, record veya küçük factory"]
+```
+
+Builder'ın seçim sinyali fluent sözdizimi değil, **kurulum kararlarının okunabilir ve doğrulanabilir bir süreç olarak ayrılmasıdır**.
+İki alanlı bir value object için builder eklemek yalnız API yüzeyini büyütür; hazır bir nesneyi kopyalayarak başlamak gerekiyorsa Prototype daha doğru soruyu cevaplar.
 
 ## Kodu adım adım okuma
 

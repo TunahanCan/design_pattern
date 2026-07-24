@@ -2,6 +2,14 @@
 
 > Aritmetik örnek mekanizmayı görünür kılar; teslimat örneği aynı fikrin gerçek iş kuralındaki karşılığını gösterir.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.strategy` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.strategy.StrategyPatternDemo` sınıfıdır.
+- Demo calculator ve teslimat context’lerine concrete strategy seçer; context’ler çalıştırılabilir örneği veya seçim arayüzünü bilmez.
+
+Production composition root strategy’yi kullanıcı tercihi, feature flag ya da iş kuralından seçebilir. Testler demo stdout’u yerine her algoritmanın sonucu ile runtime strategy değişiminin context kontratını doğrular.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -89,7 +97,7 @@ Strategy tek başına:
 | Concrete Strategy | `SubtractStrategy` | `a - b` |
 | Concrete Strategy | `MultiplyStrategy` | `a * b` |
 | Context | `CalculatorContext` | Aktif stratejiyi saklar ve delege eder |
-| Client | `StrategyPatternDemo` | Runtime strateji seçimini yapar |
+| Demo composition root | `com.can.demo.behavioral.strategy.StrategyPatternDemo` | Runtime strateji seçimini yapar |
 | Gerçekçi Strategy | `DeliveryStrategy` | `Shipment` için `DeliveryQuote` sözleşmesi |
 | Gerçekçi Context | `DeliveryPlanner` | Non-null aktif teslimat stratejisine delege eder |
 | Concrete Strategy | `StandardDeliveryStrategy` | Ürün adedi, şehir ve premium politikasını uygular |

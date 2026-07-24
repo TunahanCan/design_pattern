@@ -3,6 +3,14 @@
 > Bu örnek bir dokümanın yayın yaşam döngüsünü modeller.
 > Rol ve geçiş API’leri eğitim için sadedir; production yetkilendirme sistemi değildir.
 
+## Kod organizasyonu ve composition sınırı
+
+- Desen rolleri `com.can.behavirol.state` paketindedir.
+- Çalıştırılabilir composition root `com.can.demo.behavioral.state.StatePatternDemo` sınıfıdır.
+- Demo farklı rol ve olayları sırayla gönderir; transition kuralları demo driver’da değil `DocumentState` implementasyonlarındadır.
+
+Production composition root document’i kalıcı depodan yükleme ve state’i serialize etme politikasını seçer. Testler demo metnine değil izin verilen/yasaklanan transition’lara ve context invariant’larına doğrudan bağlanır.
+
 ## 30 saniyelik kart
 
 | Soru | Kısa cevap |
@@ -80,7 +88,7 @@ State deseni tek başına:
 | Concrete State | `DraftState` | Edit’e izin verir, publish ile moderation’a geçer |
 | Concrete State | `ModerationState` | Edit/publish yanında gerekçeli ret ile Draft’a döner |
 | Concrete State | `PublishedState` | Edit ve tekrar publish’i no-op yapar |
-| Client | `StatePatternDemo` | Rol değişikliği ve geçişleri yürütür |
+| Demo composition root | `com.can.demo.behavioral.state.StatePatternDemo` | Rol değişikliği ve geçişleri yürütür |
 
 ## Yapı
 

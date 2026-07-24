@@ -22,7 +22,17 @@ Singleton, belirli kapsamda tek instance ve ortak erişim amaçlar; `AppConfig` 
 | **Güçlendirilmiş örnek** | `ApiClientConfig`, `ApiClient`, `ApiRequestPlan` | Singleton yalnız composition root'ta çözülür; iş sınıfı dar interface'i constructor'dan aldığı için fake config ile global state olmadan test edilir |
 | **Production sınırı** | Hard-coded immutable `AppConfig` değerlerinin ötesi | Secret yönetimi, config reload, initialization failure, DI scope ve farklı process'ler arasındaki koordinasyon Singleton tarafından çözülmez |
 
-`SingletonDemo`, önce iki erişimin identity eşitliğini, sonra aynı config'in enjekte edildiği test edilebilir bir API istek planını gösterir.
+`com.can.demo.creational.singleton.SingletonDemo`, önce iki erişimin identity eşitliğini, sonra aynı config'in enjekte edildiği test edilebilir bir API istek planını gösterir.
+
+## Paket sınırı: pattern kodu ve çalıştırılabilir demo
+
+Singleton, dar config sözleşmesi ve onu kullanan client `com.can.creational.singleton` domain paketindedir.
+`com.can.demo.creational.singleton.SingletonDemo` global erişimi bir kez çözüp `ApiClient`a enjekte eden çalıştırılabilir composition root'tur; bağımlılık yönü **demo → domain** biçimindedir.
+Bu sınır `AppConfig.getInstance()` çağrısının iş sınıflarına yayılmasını önler ve global identity kararını wiring noktasında görünür tutar.
+Diyagramlarda uzun FQCN yerine kısa `SingletonDemo` adı kullanılır.
+
+`src/test` altındaki `com.can.creational.singleton.SingletonDemoTest` çalıştırılabilir demo değildir.
+Static yaşam döngüsünü izole eden package-private `resetForTests()` hook'una kontrollü erişmek ve domain kontratını doğrulamak için test paketinde kalır.
 
 ## Akılda kalıcı analoji: binanın ortak elektrik panosu
 
@@ -102,7 +112,7 @@ Singleton sınırları:
 | `ApiClientConfig` | Dar dependency contract | Client'ın static `AppConfig` tipine bağlanmasını önler |
 | `ApiClient` | Güçlendirilmiş client | Config'i constructor'dan alır, URI origin/base-path ve timeout sınırını doğrular |
 | `ApiRequestPlan` | Immutable sonuç | Gerçek ağ çağrısı olmadan method, URL ve timeout kararını gözlemlenebilir yapar |
-| `SingletonDemo` | Composition root | Singleton'ı bir kez çözüp client'a enjekte eder |
+| `com.can.demo.creational.singleton.SingletonDemo` | Demo / composition root | Singleton'ı bir kez çözüp client'a enjekte eder |
 
 ## Yapı diyagramı
 
@@ -163,6 +173,22 @@ sequenceDiagram
     B-->>B: same published instance
 ```
 
+## Yanlış araç seçimini önleyen karar diyagramı
+
+```mermaid
+flowchart TD
+    A{"Tek object identity gerçekten domain invariant'ı mı?"}
+    A -- Hayır --> B["Normal instance veya DI ile paylaşılan scope"]
+    A -- Evet --> C{"Yaşam döngüsünü kim yönetmeli?"}
+    C -- "Sınıfın kendisi" --> D["Singleton"]
+    C -- "DI container" --> E["Container singleton scope"]
+    C -- "Birden çok process" --> F["Dağıtık koordinasyon veya dış servis"]
+    D --> G["Classloader kapsamını ve test izolasyonunu belgeleyin"]
+```
+
+Singleton seçimi “her yerden kolay erişim” arzusuna değil kanıtlanabilir bir identity invariant'ına dayanmalıdır.
+Yalnız tek konfigürasyon değeri paylaşmak gerekiyorsa immutable bir nesneyi composition root'tan enjekte etmek, global access point eklemeden aynı paylaşımı sağlayabilir.
+
 ## Kodu adım adım okuma
 
 ### 1. Constructor private'dır
@@ -195,7 +221,7 @@ Value equality'nin true olması iki referansın aynı nesne olduğunu söylemez;
 ### 7. Global erişim composition root'ta tutulur
 
 `ApiClient`, kendi içinde `AppConfig.getInstance()` çağırmaz; yalnız `ApiClientConfig` sözleşmesini constructor'dan alır.
-`SingletonDemo` wiring noktasında `new ApiClient(AppConfig.getInstance())` yazar.
+`com.can.demo.creational.singleton.SingletonDemo` wiring noktasında `new ApiClient(AppConfig.getInstance())` yazar.
 Böylece production tek instance'ı kullanırken test, static state'e dokunmadan fake config sağlayabilir.
 
 ### 8. İstek planı güvenli ve gözlemlenebilir bir sınırdır

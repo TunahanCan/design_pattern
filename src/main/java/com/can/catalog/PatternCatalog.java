@@ -1,27 +1,27 @@
 package com.can.catalog;
 
-import com.can.behavirol.chainofresponsibility.ChainOfResponsibilityDemo;
-import com.can.behavirol.command.CommandPatternDemo;
-import com.can.behavirol.iterator.IteratorPatternDemo;
-import com.can.behavirol.mediator.MediatorPatternDemo;
-import com.can.behavirol.memento.MementoPatternDemo;
-import com.can.behavirol.observer.ObserverPatternDemo;
-import com.can.behavirol.state.StatePatternDemo;
-import com.can.behavirol.strategy.StrategyPatternDemo;
-import com.can.behavirol.templatemethod.TemplateMethodPatternDemo;
-import com.can.behavirol.visitor.VisitorPatternDemo;
-import com.can.creational.abstractfactory.AbstractFactoryDemo;
-import com.can.creational.builder.BuilderDemo;
-import com.can.creational.factorymethod.FactoryMethodDemo;
-import com.can.creational.prototype.PrototypeDemo;
-import com.can.creational.singleton.SingletonDemo;
-import com.can.structural.adapter.AdapterPatternDemo;
-import com.can.structural.bridge.BridgePatternDemo;
-import com.can.structural.composite.CompositePatternDemo;
-import com.can.structural.decorator.DecoratorPatternDemo;
-import com.can.structural.facade.FacadePatternDemo;
-import com.can.structural.flyweight.FlyweightPatternDemo;
-import com.can.structural.proxy.ProxyPatternDemo;
+import com.can.demo.behavioral.chainofresponsibility.ChainOfResponsibilityDemo;
+import com.can.demo.behavioral.command.CommandPatternDemo;
+import com.can.demo.behavioral.iterator.IteratorPatternDemo;
+import com.can.demo.behavioral.mediator.MediatorPatternDemo;
+import com.can.demo.behavioral.memento.MementoPatternDemo;
+import com.can.demo.behavioral.observer.ObserverPatternDemo;
+import com.can.demo.behavioral.state.StatePatternDemo;
+import com.can.demo.behavioral.strategy.StrategyPatternDemo;
+import com.can.demo.behavioral.templatemethod.TemplateMethodPatternDemo;
+import com.can.demo.behavioral.visitor.VisitorPatternDemo;
+import com.can.demo.creational.abstractfactory.AbstractFactoryDemo;
+import com.can.demo.creational.builder.BuilderDemo;
+import com.can.demo.creational.factorymethod.FactoryMethodDemo;
+import com.can.demo.creational.prototype.PrototypeDemo;
+import com.can.demo.creational.singleton.SingletonDemo;
+import com.can.demo.structural.adapter.AdapterPatternDemo;
+import com.can.demo.structural.bridge.BridgePatternDemo;
+import com.can.demo.structural.composite.CompositePatternDemo;
+import com.can.demo.structural.decorator.DecoratorPatternDemo;
+import com.can.demo.structural.facade.FacadePatternDemo;
+import com.can.demo.structural.flyweight.FlyweightPatternDemo;
+import com.can.demo.structural.proxy.ProxyPatternDemo;
 
 import java.io.PrintStream;
 import java.util.Collections;
@@ -41,8 +41,10 @@ import static com.can.catalog.PatternFamily.STRUCTURAL;
 /**
  * Repo içindeki örneklerin tek kaynağıdır.
  *
- * <p>Katalog sayesinde {@link com.can.Main}, somut demo sınıflarını tek tek yönetmek
- * yerine bir aileyi ya da tek bir deseni seçerek çalıştırabilir.</p>
+ * <p>Katalog sayesinde {@link com.can.Main}, {@code com.can.demo} altındaki
+ * composition root sınıflarını tek tek yönetmek yerine bir aileyi ya da tek
+ * bir deseni seçerek çalıştırabilir. Pattern uygulamaları kendi domain
+ * paketlerinde demo bağımlılığı taşımadan kalır.</p>
  */
 public final class PatternCatalog {
 

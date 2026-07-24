@@ -3,6 +3,7 @@ package com.can.behavirol.mediator;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +21,7 @@ class MediatorPatternDemoTest {
         @DisplayName("login modu ve ona ait bileşen görünürlüğü hazırlanır")
         void loginModeIsPrepared() {
             // Arrange
-            AuthenticationDialog dialog = new AuthenticationDialog();
+            AuthenticationDialog dialog = createDialog();
 
             // Act
             String title = dialog.getTitle();
@@ -33,6 +34,17 @@ class MediatorPatternDemoTest {
                     () -> assertEquals("Giriş ekranı aktif.", dialog.getResultMessage())
             );
         }
+
+        @Test
+        @DisplayName("gateway seçimi composition root'a aittir; null adapter kabul edilmez")
+        void gatewayIsARequiredConstructorDependency() {
+            NullPointerException error = assertThrows(
+                    NullPointerException.class,
+                    () -> new AuthenticationDialog(null)
+            );
+
+            assertEquals("authenticationGateway cannot be null", error.getMessage());
+        }
     }
 
     @Nested
@@ -43,7 +55,7 @@ class MediatorPatternDemoTest {
         @DisplayName("register modu başlığı, email görünürlüğünü ve bilgi mesajını değiştirir")
         void switchToRegisterMode() {
             // Arrange
-            AuthenticationDialog dialog = new AuthenticationDialog();
+            AuthenticationDialog dialog = createDialog();
 
             // Act
             dialog.getLoginModeCheckbox().setChecked(false);
@@ -60,7 +72,7 @@ class MediatorPatternDemoTest {
         @DisplayName("register modundan login moduna geri dönülebilir")
         void switchBackToLoginMode() {
             // Arrange
-            AuthenticationDialog dialog = new AuthenticationDialog();
+            AuthenticationDialog dialog = createDialog();
             dialog.getLoginModeCheckbox().setChecked(false);
 
             // Act
@@ -83,7 +95,7 @@ class MediatorPatternDemoTest {
         @DisplayName("zorunlu alanlar boşsa doğrulama mesajı üretilir")
         void blankCredentialsAreRejected() {
             // Arrange
-            AuthenticationDialog dialog = new AuthenticationDialog();
+            AuthenticationDialog dialog = createDialog();
 
             // Act
             dialog.getOkButton().click();
@@ -99,7 +111,7 @@ class MediatorPatternDemoTest {
         @DisplayName("kullanıcı adı ve parola doluysa login sonucu üretilir")
         void completeCredentialsAreAccepted() {
             // Arrange
-            AuthenticationDialog dialog = new AuthenticationDialog();
+            AuthenticationDialog dialog = createDialog();
             dialog.getUsername().enterText("can");
             dialog.getPassword().enterText("1234");
 
@@ -119,7 +131,7 @@ class MediatorPatternDemoTest {
         @DisplayName("email eksikse register doğrulama mesajı üretilir")
         void missingEmailIsRejected() {
             // Arrange
-            AuthenticationDialog dialog = new AuthenticationDialog();
+            AuthenticationDialog dialog = createDialog();
             dialog.getLoginModeCheckbox().setChecked(false);
             dialog.getUsername().enterText("ayse");
             dialog.getPassword().enterText("qwerty");
@@ -138,7 +150,7 @@ class MediatorPatternDemoTest {
         @DisplayName("üç alan da doluysa kayıt sonucu üretilir")
         void completeRegistrationIsAccepted() {
             // Arrange
-            AuthenticationDialog dialog = new AuthenticationDialog();
+            AuthenticationDialog dialog = createDialog();
             dialog.getLoginModeCheckbox().setChecked(false);
             dialog.getUsername().enterText("ayse");
             dialog.getPassword().enterText("qwerty");
@@ -201,6 +213,23 @@ class MediatorPatternDemoTest {
                             dialog.getResultMessage()
                     )
             );
+        }
+    }
+
+    private static AuthenticationDialog createDialog() {
+        return new AuthenticationDialog(new StubAuthenticationGateway());
+    }
+
+    private static final class StubAuthenticationGateway implements AuthenticationGateway {
+
+        @Override
+        public String login(String username, String password) {
+            return "Kullanıcı giriş yaptı: " + username;
+        }
+
+        @Override
+        public String register(String username, String password, String email) {
+            return "Yeni kullanıcı kaydedildi: " + username;
         }
     }
 

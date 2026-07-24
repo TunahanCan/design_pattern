@@ -41,12 +41,34 @@ while IFS='|' read -r chapter_slug relative_path test_path; do
     fi
 
     chapter_number=$((chapter_number + 1))
+    case "$relative_path" in
+        */creational/*)
+            family_class="creational"
+            family_label="OLUŞTURUCU"
+            ;;
+        */structural/*)
+            family_class="structural"
+            family_label="YAPISAL"
+            ;;
+        */behavirol/*)
+            family_class="behavioral"
+            family_label="DAVRANIŞSAL"
+            ;;
+        *)
+            echo "Bölüm ailesi çözülemedi: $relative_path" >&2
+            exit 1
+            ;;
+    esac
     {
         printf '\n\n<!-- generated-chapter:%02d slug:%s source:%s -->\n' \
             "$chapter_number" "$chapter_slug" "$relative_path"
         printf '<div class="chapter-break"></div>\n\n'
         # Fenced code içeriğine dokunmadan chapter H1-H5 başlıklarını bir seviye indir.
-        awk -v chapter_slug="$chapter_slug" '
+        awk \
+            -v chapter_slug="$chapter_slug" \
+            -v chapter_number="$chapter_number" \
+            -v family_class="$family_class" \
+            -v family_label="$family_label" '
             /^[[:space:]]*(```+|~~~+)/ {
                 in_fence = !in_fence
                 print
@@ -57,7 +79,10 @@ while IFS='|' read -r chapter_slug relative_path test_path; do
                 gsub(/&/, "\\&amp;", title)
                 gsub(/</, "\\&lt;", title)
                 gsub(/>/, "\\&gt;", title)
-                printf "<h2 id=\"chapter-%s\">%s</h2>\n", chapter_slug, title
+                printf \
+                    "<h2 id=\"chapter-%s\" class=\"pattern-chapter-title family-%s\" " \
+                    "data-chapter-label=\"%02d · %s\">%s</h2>\n", \
+                    chapter_slug, family_class, chapter_number, family_label, title
                 chapter_title_written = 1
                 next
             }

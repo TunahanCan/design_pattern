@@ -12,12 +12,11 @@ public class AuthenticationDialog implements Mediator {
     private final Textbox email;
     private final Button okButton;
 
-    public AuthenticationDialog() {
-        this(new DemoAuthenticationGateway());
-    }
-
     public AuthenticationDialog(AuthenticationGateway authenticationGateway) {
-        this.authenticationGateway = Objects.requireNonNull(authenticationGateway);
+        this.authenticationGateway = Objects.requireNonNull(
+                authenticationGateway,
+                "authenticationGateway cannot be null"
+        );
         title = new Label(this, "Giriş Yap");
         resultMessage = new Label(this, "");
         loginModeCheckbox = new Checkbox(this);

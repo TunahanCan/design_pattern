@@ -133,9 +133,16 @@ yalnız tip değil **ölçü birimi ve hassasiyet kontratı** da çevirdiğini g
 
 ## Repodaki roller
 
+Çalıştırılabilir örnek `com.can.demo.structural.adapter.AdapterPatternDemo`
+FQCN'indedir. Bu sınıf Adapter'ın bir domain katılımcısı değil; nesne graph'ını
+kuran ve iki senaryoyu konsola süren **composition root / example driver**'dır.
+Tekrar kullanılabilir Target, Adaptee ve Adapter tipleri
+`com.can.structural.adapter` paketinde kalır. Böylece `main`/sunum kaygısı ile
+desenin üretim kodundaki bağımlılık yönü birbirine karışmaz.
+
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
-| Client / composition root | `AdapterPatternDemo` | Nesne graph'ını kurup örneği çalıştırır |
+| Composition root / example driver | `com.can.demo.structural.adapter.AdapterPatternDemo` | Nesne graph'ını kurup örneği çalıştırır; pattern rolü değildir |
 | Target tüketicisi | `RoundHole` | Yalnız `RoundPegShape` üzerinden uygunluk ölçer |
 | Target | `RoundPegShape` | Client'ın ihtiyaç duyduğu radius kontratı |
 | Uyumlu concrete tip | `RoundPeg` | Target'ı doğal olarak uygular |
