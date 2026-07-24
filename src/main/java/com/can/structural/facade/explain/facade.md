@@ -45,7 +45,7 @@ Client video dönüştürmek için şunları bilmek zorunda kalsaydı:
 4. `BitrateReader.read` çağır.
 5. Buffer'ı `BitrateReader.convert` ile dönüştür.
 6. `AudioMixer.fix` ile ses adımını uygula.
-7. Yeni dosya uzantısını hesapla.
+7. `VideoFile` üzerinden yeni çıktı adını üret.
 8. Sonucu `ConvertedFile` içine koy.
 
 Bu akış controller, CLI ve batch job içinde kopyalanırsa:
@@ -66,12 +66,14 @@ ConvertedFile converted = converter.convert("funny-cats-video.ogg", "mp4");
 Facade içeride:
 
 ```java
+VideoFormat destinationFormat = Objects.requireNonNull(format);
 VideoFile file = new VideoFile(filename);
 CompressionCodec source = codecFactory.extract(file);
-CompressionCodec destination = codecFactory.create(format);
+CompressionCodec destination = codecFactory.create(destinationFormat);
 String buffer = BitrateReader.read(file.getName(), source);
 String converted = BitrateReader.convert(buffer, destination);
 String mixed = audioMixer.fix(converted);
+String outputName = file.replaceExtensionWith(destinationFormat);
 ```
 
 Eski imzayı koruyan String operasyonu, değeri önce açık enum'a çevirir:
@@ -110,7 +112,7 @@ Facade'ın sınırı:
 | Client | `FacadePatternDemo` | Tek `convert` çağrısıyla sonucu ister |
 | Facade | `VideoConverterFacade` | Kaynak analizi, codec seçimi, dönüşüm, audio ve adlandırmayı koordine eder |
 | Input vocabulary | `VideoFormat` | Desteklenen MP4/OGG kümesini ve normalize etmeyi açık tipte tutar |
-| Subsystem | `VideoFile` | Dosya adı ve uzantısını çıkarır |
+| Subsystem | `VideoFile` | Dosya segmentinden kaynak uzantısını çıkarır ve hedef formatlı çıktı adını üretir |
 | Subsystem | `CodecFactory` | Kaynak uzantısına codec seçer |
 | Subsystem contract | `CompressionCodec` | Codec type bilgisini sunar |
 | Concrete subsystem | `Mpeg4CompressionCodec`, `OggCompressionCodec` | MP4/OGG türlerini temsil eder |
@@ -132,7 +134,11 @@ classDiagram
         MP4
         OGG
     }
-    class VideoFile
+    class VideoFile {
+        +getName() String
+        +getExtension() String
+        +replaceExtensionWith(VideoFormat) String
+    }
     class CodecFactory
     class CompressionCodec {
         <<interface>>
@@ -162,6 +168,7 @@ Akış:
 sequenceDiagram
     participant Client
     participant Facade as VideoConverterFacade
+    participant File as VideoFile
     participant Factory as CodecFactory
     participant Reader as BitrateReader
     participant Mixer as AudioMixer
@@ -178,6 +185,8 @@ sequenceDiagram
     Reader-->>Facade: converted{...->mp4}
     Facade->>Mixer: fix(converted)
     Mixer-->>Facade: ...|audio-fixed
+    Facade->>File: replaceExtensionWith(MP4)
+    File-->>Facade: "cats.mp4"
     Facade-->>Client: ConvertedFile("cats.mp4", payload)
 ```
 
@@ -185,14 +194,15 @@ sequenceDiagram
 
 `convert("funny-cats-video.ogg", "mp4")` için:
 
-1. `VideoFile` son noktadan `ogg` uzantısını çıkarır.
+1. `VideoFile`, dosya adı segmentindeki son geçerli noktadan `ogg` uzantısını çıkarır.
 2. `CodecFactory` source codec olarak OGG üretir.
 3. Hedef metni `VideoFormat.from` ile locale-safe ve case-insensitive `MP4` enum'una çevrilir.
 4. `CodecFactory#create(MP4)` destination codec olarak MPEG-4 üretir.
 5. `BitrateReader.read` `buffer{funny-cats-video.ogg:ogg}` üretir.
 6. `convert` bunu destination codec ile `converted{buffer{...}->mp4}` yapar.
 7. `AudioMixer` sonuna `|audio-fixed` ekler.
-8. Uzantı `.mp4` yapılır ve `ConvertedFile` döner.
+8. `VideoFile#replaceExtensionWith(MP4)` kaynak adını koruyup uzantıyı `.mp4`
+   yapar ve `ConvertedFile` döner. Dosya adı kuralı facade içinde tekrarlanmaz.
 
 Bu çıktı gerçek medya içeriği değildir; akış sırasını gözle görülebilir kılan bir test fixture'ıdır.
 
@@ -205,6 +215,8 @@ Bu çıktı gerçek medya içeriği değildir; akış sırasını gözle görül
 - Son noktadan sonra gelen uzantının seçildiğini,
 - uzantının küçük harfe normalize edildiğini,
 - özgün dosya adının korunduğunu gösterir.
+- Noktalı klasör adının veya `.hidden` biçiminin uzantı sanılmadığını,
+- çıktı adının typed `VideoFormat` ile aynı metadata sorumluluğunda üretildiğini gösterir.
 
 ### `ConversionWorkflow`
 
@@ -246,7 +258,17 @@ ve provider discovery daha uygun olur.
 
 ### Dosya adı riski
 
-`changeExtension` yalnız `String.lastIndexOf('.')` kullanır; noktalı klasör yolu uzantı sanılabilir, `.hidden` boş base üretebilir, trailing dot/separator yanlış yorumlanabilir. Production'da `Path` ayrımı ve `../`, absolute path, symlink kontrolleri gerekir.
+Uzantı çözümleme ve değiştirme artık iki sınıfta tekrarlanmaz; `VideoFile` tek
+sorumludur. Parser `/` ve `\` sonrasındaki dosya segmentine bakar, baştaki
+`.hidden` noktasını ve trailing dot'u uzantı saymaz. Yeni çıktı adı üretilirken
+trailing dot kaldırılır; böylece `clip.` girdisi `clip..mp4` yerine `clip.mp4`
+olur. Çıktı uzantısı serbest bir codec String'inden değil typed `VideoFormat`
+değerinden gelir.
+
+Bu hâlâ güvenlik sağlayan bir path çözümleyici değildir. Production'da `Path`
+normalizasyonu ile `../`, absolute path, symlink, platform ayracı ve izin
+kontrolleri gerekir. “Doğru uzantıyı çıkardım” ile “bu dosyaya güvenle
+yazabilirim” farklı garantilerdir.
 
 ### Null ve kaynak doğrulama
 

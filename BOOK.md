@@ -208,11 +208,11 @@ Bu tablo bir seçim kısayoludur; bölüm anlatımlarının yerine geçmez.
 
 | Pattern | Değişen eksen | Bu repodaki hikâye | Ana giriş noktası |
 |---|---|---|---|
-| [Adapter](#chapter-adapter) | Uyumsuz API’nin hedef tipe çevrilmesi | Geometri ve legacy kargo birim/model dönüşümü | `ShippingService` |
+| [Adapter](#chapter-adapter) | Uyumsuz API’nin hedef tipe çevrilmesi | Küçük Target kontratı ve legacy kargo birim/model dönüşümü | `RoundPegShape` / `ShippingService` |
 | [Bridge](#chapter-bridge) | Abstraction ve implementation’ın bağımsız varyasyonları | Kumanda × cihaz, mute ve kanal preset’i | `RemoteControl` + `Device` |
 | [Composite](#chapter-composite) | Tekil ve bileşik nesnenin aynı sözleşmeyle kullanılması | Exact para hesabı yapan güvenli kutu ağacı | `OrderComponent` |
 | [Decorator](#chapter-decorator) | Davranışların runtime’da katmanlanması | Öncelik etiketi ve bildirim kanalı zincirleri | `Notifier` |
-| [Facade](#chapter-facade) | Karmaşık alt sistemin istemciye sunulan yüzeyi | Typed video formatı ve dönüşüm orkestrasyonu | `VideoConverterFacade` |
+| [Facade](#chapter-facade) | Karmaşık alt sistemin istemciye sunulan yüzeyi | Typed video formatı, güvenli dosya metadata’sı ve dönüşüm orkestrasyonu | `VideoConverterFacade` |
 | [Flyweight](#chapter-flyweight) | Çok sayıdaki nesnede ortak intrinsic state | Yapısal anahtarla paylaşılan ağaç türleri | `TreeFactory` |
 | [Proxy](#chapter-proxy) | Aynı interface arkasındaki erişim politikası | Immutable ve hedefli temizlenebilen YouTube cache’i | `CachedYouTubeClass` |
 
@@ -220,9 +220,9 @@ Bu tablo bir seçim kısayoludur; bölüm anlatımlarının yerine geçmez.
 
 | Pattern | Değişen eksen | Bu repodaki hikâye | Ana giriş noktası |
 |---|---|---|---|
-| [Chain of Responsibility](#chapter-chain-of-responsibility) | İsteği işleyecek ardışık kontroller | Typed sonuçlu sipariş güvenlik/işleme pipeline’ı | `OrderRequestHandler` |
+| [Chain of Responsibility](#chapter-chain-of-responsibility) | İsteği işleyecek ardışık kontroller | Girdi invariant’ı ve typed sonuç taşıyan sipariş pipeline’ı | `OrderRequestHandler` |
 | [Command](#chapter-command) | Bir eylemin nesne olarak taşınması ve geçmişi | Editör toolbar’ı, güvenli undo ve macro | `Command` |
-| [Iterator](#chapter-iterator) | Koleksiyon yapısını açmadan dolaşma | Sosyal graph ve lazy şirket filtresi | `ProfileIterator` |
+| [Iterator](#chapter-iterator) | Koleksiyon yapısını açmadan dolaşma | Immutable sosyal graph, lazy şirket filtresi ve Java Iterator adapter’ı | `ProfileIterator` |
 | [Mediator](#chapter-mediator) | Bileşenler arası iletişim merkezi | Gateway enjekte edilen login/register diyaloğu | `AuthenticationDialog` |
 | [Memento](#chapter-memento) | Encapsulation bozmadan snapshot/restore | Ardışık undo protokollü editör geçmişi | `EditorHistory` |
 | [Observer](#chapter-observer) | Bir olayı dinleyicilere yayma | Yaşam döngüsü handle’lı stok aboneliği | `Publisher` / `Store` |
@@ -252,11 +252,11 @@ Aşağıdaki harita, değişikliklerin neden yapıldığını topluca gösterir.
 
 | Pattern | Temel örnek | Güçlendirilen nokta | Bilinçli production sınırı |
 |---|---|---|---|
-| Adapter | Kare çivi–yuvarlak delik | Kargo model/birim dönüşümü: gram→kg, kuruş→TL, saat→gün | Provider timeout, retry, auth, SLA |
+| Adapter | Kare çivi–yuvarlak delik | Yapay superclass state’ini kaldıran Target interface’i; kargo model/birim dönüşümü | Binary uyumluluk, provider timeout, retry, auth, SLA |
 | Bridge | Kumanda × cihaz | Mute, preset workflow’u, null ve cihaz sınırları | Capability modeli, ağ I/O, concurrency |
 | Composite | Ürün/kutu toplamı | `BigDecimal`, immutable child görünümü ve cycle koruması | Ownership, depth limiti, persistence |
 | Decorator | Çok kanallı bildirim | Bütün kanallara ulaşan `PriorityDecorator` ve fail-fast graph | Kısmi başarı, retry, PII, SDK lifecycle |
-| Facade | String tabanlı conversion | `VideoFormat`, açık format hatası ve dependency injection | Gerçek media I/O, path/MIME, cancel |
+| Facade | String tabanlı conversion | `VideoFormat`, tek yerde dosya metadata’sı ve dependency injection | Gerçek media I/O, güvenli path/MIME, cancel |
 | Flyweight | Paylaşılan `TreeType` | Yapısal key, thread-safe havuz ve doğru sayaç scope’u | Eviction, kapasite ve resource lifecycle |
 | Proxy | YouTube cache | Immutable snapshot, concurrent map ve hedefli invalidation | TTL, tenant, stampede, dağıtık cache |
 
@@ -264,15 +264,15 @@ Aşağıdaki harita, değişikliklerin neden yapıldığını topluca gösterir.
 
 | Pattern | Temel örnek | Güçlendirilen nokta | Bilinçli production sınırı |
 |---|---|---|---|
-| Chain of Responsibility | Boolean handler sonucu | `PROCESSED/REJECTED/DUPLICATE` ve sonuç nedeni | Gerçek idempotency/rate-limit/cache |
+| Chain of Responsibility | Boolean handler sonucu | İlk halkada request invariant’ı; `PROCESSED/REJECTED/DUPLICATE` ve sonuç nedeni | Gerçek idempotency/rate-limit/cache |
 | Command | Toolbar ve tek undo | Invocation backup stack’i, macro ters-undo ve telafi | Redo, bounded/persistent history, transaction |
-| Iterator | Friends/coworkers dolaşımı | Lazy buffered `CompanyProfileIterator` composition’ı | Pagination, retry, versioned snapshot |
+| Iterator | Friends/coworkers dolaşımı | Immutable graph snapshot’ı, lazy filtre ve standart Java `Iterator` adapter’ı | Pagination, retry, versioned snapshot |
 | Mediator | Auth form koordinasyonu | Enjekte edilen `AuthenticationGateway` ile yan etki sınırı | Typed event, gerçek auth ve secret lifecycle |
 | Memento | Snapshot + düşük seviye stack | Precondition-safe `EditorHistory#undo` ile caretaker protokolü | Redo, diff/bounded history, persistence |
 | Observer | Store/subscriber bildirimi | Duplicate-safe kayıt, snapshot iteration ve ref-counted `Subscription` sahipliği | Async isolation, retry, DLQ, thread safety |
 | State | Draft→Moderation→Published | Admin ve gerekçe kontrollü reject→Draft geçişi | Mutator sınırı, locking ve kalıcı audit |
 | Strategy | Aritmetik işlemler | Typed shipment/quote ve overflow-safe `long` fiyatlama | Currency, config, eligibility, versioning |
-| Template Method | PDF/CSV sabit akış | `finally` ile cleanup; primary/suppressed hata politikası | AutoCloseable, streaming parser |
+| Template Method | PDF/CSV sabit akış | Giriş precondition’ı, locale-deterministic analiz ve `finally` ile primary/suppressed cleanup politikası | AutoCloseable, streaming parser |
 | Visitor | XML + risk notları | Fail-fast elementler, XML escaping ve typed `GeoSummaryVisitor` | Serializer, schema, root ve lifecycle |
 
 # En çok karıştırılan desenler
@@ -334,6 +334,142 @@ Kısa kural: dışarıdan algoritma seçimi **Strategy**, davranışın mevcut d
 
 - Chain’de her halka isteği reddedebilir, işleyebilir, dönüştürebilir veya sonrakine bırakabilir.
 - Decorator’da her halka aynı operation’a ek davranış katar ve sonucu aynı sözleşmede döndürür.
+
+# Pattern’leri birlikte kullanmak: bir sipariş akışı
+
+Gerçek bir sistem çoğu zaman tek bir pattern’den oluşmaz. Yine de iyi mimari,
+“mümkün olan en fazla deseni” bir araya getirmek değildir. Her pattern yalnızca
+kanıtlanmış bir değişim baskısının etrafına çizilen küçük bir karar sınırı
+olmalıdır.
+
+Aşağıdaki sipariş akışı **entegrasyon düşünce deneyidir**; repoda ayrıca
+çalışan tek bir e-ticaret uygulaması bulunduğu anlamına gelmez. Amaç, ayrı
+demolarda öğrenilen rollerin aynı use case içinde nerede durabileceğini
+göstermektir.
+
+```mermaid
+flowchart LR
+    Client[Web / Mobil istemci] --> Facade["CheckoutFacade<br/><b>Facade</b>"]
+    Facade --> Chain["Sipariş kontrolleri<br/><b>Chain of Responsibility</b>"]
+    Chain --> Strategy["Teslimat fiyatlama<br/><b>Strategy</b>"]
+    Strategy --> Adapter["LegacyCargoAdapter<br/><b>Adapter</b>"]
+    Facade --> Command["PlaceOrderCommand<br/><b>Command</b>"]
+    Command --> State["Order yaşam döngüsü<br/><b>State</b>"]
+    State --> Event["OrderPlaced olayı"]
+    Event --> Observer["Stok · bildirim · analitik<br/><b>Observer</b>"]
+
+    classDef boundary fill:#e8f1ff,stroke:#2563eb,color:#102a43
+    classDef behavior fill:#fff4df,stroke:#d97706,color:#3f2a09
+    classDef event fill:#ecfdf3,stroke:#16803c,color:#12351f
+    class Facade,Adapter boundary
+    class Chain,Strategy,Command,State behavior
+    class Event,Observer event
+```
+
+Bu şekil bir sınıf sayısı hedefi vermez. Örneğin use case yalnızca senkron
+çalışıyor, kuyruğa alınmıyor ve geri alınmıyorsa `PlaceOrderCommand` ayrı bir
+sınıf olmak zorunda değildir. Pattern’in varlığını diyagram değil gereksinim
+haklı çıkarır.
+
+## Aynı isteğin çalışma zamanı izi
+
+```mermaid
+sequenceDiagram
+    actor Customer as Müşteri
+    participant Facade as CheckoutFacade
+    participant Chain as ValidationChain
+    participant Pricing as DeliveryStrategy
+    participant Cargo as LegacyCargoAdapter
+    participant Command as PlaceOrderCommand
+    participant Order as Order / State
+    participant Events as OrderPublisher
+
+    Customer->>Facade: placeOrder(request)
+    Facade->>Chain: validate(request)
+
+    alt Kontrol reddeder
+        Chain-->>Facade: REJECTED(reason)
+        Facade-->>Customer: anlamlı iş hatası
+    else Kontroller geçer
+        Chain-->>Facade: APPROVED
+        Facade->>Pricing: quote(shipment)
+        Pricing->>Cargo: quote(parcel)
+        Cargo-->>Pricing: normalize edilmiş fiyat ve süre
+        Pricing-->>Facade: DeliveryQuote
+        Facade->>Command: execute()
+        Command->>Order: confirm()
+        Order->>Order: Draft → Confirmed
+        Order->>Events: publish(OrderPlaced)
+        Events-->>Facade: publication accepted
+        Facade-->>Customer: OrderResult
+    end
+```
+
+Akışı okurken üç farklı ilişkiyi ayır:
+
+1. **Orkestrasyon:** `CheckoutFacade` adımların hangi sırada çağrıldığını bilir.
+2. **Politika:** Chain, Strategy ve State kendi kararlarını sahiplenir.
+3. **Entegrasyon:** Adapter dış sistemin modelini içerideki modele çevirir;
+   Observer ise sipariş sonucunu ikincil alıcılara dağıtır.
+
+Bu ayrım önemlidir. Bir facade’ın içinde yüzlerce iş kuralı oluşursa facade,
+kolay bir giriş noktası olmaktan çıkıp “god object” olur. Observer üzerinden
+yayınlanan her dinleyici ana transaction’ın zorunlu parçası yapılırsa gevşek
+bağlı görünen tasarım gerçekte ortak hata kaderine sahip olur.
+
+## Değişim baskısından pattern’e
+
+| Gözlenen baskı | Aday pattern | İzole edilen karar | Pattern eklemeden önce sor |
+|---|---|---|---|
+| Kargo sağlayıcısının modeli ve birimleri iç API’den farklı | Adapter | Dış model → iç model dönüşümü | Dönüşüm gerçekten tekrar ediyor mu, yoksa tek fonksiyon yeterli mi? |
+| Teslimat fiyatı standart/ekspres/mağazadan teslim algoritmasına göre değişiyor | Strategy | Seçilebilir fiyatlama algoritması | Algoritmalar aynı giriş/çıkış sözleşmesini taşıyor mu? |
+| Güvenlik ve iş kontrollerinin sırası ürünlere göre kuruluyor | Chain of Responsibility | Ardışık kontrol ve kısa devre politikası | Sabit üç koşul, açık bir metotta daha okunabilir mi? |
+| İstek kuyruklanacak, audit edilecek veya daha sonra çalıştırılacak | Command | Çağrı ile çalıştırılabilir eylem arasındaki zaman | Eylemi nesneleştirmenin somut bir yaşam döngüsü var mı? |
+| Aynı operasyon sipariş durumuna göre farklı davranıyor | State | Duruma bağlı davranış ve geçişler | Yalnız iki basit durum için enum/switch daha açık mı? |
+| Sipariş sonrası alıcılar birbirinden bağımsız eklenip çıkarılıyor | Observer | Olay üreticisi ile ikincil tepkiler | Teslimat, sıra ve hata semantiği tanımlı mı? |
+| İstemci alt sistem adımlarını bilmemeli | Facade | Use case’in dışarıya sunulan dar yüzeyi | Basitleştirme yapıyor mu, yoksa kuralları tek sınıfa mı yığıyor? |
+
+Tablo “baskı varsa kesin bu pattern’i kullan” demez. Adayı görünür kılar;
+son karar kodun boyutu, değişim sıklığı, ekip bilgisi ve operasyon gereksinimiyle
+verilir.
+
+## Pattern çorbasını önleyen refactoring döngüsü
+
+```mermaid
+flowchart TD
+    A[Somut değişiklik isteği] --> B[Mevcut davranışı karakterizasyon testiyle sabitle]
+    B --> C{İki veya daha fazla bağımsız varyasyon var mı?}
+    C -->|Hayır| D[Basit kodu koru]
+    C -->|Evet| E[Değişen kararın sınırını adlandır]
+    E --> F{Daha küçük bir fonksiyon veya veri tipi yeterli mi?}
+    F -->|Evet| G[Küçük refactoring uygula]
+    F -->|Hayır| H[En dar pattern rollerini çıkar]
+    H --> I[Başarı ve hata kontratlarını test et]
+    I --> J{Okuma ve değişiklik maliyeti azaldı mı?}
+    J -->|Evet| K[Pattern’i ve trade-off'u dokümante et]
+    J -->|Hayır| L[Soyutlamayı geri küçült]
+```
+
+Deneyimli ekiplerin önemli alışkanlığı, yalnız pattern ekleyebilmek değil;
+değişim baskısı ortadan kalktığında onu güvenle küçültebilmektir. Silinebilen
+bir soyutlama başarısızlık değil, bakım maliyetinin yeniden değerlendirilmesidir.
+
+## Birlikte kullanımda beş mühendislik kuralı
+
+1. **Concrete wiring composition root’ta kalır.** Pattern kullanmak, sistemde
+   hiçbir sınıfın concrete türleri bilmemesi demek değildir.
+2. **Hata semantiği tasarımın parçasıdır.** Chain’in neden durduğu, Observer’da
+   bir dinleyici çöktüğünde ne olduğu ve Command’in tekrar çalıştırılıp
+   çalıştırılamayacağı açık sözleşme ister.
+3. **Transaction sınırı diyagramda görünmeyen en önemli çizgidir.** State
+   değişimi ile event yayını arasında atomicity gerekiyorsa outbox gibi bir
+   teslimat tasarımı ayrıca gerekir; Observer bunu kendiliğinden çözmez.
+4. **Decorator ve Proxy sırası davranıştır.** Cache’in telemetry’nin içinde mi
+   dışında mı olduğu, cache hit’lerinin ölçülüp ölçülmeyeceğini değiştirir.
+   Wrapper sırasını composition testiyle sabitle.
+5. **Pattern adı acceptance criterion değildir.** “Strategy kullandık” yerine
+   “yeni fiyatlama algoritması mevcut algoritmaları değiştirmeden ekleniyor ve
+   aynı kontrat testinden geçiyor” denebilmelidir.
 
 # Testleri bir gereksinim dokümanı gibi okumak
 
@@ -460,7 +596,7 @@ Pattern Markdown’ları güncellendikten sonra birleşik kitabı üret:
 node scripts/validate-learning-content.mjs
 ```
 
-Node.js 22+, yerel Chrome/Chromium, internet bağlantısı ve macOS’taki
+Node.js 22+, npm/npx, yerel Chrome/Chromium, internet bağlantısı ve macOS’taki
 Swift/PDFKit araçlarıyla görsel PDF’i yeniden oluştur:
 
 ```bash
@@ -2161,7 +2297,7 @@ Aynı class'ı iki classloader ile yükle; “tek” kelimesinin neden kapsam is
 
 | Katman | Repodaki karşılığı | Öğrettiği şey |
 |---|---|---|
-| Temel örnek | `RoundHole`, `RoundPeg`, `SquarePeg`, `SquarePegAdapter` | Uyumsuz tipi yarım köşegen hesabıyla target tipe uydurmak |
+| Temel örnek | `RoundPegShape`, `RoundHole`, `RoundPeg`, `SquarePeg`, `SquarePegAdapter` | Küçük bir Target interface'i üzerinden uyumsuz tipi yarım köşegen hesabıyla uydurmak |
 | Güçlendirilmiş örnek | `ShippingService`, `Parcel`, `DeliveryQuote`, `LegacyCargoApi`, `LegacyCargoAdapter` | Metot çağrısıyla birlikte gram→kilogram, kuruş→TL ve saat→gün semantiğini çevirmek |
 | Bilinçli production sınırı | Demo API'si yerel ve deterministiktir | Gerçek provider'da timeout/retry, kur, SLA, kimlik doğrulama ve hata eşleme ayrıca tasarlanır |
 
@@ -2180,7 +2316,7 @@ Yazılım Adapter'ı da tip, metot adı, DTO, veri formatı veya protokol uyumsu
 `RoundHole` yalnız şu kontratı kabul eder:
 
 ```java
-boolean fits(RoundPeg peg)
+boolean fits(RoundPegShape peg)
 ```
 
 `SquarePeg` ise radius değil yalnız width bilir. Kötü çözümler:
@@ -2194,10 +2330,20 @@ Yeni adaptee geldikçe target tüketicisi büyür ve dönüşüm mantığı dağ
 
 ### Çözüm ve çözümün sınırı
 
-`SquarePegAdapter`, target olan `RoundPeg` gibi davranır ve içeride `SquarePeg` tutar:
+`RoundHole` concrete bir çivi sınıfına değil, yalnız ihtiyaç duyduğu küçük Target
+kontratına bağımlıdır:
 
 ```java
-public class SquarePegAdapter extends RoundPeg {
+public interface RoundPegShape {
+    double getRadius();
+}
+```
+
+Hem doğal uyumlu `RoundPeg` hem adapter bu kontratı uygular. Adapter, adaptee'yi
+kalıtmak yerine içeride tutar:
+
+```java
+public class SquarePegAdapter implements RoundPegShape {
     private final SquarePeg squarePeg;
 
     @Override
@@ -2216,7 +2362,7 @@ gerekli radius = width × √2 / 2
 
 Adapter iki çeviri yapar:
 
-- **Tip:** `SquarePeg`, `RoundPeg` kontratından görünür.
+- **Tip:** `SquarePeg`, `RoundPegShape` kontratından görünür.
 - **Anlam:** width, karşılaştırılabilir radius değerine çevrilir.
 
 Sınırlar:
@@ -2226,7 +2372,27 @@ Sınırlar:
 - Hata/timeout politikasını otomatik çözmez.
 - Dönüşüm kayıplıysa hedef kontrat bunu ifade etmelidir.
 
-Bu klasik örnekte Target concrete sınıftır; adapter `super(0)` ile kullanılmayan üst sınıf state'i kurar. Production'da küçük bir Target interface'i bu yapay state'i kaldırabilir.
+Target'ın interface olması adapter'ın yapay bir `RoundPeg` state'i veya `super(0)`
+üretmesini engeller. Bu, Java'da çoğunlukla tercih edilen **object adapter**
+biçimidir: adaptee kompozisyonla sarılır. Class adapter biçimi kalıtım kullanır;
+tek kalıtım, `final` üçüncü parti sınıflar ve superclass constructor'ları nedeniyle
+daha sıkı bağlanır. Interface seçimi ise “her şeyi soyutla” kuralı değildir:
+`RoundHole` gerçekten birden fazla radius sağlayıcısıyla çalıştığı için burada
+değişim noktası somuttur.
+
+Bu refactoring’in uyumluluk bedeli bilinçlidir:
+
+- `fits(new RoundPeg(...))` gibi doğrudan kaynak kodu çağrıları çalışmaya devam eder.
+- `SquarePegAdapter` artık `RoundPeg` alt tipi değildir; adapter’ı concrete üst
+  sınıf değişkeninde tutan kaynak kodu yeniden yazılmalıdır.
+- Yapay adapter state’i kalktığı için `new RoundPeg(0)` da artık geçersizdir.
+- JVM metot descriptor'ı `fits(RoundPeg)` → `fits(RoundPegShape)` değiştiğinden
+  önceden derlenmiş binary client yeniden derlenmeden çalışmaz.
+
+Bu kod yayınlanmış bir kütüphane olsaydı eski overload/adapter bir deprecation
+dönemi boyunca delegate ettirilmeli veya bu değişiklik major sürümde
+yayınlanmalıydı. Eğitim reposu kaynak koddan birlikte derlendiği için burada
+daha temiz Target kontratı seçildi.
 
 Gerçekçi örnekte target artık açıkça bir interface'tir:
 
@@ -2248,8 +2414,9 @@ yalnız tip değil **ölçü birimi ve hassasiyet kontratı** da çevirdiğini g
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
 | Client / composition root | `AdapterPatternDemo` | Nesne graph'ını kurup örneği çalıştırır |
-| Target tüketicisi | `RoundHole` | Yalnız `RoundPeg` üzerinden uygunluk ölçer |
-| Target | `RoundPeg` | Client'ın bildiği radius tabanlı tip |
+| Target tüketicisi | `RoundHole` | Yalnız `RoundPegShape` üzerinden uygunluk ölçer |
+| Target | `RoundPegShape` | Client'ın ihtiyaç duyduğu radius kontratı |
+| Uyumlu concrete tip | `RoundPeg` | Target'ı doğal olarak uygular |
 | Adaptee | `SquarePeg` | Width tabanlı mevcut/uyumsuz tip |
 | Adapter | `SquarePegAdapter` | Adaptee'yi sarar ve width'i radius'a çevirir |
 | Gerçek target | `ShippingService` | Uygulamanın beklediği kargo fiyatlama kontratı |
@@ -2265,7 +2432,11 @@ Demo adapter'ın concrete tipini wiring için bilir; kazanç, `RoundHole` iş ma
 classDiagram
     class RoundHole {
         -double radius
-        +fits(RoundPeg) boolean
+        +fits(RoundPegShape) boolean
+    }
+    class RoundPegShape {
+        <<interface>>
+        +getRadius() double
     }
     class RoundPeg {
         -double radius
@@ -2279,9 +2450,10 @@ classDiagram
         -SquarePeg squarePeg
         +getRadius() double
     }
-    RoundPeg <|-- SquarePegAdapter : Target
+    RoundPegShape <|.. RoundPeg
+    RoundPegShape <|.. SquarePegAdapter : adapts to Target
     SquarePegAdapter *-- SquarePeg : wraps
-    RoundHole --> RoundPeg : only knows
+    RoundHole --> RoundPegShape : only knows
 ```
 
 ```mermaid
@@ -2330,7 +2502,7 @@ sequenceDiagram
 #### `SquarePegAdaptation`
 
 - Yarım köşegen formülünü floating-point toleransıyla test eder.
-- Adapter'ın `RoundPeg` referansından kullanılabildiğini gösterir.
+- Adapter'ın `RoundPegShape` referansından kullanılabildiğini gösterir.
 - Width `5` ve `10` ile olumlu/olumsuz yolu birlikte sınar.
 - `Double.MAX_VALUE` gibi geçerli büyük bir width'in ara çarpım yüzünden
   `Infinity`ye taşmadığını doğrular.
@@ -2355,8 +2527,11 @@ Arrange uyumsuz dünyaları kurar, Act target çağrısını yapar, Assert hem m
 
 #### Sayısal sınırlar
 
-`RoundHole` ve `SquarePeg` pozitif/finite değer ister; `RoundPeg`, adapter'ın
-`super(0)` ihtiyacı nedeniyle sıfıra izin verir. `Parcel` ağırlığı pozitif olmalıdır.
+`RoundHole`, `RoundPeg` ve `SquarePeg` pozitif/finite değer ister. `RoundPegShape`
+aynı semantik kontratı Javadoc’unda tanımlar; `RoundHole#fits` de üçüncü parti
+bir adapter negatif, sonsuz veya `NaN` radius döndürürse sınırda reddeder.
+Adapter artık concrete `RoundPeg`'den kalıtım almadığı için geçersiz bir
+`super(0)` istisnasına ihtiyaç yoktur. `Parcel` ağırlığı da pozitif olmalıdır.
 Bu doğrulamalar anlamsız geometriyi ve sessiz yanlış fiyatı erken keser.
 
 `double` yalnız kilogram oranı için legacy sınıra taşınır; uygulama tarafındaki para
@@ -2440,9 +2615,11 @@ Hepsi sarma kullanabilir. Seçimi sınıf diyagramı değil, **niyet** belirler.
 
 Radius `4` deliğe width `5`, `6`, `8` karelerin sığıp sığmadığını önce hesapla, sonra test et.
 
-#### Seviye 2 — Target abstraction
+#### Seviye 2 — İkinci adaptee
 
-Küçük bir `RoundPegLike` interface'i çıkar. `RoundPeg` ve adapter bunu uygulasın; `super(0)` ihtiyacının neden kalktığını açıkla.
+Yalnız diameter bilgisi veren bir `DiameterPeg` sınıfı yaz. Yeni bir adapter ile
+`RoundPegShape` kontratına çevir; `RoundHole` veya mevcut çivi sınıflarını
+değiştirmeden doğrudan ve adapte edilmiş çivileri aynı parametreli testte kullan.
 
 #### Seviye 3 — Production sınırı
 
@@ -2936,7 +3113,7 @@ flowchart TD
 
 1. Ana kutu total'i kendi `75` paketleme maliyetiyle başlatır.
 2. Klavye `1200` döndürür; ara toplam `1275` olur.
-3. Aksesuar kutusuna aynı `getPrice()` çağrısı yapılır.
+3. Aksesuar kutusuna aynı `getPriceAmount()` çağrısı yapılır.
 4. Aksesuar kutusu `40 + 800 + 150 = 990` döndürür.
 5. Kök kutu `1275 + 990 = 2265` sonucuna ulaşır.
 
@@ -3446,7 +3623,7 @@ Client video dönüştürmek için şunları bilmek zorunda kalsaydı:
 4. `BitrateReader.read` çağır.
 5. Buffer'ı `BitrateReader.convert` ile dönüştür.
 6. `AudioMixer.fix` ile ses adımını uygula.
-7. Yeni dosya uzantısını hesapla.
+7. `VideoFile` üzerinden yeni çıktı adını üret.
 8. Sonucu `ConvertedFile` içine koy.
 
 Bu akış controller, CLI ve batch job içinde kopyalanırsa:
@@ -3467,12 +3644,14 @@ ConvertedFile converted = converter.convert("funny-cats-video.ogg", "mp4");
 Facade içeride:
 
 ```java
+VideoFormat destinationFormat = Objects.requireNonNull(format);
 VideoFile file = new VideoFile(filename);
 CompressionCodec source = codecFactory.extract(file);
-CompressionCodec destination = codecFactory.create(format);
+CompressionCodec destination = codecFactory.create(destinationFormat);
 String buffer = BitrateReader.read(file.getName(), source);
 String converted = BitrateReader.convert(buffer, destination);
 String mixed = audioMixer.fix(converted);
+String outputName = file.replaceExtensionWith(destinationFormat);
 ```
 
 Eski imzayı koruyan String operasyonu, değeri önce açık enum'a çevirir:
@@ -3511,7 +3690,7 @@ Facade'ın sınırı:
 | Client | `FacadePatternDemo` | Tek `convert` çağrısıyla sonucu ister |
 | Facade | `VideoConverterFacade` | Kaynak analizi, codec seçimi, dönüşüm, audio ve adlandırmayı koordine eder |
 | Input vocabulary | `VideoFormat` | Desteklenen MP4/OGG kümesini ve normalize etmeyi açık tipte tutar |
-| Subsystem | `VideoFile` | Dosya adı ve uzantısını çıkarır |
+| Subsystem | `VideoFile` | Dosya segmentinden kaynak uzantısını çıkarır ve hedef formatlı çıktı adını üretir |
 | Subsystem | `CodecFactory` | Kaynak uzantısına codec seçer |
 | Subsystem contract | `CompressionCodec` | Codec type bilgisini sunar |
 | Concrete subsystem | `Mpeg4CompressionCodec`, `OggCompressionCodec` | MP4/OGG türlerini temsil eder |
@@ -3533,7 +3712,11 @@ classDiagram
         MP4
         OGG
     }
-    class VideoFile
+    class VideoFile {
+        +getName() String
+        +getExtension() String
+        +replaceExtensionWith(VideoFormat) String
+    }
     class CodecFactory
     class CompressionCodec {
         <<interface>>
@@ -3563,6 +3746,7 @@ Akış:
 sequenceDiagram
     participant Client
     participant Facade as VideoConverterFacade
+    participant File as VideoFile
     participant Factory as CodecFactory
     participant Reader as BitrateReader
     participant Mixer as AudioMixer
@@ -3579,6 +3763,8 @@ sequenceDiagram
     Reader-->>Facade: converted{...->mp4}
     Facade->>Mixer: fix(converted)
     Mixer-->>Facade: ...|audio-fixed
+    Facade->>File: replaceExtensionWith(MP4)
+    File-->>Facade: "cats.mp4"
     Facade-->>Client: ConvertedFile("cats.mp4", payload)
 ```
 
@@ -3586,14 +3772,15 @@ sequenceDiagram
 
 `convert("funny-cats-video.ogg", "mp4")` için:
 
-1. `VideoFile` son noktadan `ogg` uzantısını çıkarır.
+1. `VideoFile`, dosya adı segmentindeki son geçerli noktadan `ogg` uzantısını çıkarır.
 2. `CodecFactory` source codec olarak OGG üretir.
 3. Hedef metni `VideoFormat.from` ile locale-safe ve case-insensitive `MP4` enum'una çevrilir.
 4. `CodecFactory#create(MP4)` destination codec olarak MPEG-4 üretir.
 5. `BitrateReader.read` `buffer{funny-cats-video.ogg:ogg}` üretir.
 6. `convert` bunu destination codec ile `converted{buffer{...}->mp4}` yapar.
 7. `AudioMixer` sonuna `|audio-fixed` ekler.
-8. Uzantı `.mp4` yapılır ve `ConvertedFile` döner.
+8. `VideoFile#replaceExtensionWith(MP4)` kaynak adını koruyup uzantıyı `.mp4`
+   yapar ve `ConvertedFile` döner. Dosya adı kuralı facade içinde tekrarlanmaz.
 
 Bu çıktı gerçek medya içeriği değildir; akış sırasını gözle görülebilir kılan bir test fixture'ıdır.
 
@@ -3606,6 +3793,8 @@ Bu çıktı gerçek medya içeriği değildir; akış sırasını gözle görül
 - Son noktadan sonra gelen uzantının seçildiğini,
 - uzantının küçük harfe normalize edildiğini,
 - özgün dosya adının korunduğunu gösterir.
+- Noktalı klasör adının veya `.hidden` biçiminin uzantı sanılmadığını,
+- çıktı adının typed `VideoFormat` ile aynı metadata sorumluluğunda üretildiğini gösterir.
 
 #### `ConversionWorkflow`
 
@@ -3647,7 +3836,17 @@ ve provider discovery daha uygun olur.
 
 #### Dosya adı riski
 
-`changeExtension` yalnız `String.lastIndexOf('.')` kullanır; noktalı klasör yolu uzantı sanılabilir, `.hidden` boş base üretebilir, trailing dot/separator yanlış yorumlanabilir. Production'da `Path` ayrımı ve `../`, absolute path, symlink kontrolleri gerekir.
+Uzantı çözümleme ve değiştirme artık iki sınıfta tekrarlanmaz; `VideoFile` tek
+sorumludur. Parser `/` ve `\` sonrasındaki dosya segmentine bakar, baştaki
+`.hidden` noktasını ve trailing dot'u uzantı saymaz. Yeni çıktı adı üretilirken
+trailing dot kaldırılır; böylece `clip.` girdisi `clip..mp4` yerine `clip.mp4`
+olur. Çıktı uzantısı serbest bir codec String'inden değil typed `VideoFormat`
+değerinden gelir.
+
+Bu hâlâ güvenlik sağlayan bir path çözümleyici değildir. Production'da `Path`
+normalizasyonu ile `../`, absolute path, symlink, platform ayracı ve izin
+kontrolleri gerekir. “Doğru uzantıyı çıkardım” ile “bu dosyaya güvenle
+yazabilirim” farklı garantilerdir.
 
 #### Null ve kaynak doğrulama
 
@@ -4418,15 +4617,15 @@ sonuçlandığını test et.
 | Niyet | Bir isteği, sırayla çalışan ve gerektiğinde akışı kesen handler nesnelerinden geçirmek |
 | Değişen eksen | Kontrollerin türü, sırası ve hangi koşulda zinciri durdurduğu |
 | Ana bedel | Akış dağıtık hale gelir; sonuç ve yan etkilerin izini sürmek zorlaşabilir |
-| Bu örnekte | Sipariş isteği brute-force, kimlik, temizlik, yetki, tekrar ve işleme adımlarından geçer |
+| Bu örnekte | Sipariş isteği giriş doğrulama, brute-force, kimlik, temizlik, yetki, tekrar ve işleme adımlarından geçer |
 | Hafıza ipucu | “Ben geçiremezsem burada durdurur, geçirebilirsem sıradakine veririm.” |
 
 ### Örnek haritası: temel → güçlendirilmiş → production
 
 | Katman | Bu repoda ne var? | Öğrettiği sınır |
 |---|---|---|
-| Temel örnek | `OrderRequestHandler`, `BaseOrderRequestHandler` ve altı concrete handler | İsteğin sırayla ilerlemesi ve herhangi bir handler’ın kısa devre yapması |
-| Güçlendirilmiş örnek | `OrderRequestOutcome` ile `OrderRequest#getOutcome()` / `getOutcomeMessage()` | Aynı `false` sonucunun yetki reddi mi yoksa duplicate mı olduğunun gözlenmesi |
+| Temel örnek | `OrderRequestHandler`, `BaseOrderRequestHandler` ve yedi concrete handler | İsteğin sırayla ilerlemesi ve herhangi bir handler’ın kısa devre yapması |
+| Güçlendirilmiş örnek | İlk sınırdaki `RequestValidationHandler` ile `OrderRequestOutcome` | Eksik alanın sonraki handler’da rastlantısal NPE olması yerine typed ret sonucuna dönüşmesi; aynı `false` değerindeki yetki ve duplicate nedenlerinin gözlenmesi |
 | Production sınırı | Typed sonuç dönüşü, idempotency key, güvenli kimlik sağlayıcısı, rate limiter ve bounded cache | Boolean ile iş sonucu, güvenlik ve tekrar politikasının tam modellenememesi |
 
 ### Akılda kalıcı analoji: havaalanı güvenlik hattı
@@ -4478,6 +4677,7 @@ Pattern iletişim yapısını düzenler; iş kurallarının doğruluğu yine gel
 |---|---|---|
 | Handler | `OrderRequestHandler` | `setNext` ve `handle` sözleşmesini tanımlar |
 | Base Handler | `BaseOrderRequestHandler` | Sonraki handler referansını ve `checkNext` akışını tutar |
+| Concrete Handler | `RequestValidationHandler` | Zorunlu alanları sınırda doğrular; eksik isteği typed sonuçla keser |
 | Concrete Handler | `BruteForceProtectionHandler` | IP blokluysa zinciri keser |
 | Concrete Handler | `AuthenticationHandler` | Kullanıcı/parola kontrolü yapar ve kullanıcıyı request’e yazar |
 | Concrete Handler | `DataSanitizationHandler` | Payload’dan `<` ve `>` karakterlerini silip trim eder |
@@ -4503,6 +4703,7 @@ classDiagram
         -next OrderRequestHandler
         #checkNext(request) boolean
     }
+    class RequestValidationHandler
     class BruteForceProtectionHandler
     class AuthenticationHandler
     class DataSanitizationHandler
@@ -4523,6 +4724,7 @@ classDiagram
         DUPLICATE
     }
     OrderRequestHandler <|.. BaseOrderRequestHandler
+    BaseOrderRequestHandler <|-- RequestValidationHandler
     BaseOrderRequestHandler <|-- BruteForceProtectionHandler
     BaseOrderRequestHandler <|-- AuthenticationHandler
     BaseOrderRequestHandler <|-- DataSanitizationHandler
@@ -4537,12 +4739,15 @@ classDiagram
 
 ```mermaid
 flowchart LR
-    R["OrderRequest<br/>PENDING"] --> B[Brute force]
+    R["OrderRequest<br/>PENDING"] --> V[Request validation]
+    V -->|alan eksik| X0["false<br/>REJECTED"]
+    V -->|geçerli| B[Brute force]
     B -->|bloklu| X1["false<br/>REJECTED"]
     B -->|uygun| A[Authentication]
     A -->|hatalı| X2["false<br/>REJECTED"]
     A -->|başarılı| S[Sanitization]
-    S --> Z[Authorization]
+    S -->|temizlik sonrası boş| X5["false<br/>REJECTED"]
+    S -->|geçerli| Z[Authorization]
     Z -->|yetkisiz| X3["false<br/>REJECTED"]
     Z -->|yetkili| C[Cache]
     C -->|imza var| X4["false<br/>DUPLICATE"]
@@ -4554,25 +4759,26 @@ flowchart LR
 
 #### 1. Normal kullanıcının sipariş oluşturması
 
-1. IP henüz bloklu değildir.
-2. `"can" / "1234"` doğrulanır.
-3. `authenticatedUser` request üzerine yazılır.
-4. `<script>...` payload’ındaki açı parantezleri silinir.
-5. `CREATE_ORDER` admin gerektirmez.
-6. İmza cache’de bulunmaz.
-7. İşlem mesajı yazılır ve zincir `true` döner.
-8. Cache başarılı imzayı saklar.
+1. Validation bütün zorunlu alanların mevcut olduğunu doğrular.
+2. IP henüz bloklu değildir.
+3. `"can" / "1234"` doğrulanır.
+4. `authenticatedUser` request üzerine yazılır.
+5. `<script>...` payload’ındaki açı parantezleri silinir.
+6. `CREATE_ORDER` admin gerektirmez.
+7. İmza cache’de bulunmaz.
+8. İşlem mesajı yazılır ve zincir `true` döner.
+9. Cache başarılı imzayı saklar.
 
 #### 2. Normal kullanıcının tüm siparişleri istemesi
 
-1. Brute-force ve authentication adımları geçilir.
+1. Validation, brute-force ve authentication adımları geçilir.
 2. Payload, authorization’dan önce mutate edilir.
 3. Kullanıcı admin olmadığı için authorization `false` döndürür.
 4. Cache ve order processing çalışmaz.
 
 #### 3. Aynı admin isteğinin ikinci kez gelmesi
 
-1. İkinci istek yine brute-force, authentication, sanitization ve authorization’dan geçer.
+1. İkinci istek yine validation, brute-force, authentication, sanitization ve authorization’dan geçer.
 2. Cache imzayı bulur.
 3. Order processing çağrılmaz.
 4. Mevcut API cache-hit için de `false` döndürür.
@@ -4581,7 +4787,11 @@ Bu son nokta önemlidir: örnek gerçek bir “sonuç cache’i” değil, tekra
 
 ### API, invariant ve sonuç semantiği
 
-- Zincirin kökü `buildChain` tarafından döndürülen ilk handler’dır.
+- Zincirin kökü `buildChain` tarafından döndürülen `RequestValidationHandler`dır.
+- Null request sonuç yazılabilecek context olmadığı için açık `IllegalArgumentException` üretir.
+- Null/blank username, password, IP veya payload ile null operation `REJECTED` olur; sonraki handler’lar çağrılmaz.
+- Validation ilk hatayı deterministik alan sırasıyla raporlar.
+- Başta dolu olup sanitization sonrasında boşalan payload `REJECTED` olur; authorization ve işleme adımlarına ilerlemez.
 - `setNext` verilen handler’ı döndürür; bu yüzden fluent bağlantı kurulabilir.
 - `checkNext`, sıradaki handler yoksa `true` döndürür.
 - Bir handler `false` döndürdüğünde kalan zincir çalışmaz.
@@ -4590,6 +4800,7 @@ Bu son nokta önemlidir: örnek gerçek bir “sonuç cache’i” değil, tekra
 - Cache imzası `username|operation|sanitizedPayload` biçimindedir.
 - İmza IP, parola veya ayrı bir idempotency key içermez.
 - Başarısız istekler cache’e yazılmaz.
+- Brute-force eşiği en az 1 olmalıdır; geçersiz configuration constructor’da reddedilir.
 - `boolean` yalnız “terminal işleme kabul edildi mi?” bilgisini taşır.
 - Authentication, authorization, blok ve cache-hit dönüşte aynı `false` değerinde birleşir.
 - Buna karşılık request üzerindeki `outcome`, reddi duplicate kısa devreden ayırır.
@@ -4601,8 +4812,9 @@ Production API’sinde sonucu mutable request’e yazmak yerine, handler’dan t
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
+| `RequestValidation` | Eksik alanın zincirin başında typed ret olması; null request ve geçersiz brute-force eşiğinin fail-fast davranışı |
 | `SuccessfulRequests` | Create başarısı, admin erişimi, payload mutation |
-| `RejectedRequests` | Yanlış parola, yetki reddi, deneme eşiği, başarılı login reset’i |
+| `RejectedRequests` | Yanlış parola, yetki reddi, deneme eşiği, başarılı login reset’i ve sanitization sonrası boş payload |
 | `CacheShortCircuit` | İlk çağrı/tekrar sonucu ve payload’a bağlı imza |
 | `OutcomeSemantics` | Başarı/reddetme/tekrar ayrımı ve processing handler’ın terminal olması |
 
@@ -4615,8 +4827,9 @@ Terminal davranış, yanlışlıkla bağlanan recording handler’ın çağrılm
 
 - Üçüncü hatalı giriş sayacı eşiğe getirir; brute-force reddi sonraki istekte görülür.
 - Başarılı giriş, aynı IP’deki bütün hata sayısını sıfırlar.
-- `maxFailedAttempts <= 0` her IP’yi bloklu kabul eder.
-- Null request veya null payload açık doğrulama yerine NPE üretebilir.
+- Validation yalnız zorunlu alan varlığını doğrular; uzunluk, IP biçimi ve payload şeması hâlâ kontrol edilmez.
+- Null request typed outcome’a yazılamadığı için exception politikasına gider.
+- Sanitization sonrası boşluk yeniden doğrulanır ve zincir bu adımda kesilir.
 - `setNext(null)` fluent kurulumun sonraki çağrısını bozabilir.
 - `HashMap` ve `HashSet` thread-safe değildir.
 - Düz metin parola karşılaştırması production için uygun değildir.
@@ -4890,14 +5103,46 @@ Bu nedenle `AbstractEditorCommand` tek backup yerine `Deque<String>` kullanır:
 
 `MacroCommand` ise alt komutlardan `true` dönenleri kaydeder.
 Normal undo’da bu komutları ters sırada geri alır.
-Bir alt komut exception atarsa daha önce çalışan undo edilebilir alt komutların tamamını ters sırada telafi etmeyi dener.
-Asıl execute exception’ı primary kalır; rollback exception’ları çağrı sırasıyla ona suppressed olarak eklenir.
+Bir alt komut `RuntimeException` atarsa daha önce çalışan undo edilebilir alt
+komutların tamamını ters sırada telafi etmeyi dener.
+Asıl execute exception’ı primary kalır; rollback exception’ları çağrı sırasıyla
+ona suppressed olarak eklenir.
 
 Normal macro undo sırasında birden fazla alt komut hata verirse yine bütün undo’lar denenir.
 Ters sıradaki ilk undo hatası primary olur, sonraki undo hataları ona suppressed olarak eklenir.
 Bu deterministik politika hata bilgisini korur; fakat telafilerin iş açısından gerçekten başarılı olduğunu garanti etmez.
 
 Bu telafi davranışı veritabanı transaction’ı değildir: `false` dönen ama clipboard gibi başka state’i değiştiren bir komut otomatik geri alınmaz.
+
+```mermaid
+flowchart TD
+    N{Başka alt komut var mı?}
+    N -->|Evet| E[Sonraki alt komutu execute et]
+    N -->|Hayır| L{executedCommands boş mu?}
+    L -->|Evet| Q[false dön]
+    Q --> QH[Toolbar history push yapmaz]
+    L -->|Hayır| M["Macro executionHistory'ye invocation snapshot'ı push et"]
+    M --> Y[true dön]
+    Y --> H["Toolbar CommandHistory'ye macro'yu tek girdi olarak push eder"]
+    E --> T{Sonuç}
+    T -->|true| K[Undo edilebilirler listesine ekle]
+    T -->|false| N
+    K --> N
+    T -->|RuntimeException| P[Hatayı primary olarak koru]
+    P --> R{Telafi edilecek komut kaldı mı?}
+    R -->|Evet| C[Son kaydedilen komutu undo et]
+    C --> U{Undo hatası var mı?}
+    U -->|Evet| S[Primary hataya suppressed ekle]
+    U -->|Hayır| R
+    S --> R
+    R -->|Hayır| X[Orijinal primary hatayı yeniden fırlat]
+```
+
+`MacroCommand` özellikle `Error` yakalamaz.
+`OutOfMemoryError`, `StackOverflowError` veya VM seviyesindeki başka fatal
+durumlarda ek telafi kodu çalıştırmak güvenli olmayabilir.
+Bu nedenle örneğin best-effort telafi garantisi recoverable uygulama hatası olarak
+modellenen `RuntimeException` sınırında kalır.
 
 ### Test kontrat haritası
 
@@ -4907,7 +5152,7 @@ Bu telafi davranışı veritabanı transaction’ı değildir: `false` dönen am
 | `ClipboardCommands` | Copy tracking politikası, dolu ve blank paste |
 | `UndoHistory` | LIFO undo, farklı instance’larla çoklu undo, boş history |
 | `ReusableCommandHistory` | Aynı stateful command instance’ının iki invocation backup’ı |
-| `MacroCommands` | Tek history birimi, ters sıra undo, primary/suppressed hata ve tam telafi denemesi |
+| `MacroCommands` | Tek history birimi, ters sıra undo, `RuntimeException` primary/suppressed hata ve tam telafi denemesi |
 
 Core testlerde stdout yerine receiver state’i ve history boyutu gözlenir.
 
@@ -4917,6 +5162,7 @@ Core testlerde stdout yerine receiver state’i ve history boyutu gözlenir.
 - Aynı isimle ikinci kayıt ilk command’i sessizce değiştirir.
 - Tam metin backup’ı her komutta O(n) zaman ve bellek kullanır.
 - Macro undo hatasında bütün telafiler denense de receiver’lar kısmen geri alınmış kalabilir.
+- Macro `Error` sonrasında telafi garantisi vermez; fatal JVM koşullarında ek uygulama kodu çalıştırmaz.
 
 Production editörleri diff, operation log, immutable event veya Memento tabanlı snapshot kullanabilir.
 
@@ -4989,8 +5235,9 @@ Asıl execute hatasını primary tut, iki rollback hatasını suppressed olarak 
 
 <h2 id="chapter-iterator">Iterator — Yineleyici Deseni</h2>
 
-> Bu örnek custom bir iterator sözleşmesi kullanır.
-> Java’nın standart `Iterator` API’siyle aynı bitiş davranışına sahip değildir.
+> Temel örnek custom bir iterator sözleşmesi kullanır.
+> Geriye uyumlu `asJavaIterator()` adaptörü aynı traversal’ı standart Java
+> `Iterator` bitiş sözleşmesiyle de sunar.
 
 ### 30 saniyelik kart
 
@@ -5007,8 +5254,8 @@ Asıl execute hatasını primary tut, iki rollback hatasını suppressed olarak 
 | Katman | Bu repoda ne var? | Öğrettiği sınır |
 |---|---|---|
 | Temel örnek | `SocialGraphIterator` ile friends/coworkers gezintisi | Koleksiyon yapısını client’tan saklama ve bağımsız cursor state’i |
-| Güçlendirilmiş örnek | `CompanyProfileIterator` | Var olan iterator’ı açmadan lazy filtreyle compose etme ve `hasMore()` için buffer tutma |
-| Production sınırı | Java `Iterator`/`Spliterator`, sayfalama, retry, snapshot/version politikası | Null sentinel ve process içi cache’in büyük/uzak veri kaynağına yetmemesi |
+| Güçlendirilmiş örnek | `CompanyProfileIterator`, `StandardProfileIteratorAdapter` ve immutable `SocialGraph` snapshot’ı | Lazy filtre composition’ı, custom API’yi standart kontrata uyarlama ve snapshot zamanını aggregate sınırında sabitleme |
+| Production sınırı | `Spliterator`, sayfalama, retry, snapshot/version politikası | Process içi tam cache’in büyük/uzak veri kaynağına ve backpressure’a yetmemesi |
 
 ### Akılda kalıcı analoji: müze sesli rehberi
 
@@ -5057,6 +5304,12 @@ Profile getNext();
 `Facebook`, istenen relation için doğru iterator’ı üreten aggregate/factory rolündedir.
 `SocialSpammer`, graph yapısını görmeden iterator üzerinden ilerler.
 
+Custom sözleşmeye bağlı olmayan Java kodu aynı nesne üzerinde
+`profileIterator.asJavaIterator()` çağırabilir.
+`StandardProfileIteratorAdapter`, `hasMore/getNext` çağrılarını
+`hasNext/next` sözleşmesine çevirir; traversal bitince null yerine
+`NoSuchElementException` üretir.
+
 #### Çözmediği şeyler
 
 Iterator tek başına:
@@ -5074,9 +5327,10 @@ Iterator tek başına:
 | Iterator | `ProfileIterator` | `hasMore` ve `getNext` sözleşmesi |
 | Concrete Iterator | `SocialGraphIterator` | Cursor, relation seçimi ve lazy cache |
 | Iterator decorator | `CompanyProfileIterator` | Delegate iterator’ı şirket adına göre lazy süzer |
+| Iterator adapter | `StandardProfileIteratorAdapter` | Custom null-sentinel sözleşmesini Java `Iterator` sözleşmesine çevirir |
 | Aggregate arayüzü | `SocialNetwork` | Friends/coworkers iterator factory’leri |
 | Concrete Aggregate | `Facebook` | `SocialGraphIterator` üretir |
-| Veri sahibi | `SocialGraph` | Profile ve relation map’lerini okur |
+| Veri sahibi | `SocialGraph` | Constructor girdilerinin immutable snapshot’ını tutar |
 | Element | `Profile` | Gezilen immutable record |
 | Relation seçimi | `RelationType` | `FRIENDS` veya `COWORKERS` |
 | Client | `SocialSpammer` | Iterator’dan email adreslerini tüketir |
@@ -5090,6 +5344,17 @@ classDiagram
         <<interface>>
         +hasMore() boolean
         +getNext() Profile
+        +asJavaIterator() Iterator~Profile~
+    }
+    class JavaIterator {
+        <<interface>>
+        +hasNext() boolean
+        +next() Profile
+    }
+    class StandardProfileIteratorAdapter {
+        -delegate ProfileIterator
+        +hasNext() boolean
+        +next() Profile
     }
     class SocialGraphIterator {
         -socialGraph SocialGraph
@@ -5112,6 +5377,8 @@ classDiagram
     }
     ProfileIterator <|.. SocialGraphIterator
     ProfileIterator <|.. CompanyProfileIterator
+    JavaIterator <|.. StandardProfileIteratorAdapter
+    StandardProfileIteratorAdapter o--> ProfileIterator : same cursor
     CompanyProfileIterator o--> ProfileIterator : lazy delegate
     SocialNetwork <|.. Facebook
     Facebook --> SocialGraphIterator
@@ -5144,18 +5411,44 @@ sequenceDiagram
     Filter-->>Client: buffered match döner ve buffer temizlenir
 ```
 
+### İki snapshot anı
+
+```mermaid
+flowchart LR
+    I["Mutable constructor girdileri<br/>profiles + relation listeleri"]
+    G["SocialGraph immutable snapshot'ı<br/>constructor anı"]
+    E["Dış map/list mutation'ı"]
+    T["SocialGraphIterator traversal cache'i<br/>ilk hasMore/getNext anı"]
+    C["Cursor ilerlemesi"]
+    I -->|deep defensive copy| G
+    I --> E
+    E -. graph sonucunu değiştirmez .-> G
+    G -->|relation ID → Profile dönüşümü| T
+    T --> C
+```
+
+İki katmanı ayırmak önemlidir:
+
+1. `SocialGraph`, aldığı map’leri ve iç relation listelerini constructor’da kopyalar.
+2. Her `SocialGraphIterator`, seçtiği relation’ın `List<Profile>` sonucunu ilk erişimde kendi cache’ine alır.
+
+Birinci katman aggregate’i dış mutation’dan korur.
+İkinci katman her traversal’a bağımsız cursor ve sabit bir gezi listesi verir.
+
 ### Kod execution trace
 
 1. Demo profile ve relation map’lerini oluşturur.
-2. `Facebook#createFriendsIterator("1")` yeni iterator üretir.
-3. Constructor graph’a henüz sorgu yapmaz.
-4. İlk `hasMore()` çağrısı `lazyInit()` metodunu tetikler.
-5. Graph ID listesini profile listesine dönüştürür.
-6. Bulunamayan profile ID’leri `filter` ile sessizce çıkarılır.
-7. Elde edilen `Stream.toList()` sonucu iterator cache’ine yazılır.
-8. `hasMore`, cursor cache boyutundan küçükse true döner.
-9. `getNext`, mevcut profile’ı alıp cursor’ı bir artırır.
-10. Bitişte `getNext()` null döner.
+2. `SocialGraph` bu map’leri ve iç listeleri defensive copy ile sabitler.
+3. `Facebook#createFriendsIterator("1")` yeni iterator üretir.
+4. Iterator constructor’ı graph’a henüz sorgu yapmaz.
+5. İlk `hasMore()` çağrısı `lazyInit()` metodunu tetikler.
+6. Exhaustive `switch`, `FRIENDS` relation’ını seçer.
+7. Graph ID listesini profile listesine dönüştürür.
+8. Bulunamayan profile ID’leri `filter` ile sessizce çıkarılır.
+9. Elde edilen `Stream.toList()` sonucu iterator cache’ine yazılır.
+10. `hasMore`, cursor cache boyutundan küçükse true döner.
+11. `getNext`, mevcut profile’ı alıp cursor’ı bir artırır.
+12. Custom API bitişte null döner; standart adapter aynı noktada `NoSuchElementException` üretir.
 
 Friends ve coworkers iterator’ları ayrı nesnelerdir.
 Bu yüzden cursor state’leri birbirini bozmaz.
@@ -5171,27 +5464,39 @@ Bu ifade thread-safe oldukları anlamına gelmez.
 - `SocialGraphIterator#getNext()` başarılı olduğunda cursor’ı tam bir artırır.
 - Bitişte `hasMore()` false, `getNext()` null döner.
 - Bu null sentinel, Java `Iterator#next()` sözleşmesinden farklıdır.
+- `asJavaIterator()` yeni iterator/cursor üretmez; mevcut delegate traversal’ını tüketir.
+- Adapter bitişte null değerini `NoSuchElementException` olarak çevirir.
 - Relation listesinin sırası sonuç sırasını belirler.
 - Duplicate ID duplicate profile üretebilir.
 - Bilinmeyen source profile boş relation gibi davranır.
 - Graph’ta bulunmayan relation ID’si sessizce filtrelenir.
 - Cache ilk erişimde oluşur ve daha sonra yenilenmez.
+- Null `socialGraph`, `profileId` ve `relationType` constructor’da fail-fast reddedilir.
+- Relation seçimi exhaustive `switch` ile yapılır; enum’a yeni değer eklemek compile-time güncelleme gerektirir.
 - `CompanyProfileIterator` şirket adını case-insensitive karşılaştırır.
+- Null/blank şirket filtresi constructor’da reddedilir, geçerli değer trim edilir.
 - Filtre iterator’ının buffer’ı en fazla bir `Profile` taşır.
 - Filtre iterator’ının ilk `hasMore()` çağrısı eşleşme ararken delegate cursor’ını ilerletebilir.
 - Eşleşme buffer’a girdikten sonraki tekrarlı `hasMore()` çağrıları delegate’i yeniden ilerletmez.
 
 ### Lazy cache ve mutation zamanı
 
-`SocialGraph` constructor girdilerini defensive copy yapmadan saklar.
-Bu nedenle dışarıdaki mutable map/list:
+`SocialGraph` constructor girdilerini shallow değil, relation listelerini de kapsayan
+defensive copy ile saklar.
+Constructor döndükten sonra caller’ın:
 
-- iterator oluşturulduktan sonra,
-- fakat ilk `hasMore/getNext` öncesinde
+- profile map’ine yeni profil eklemesi,
+- mevcut friend ID listesine eleman eklemesi,
+- relation map’ine yeni anahtar yazması
 
-değişirse yeni veri cache’e yansıyabilir.
-Cache oluştuktan sonraki değişiklikler aynı iterator’da görünmez.
-Bu davranış snapshot zamanının ilk erişim olduğunu gösterir.
+aggregate’in sonucunu değiştirmez.
+
+Iterator cache’i yine ilk `hasMore/getNext` sırasında oluşur; buradaki laziness
+dış mutation’ı görmek için değil, traversal maliyetini gerçekten kullanılacağı ana
+ertelemek içindir.
+İleride `SocialGraph`a kontrollü mutator veya uzak veri kaynağı eklenirse
+“aggregate version’ı mı, iterator oluşturma anı mı, ilk erişim mi?” kararı yeniden
+açıkça verilmelidir.
 
 ### Test kontrat haritası
 
@@ -5200,24 +5505,24 @@ Bu davranış snapshot zamanının ilk erişim olduğunu gösterir.
 | `RelationTraversal` | Friends sırası ve coworkers filtresi |
 | `CursorState` | Idempotent `hasMore`, ilerleme, bağımsız iterator, null bitiş |
 | `EmptyTraversal` | Bilinmeyen source ve dangling relation davranışı |
-| `IteratorComposition` | Lazy şirket filtresi ve buffered `hasMore` idempotency’si |
+| `IteratorComposition` | Lazy şirket filtresi, ölçüt normalizasyonu/validasyonu ve buffered `hasMore` idempotency’si |
+| `StandardIteratorCompatibility` | Java bitiş sözleşmesi ve adapter/delegate ortak cursor’ı |
+| `AggregateSnapshot` | Constructor-time deep snapshot ve null relation fail-fast davranışı |
 
 Testler client’ın graph map’lerine erişmesini gerektirmez.
 İki iterator interleaved ilerletilerek cursor isolation doğrudan gözlenir.
 
 ### Edge case, security, concurrency ve performans
 
-- Null `relationType`, mevcut ternary nedeniyle coworkers koluna düşer.
-- Enum’a yeni değer eklenirse o da sessizce coworkers gibi davranır.
-- `switch` ile exhaustive seçim daha güvenli olurdu.
-- Graph girdileri defensive copy değildir.
-- Iterator ve graph thread-safe değildir.
+- Custom API’nin null sentinel’i, sonuç domain’i ileride null profile’a izin verirse belirsizleşir; standart adapter bu yüzden daha güvenli sınırdır.
+- `SocialGraph` iç durumu immutable snapshot’tır; iterator cursor’ları ise thread-safe değildir.
+- Aynı custom iterator ile ondan üretilen adapter eşzamanlı tüketilmemelidir; aynı cursor’ı paylaşırlar.
 - Remote graph’ta lazy init ilk çağrıyı beklenmedik biçimde yavaşlatabilir.
 - `SocialGraphIterator` cache oluştuktan sonra `hasMore/getNext` için O(1) çalışır.
 - `CompanyProfileIterator#hasMore`, sıradaki eşleşmeye kadar k adayı tararsa O(k) çalışır; bütün traversal toplamda O(n)’dir.
 - `SocialSpammer` adı ve davranışı production ileti izinlerini modellemez.
 
-Production’da standart `Iterator`, `Iterable`, stream, cursor pagination veya reactive publisher seçenekleri değerlendirilmelidir.
+Production’da adapter’ın ötesinde `Iterable`, `Spliterator`, stream, cursor pagination veya reactive publisher seçenekleri değerlendirilmelidir.
 
 ### Ne zaman kullan?
 
@@ -5270,10 +5575,11 @@ Bir traversal’ın sıralama algoritması Strategy olabilir; gezinti state’i 
 İki friends iterator üret.
 Birini iki adım, diğerini bir adım ilerlet ve cursor’ların bağımsızlığını test et.
 
-#### Seviye 2 — Tasarla
+#### Seviye 2 — Standart API ile genişlet
 
-`ProfileIterator`ı Java `Iterator<Profile>` sözleşmesine uyarla.
-Bitişte null yerine `NoSuchElementException` bekleyen test yaz.
+`StandardProfileIteratorAdapter` için `forEachRemaining` kullanan bir client yaz.
+Adapter ve delegate’in aynı cursor’ı paylaştığını göster; ardından bağımsız traversal
+gereken kullanımda neden aggregate’den yeni iterator istenmesi gerektiğini açıkla.
 
 #### Seviye 3 — Ölçekle
 
@@ -6904,6 +7210,7 @@ flowchart TD
 - Close da hata verirse farklı close hatası primary hataya `suppressed` olarak eklenir; close tam bir kez çağrılır.
 - İş gövdesi başarılı, yalnız close başarısızsa close hatası kendi kimliğiyle primary olur ve rapor dönmez.
 - Hook’lar opsiyoneldir.
+- Null/blank filename herhangi bir resource adımı başlamadan `IllegalArgumentException` ile reddedilir.
 - Filename yalnız log/açma/çıkarma adımlarına taşınır.
 - Extension doğrulaması yapılmaz.
 - Null raw data base `toUpperCase()` çağrısında NPE üretir.
@@ -6925,16 +7232,21 @@ Gövde başarılıysa close hatası doğrudan primary olur.
 
 ### Locale determinismi
 
-Base analiz `rawData.toUpperCase()` çağırır.
-Parametresiz uppercase JVM default locale’ine bağlıdır.
-Türkçe locale’de `i/İ` dönüşümü test çıktısını değiştirebilir.
+Base analiz `rawData.toUpperCase(Locale.ROOT)` çağırır.
+Bu seçim protokol/rapor metnini JVM’in default locale’inden bağımsız yapar.
+Test, default locale’i geçici olarak Türkçe yapıp `"birim fiyat"` girdisinin yine
+`"BIRIM FIYAT"` üretmesini doğrular.
 
-Makineden bağımsız metin protokolü gerekiyorsa `toUpperCase(Locale.ROOT)` tercih edilir.
+Bu, kullanıcıya gösterilen doğal dil metninin her zaman `Locale.ROOT` ile
+dönüştürülmesi gerektiği anlamına gelmez.
+Kullanıcı arayüzü metni kullanıcının locale’ini; makineden bağımsız anahtar ve
+protokol metni ise `Locale.ROOT` gibi sabit bir politika kullanmalıdır.
 
 ### Test kontrat haritası
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
+| `InputBoundary` | Blank filename’in lifecycle başlamadan reddi ve locale-independent analiz |
 | `AlgorithmSkeleton` | Recording subclass ile tam yedi adımlı sıra ve veri akışı |
 | `PdfProcessing` | Default analyze/report davranışı |
 | `CsvProcessing` | Format özel override davranışı |
@@ -6944,7 +7256,7 @@ Cleanup testi stdout’a değil recording subclass’ın çağrı sırasına bak
 
 ### Edge case, security, concurrency ve performans
 
-- Null/blank filename doğrulanmaz.
+- Filename yalnız null/blank açısından doğrulanır; normalize edilmez ve gerçek path güvenliği sağlamaz.
 - Dosya extension’ı concrete miner ile eşleştirilmez.
 - Gerçek path traversal veya dosya izni kontrolü yoktur.
 - Stdout gerçek loglama/metric sistemi değildir.

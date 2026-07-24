@@ -2,12 +2,11 @@ package com.can.structural.adapter;
 
 import java.util.Objects;
 
-public class SquarePegAdapter extends RoundPeg {
+public class SquarePegAdapter implements RoundPegShape {
 
     private final SquarePeg squarePeg;
 
     public SquarePegAdapter(SquarePeg squarePeg) {
-        super(0);
         this.squarePeg = Objects.requireNonNull(squarePeg, "squarePeg cannot be null");
     }
 

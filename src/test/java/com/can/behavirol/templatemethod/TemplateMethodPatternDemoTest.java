@@ -9,13 +9,74 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 @DisplayName("Template Method — doküman madenciliği akışı")
 class TemplateMethodPatternDemoTest {
+
+    @Nested
+    @DisplayName("Template method giriş sınırını kurduğunda")
+    class InputBoundary {
+
+        @Test
+        @DisplayName("blank dosya adı kaynak açılmadan ve close çağrılmadan reddedilir")
+        void blankFileNameFailsBeforeResourceLifecycleStarts() {
+            // Arrange
+            RecordingMiner miner = new RecordingMiner();
+
+            // Act
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> miner.process("   ")
+            );
+
+            // Assert
+            assertAll(
+                    () -> assertEquals("fileName cannot be blank", error.getMessage()),
+                    () -> assertTrue(miner.calls.isEmpty())
+            );
+        }
+
+        @Test
+        @ResourceLock(Resources.LOCALE)
+        @DisplayName("standart analiz JVM locale'inden bağımsız büyük harf üretir")
+        void defaultAnalysisUsesLocaleIndependentProtocolText() {
+            // Arrange
+            Locale originalLocale = Locale.getDefault();
+            DocumentMiningTemplate miner = new DocumentMiningTemplate() {
+                @Override
+                protected void openFile(String fileName) {
+                }
+
+                @Override
+                protected String extractRawData(String fileName) {
+                    return "birim fiyat";
+                }
+
+                @Override
+                protected void closeFile(String fileName) {
+                }
+            };
+
+            // Act
+            String report;
+            try {
+                Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+                report = miner.process("fiyat.demo");
+            } finally {
+                Locale.setDefault(originalLocale);
+            }
+
+            // Assert
+            assertEquals("RAPOR: Standart analiz => BIRIM FIYAT", report);
+        }
+    }
 
     @Nested
     @DisplayName("Üst sınıftaki template method çalıştığında")

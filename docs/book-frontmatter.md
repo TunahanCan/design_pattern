@@ -208,11 +208,11 @@ Bu tablo bir seçim kısayoludur; bölüm anlatımlarının yerine geçmez.
 
 | Pattern | Değişen eksen | Bu repodaki hikâye | Ana giriş noktası |
 |---|---|---|---|
-| [Adapter](#chapter-adapter) | Uyumsuz API’nin hedef tipe çevrilmesi | Geometri ve legacy kargo birim/model dönüşümü | `ShippingService` |
+| [Adapter](#chapter-adapter) | Uyumsuz API’nin hedef tipe çevrilmesi | Küçük Target kontratı ve legacy kargo birim/model dönüşümü | `RoundPegShape` / `ShippingService` |
 | [Bridge](#chapter-bridge) | Abstraction ve implementation’ın bağımsız varyasyonları | Kumanda × cihaz, mute ve kanal preset’i | `RemoteControl` + `Device` |
 | [Composite](#chapter-composite) | Tekil ve bileşik nesnenin aynı sözleşmeyle kullanılması | Exact para hesabı yapan güvenli kutu ağacı | `OrderComponent` |
 | [Decorator](#chapter-decorator) | Davranışların runtime’da katmanlanması | Öncelik etiketi ve bildirim kanalı zincirleri | `Notifier` |
-| [Facade](#chapter-facade) | Karmaşık alt sistemin istemciye sunulan yüzeyi | Typed video formatı ve dönüşüm orkestrasyonu | `VideoConverterFacade` |
+| [Facade](#chapter-facade) | Karmaşık alt sistemin istemciye sunulan yüzeyi | Typed video formatı, güvenli dosya metadata’sı ve dönüşüm orkestrasyonu | `VideoConverterFacade` |
 | [Flyweight](#chapter-flyweight) | Çok sayıdaki nesnede ortak intrinsic state | Yapısal anahtarla paylaşılan ağaç türleri | `TreeFactory` |
 | [Proxy](#chapter-proxy) | Aynı interface arkasındaki erişim politikası | Immutable ve hedefli temizlenebilen YouTube cache’i | `CachedYouTubeClass` |
 
@@ -220,9 +220,9 @@ Bu tablo bir seçim kısayoludur; bölüm anlatımlarının yerine geçmez.
 
 | Pattern | Değişen eksen | Bu repodaki hikâye | Ana giriş noktası |
 |---|---|---|---|
-| [Chain of Responsibility](#chapter-chain-of-responsibility) | İsteği işleyecek ardışık kontroller | Typed sonuçlu sipariş güvenlik/işleme pipeline’ı | `OrderRequestHandler` |
+| [Chain of Responsibility](#chapter-chain-of-responsibility) | İsteği işleyecek ardışık kontroller | Girdi invariant’ı ve typed sonuç taşıyan sipariş pipeline’ı | `OrderRequestHandler` |
 | [Command](#chapter-command) | Bir eylemin nesne olarak taşınması ve geçmişi | Editör toolbar’ı, güvenli undo ve macro | `Command` |
-| [Iterator](#chapter-iterator) | Koleksiyon yapısını açmadan dolaşma | Sosyal graph ve lazy şirket filtresi | `ProfileIterator` |
+| [Iterator](#chapter-iterator) | Koleksiyon yapısını açmadan dolaşma | Immutable sosyal graph, lazy şirket filtresi ve Java Iterator adapter’ı | `ProfileIterator` |
 | [Mediator](#chapter-mediator) | Bileşenler arası iletişim merkezi | Gateway enjekte edilen login/register diyaloğu | `AuthenticationDialog` |
 | [Memento](#chapter-memento) | Encapsulation bozmadan snapshot/restore | Ardışık undo protokollü editör geçmişi | `EditorHistory` |
 | [Observer](#chapter-observer) | Bir olayı dinleyicilere yayma | Yaşam döngüsü handle’lı stok aboneliği | `Publisher` / `Store` |
@@ -252,11 +252,11 @@ Aşağıdaki harita, değişikliklerin neden yapıldığını topluca gösterir.
 
 | Pattern | Temel örnek | Güçlendirilen nokta | Bilinçli production sınırı |
 |---|---|---|---|
-| Adapter | Kare çivi–yuvarlak delik | Kargo model/birim dönüşümü: gram→kg, kuruş→TL, saat→gün | Provider timeout, retry, auth, SLA |
+| Adapter | Kare çivi–yuvarlak delik | Yapay superclass state’ini kaldıran Target interface’i; kargo model/birim dönüşümü | Binary uyumluluk, provider timeout, retry, auth, SLA |
 | Bridge | Kumanda × cihaz | Mute, preset workflow’u, null ve cihaz sınırları | Capability modeli, ağ I/O, concurrency |
 | Composite | Ürün/kutu toplamı | `BigDecimal`, immutable child görünümü ve cycle koruması | Ownership, depth limiti, persistence |
 | Decorator | Çok kanallı bildirim | Bütün kanallara ulaşan `PriorityDecorator` ve fail-fast graph | Kısmi başarı, retry, PII, SDK lifecycle |
-| Facade | String tabanlı conversion | `VideoFormat`, açık format hatası ve dependency injection | Gerçek media I/O, path/MIME, cancel |
+| Facade | String tabanlı conversion | `VideoFormat`, tek yerde dosya metadata’sı ve dependency injection | Gerçek media I/O, güvenli path/MIME, cancel |
 | Flyweight | Paylaşılan `TreeType` | Yapısal key, thread-safe havuz ve doğru sayaç scope’u | Eviction, kapasite ve resource lifecycle |
 | Proxy | YouTube cache | Immutable snapshot, concurrent map ve hedefli invalidation | TTL, tenant, stampede, dağıtık cache |
 
@@ -264,15 +264,15 @@ Aşağıdaki harita, değişikliklerin neden yapıldığını topluca gösterir.
 
 | Pattern | Temel örnek | Güçlendirilen nokta | Bilinçli production sınırı |
 |---|---|---|---|
-| Chain of Responsibility | Boolean handler sonucu | `PROCESSED/REJECTED/DUPLICATE` ve sonuç nedeni | Gerçek idempotency/rate-limit/cache |
+| Chain of Responsibility | Boolean handler sonucu | İlk halkada request invariant’ı; `PROCESSED/REJECTED/DUPLICATE` ve sonuç nedeni | Gerçek idempotency/rate-limit/cache |
 | Command | Toolbar ve tek undo | Invocation backup stack’i, macro ters-undo ve telafi | Redo, bounded/persistent history, transaction |
-| Iterator | Friends/coworkers dolaşımı | Lazy buffered `CompanyProfileIterator` composition’ı | Pagination, retry, versioned snapshot |
+| Iterator | Friends/coworkers dolaşımı | Immutable graph snapshot’ı, lazy filtre ve standart Java `Iterator` adapter’ı | Pagination, retry, versioned snapshot |
 | Mediator | Auth form koordinasyonu | Enjekte edilen `AuthenticationGateway` ile yan etki sınırı | Typed event, gerçek auth ve secret lifecycle |
 | Memento | Snapshot + düşük seviye stack | Precondition-safe `EditorHistory#undo` ile caretaker protokolü | Redo, diff/bounded history, persistence |
 | Observer | Store/subscriber bildirimi | Duplicate-safe kayıt, snapshot iteration ve ref-counted `Subscription` sahipliği | Async isolation, retry, DLQ, thread safety |
 | State | Draft→Moderation→Published | Admin ve gerekçe kontrollü reject→Draft geçişi | Mutator sınırı, locking ve kalıcı audit |
 | Strategy | Aritmetik işlemler | Typed shipment/quote ve overflow-safe `long` fiyatlama | Currency, config, eligibility, versioning |
-| Template Method | PDF/CSV sabit akış | `finally` ile cleanup; primary/suppressed hata politikası | AutoCloseable, streaming parser |
+| Template Method | PDF/CSV sabit akış | Giriş precondition’ı, locale-deterministic analiz ve `finally` ile primary/suppressed cleanup politikası | AutoCloseable, streaming parser |
 | Visitor | XML + risk notları | Fail-fast elementler, XML escaping ve typed `GeoSummaryVisitor` | Serializer, schema, root ve lifecycle |
 
 # En çok karıştırılan desenler
@@ -334,6 +334,142 @@ Kısa kural: dışarıdan algoritma seçimi **Strategy**, davranışın mevcut d
 
 - Chain’de her halka isteği reddedebilir, işleyebilir, dönüştürebilir veya sonrakine bırakabilir.
 - Decorator’da her halka aynı operation’a ek davranış katar ve sonucu aynı sözleşmede döndürür.
+
+# Pattern’leri birlikte kullanmak: bir sipariş akışı
+
+Gerçek bir sistem çoğu zaman tek bir pattern’den oluşmaz. Yine de iyi mimari,
+“mümkün olan en fazla deseni” bir araya getirmek değildir. Her pattern yalnızca
+kanıtlanmış bir değişim baskısının etrafına çizilen küçük bir karar sınırı
+olmalıdır.
+
+Aşağıdaki sipariş akışı **entegrasyon düşünce deneyidir**; repoda ayrıca
+çalışan tek bir e-ticaret uygulaması bulunduğu anlamına gelmez. Amaç, ayrı
+demolarda öğrenilen rollerin aynı use case içinde nerede durabileceğini
+göstermektir.
+
+```mermaid
+flowchart LR
+    Client[Web / Mobil istemci] --> Facade["CheckoutFacade<br/><b>Facade</b>"]
+    Facade --> Chain["Sipariş kontrolleri<br/><b>Chain of Responsibility</b>"]
+    Chain --> Strategy["Teslimat fiyatlama<br/><b>Strategy</b>"]
+    Strategy --> Adapter["LegacyCargoAdapter<br/><b>Adapter</b>"]
+    Facade --> Command["PlaceOrderCommand<br/><b>Command</b>"]
+    Command --> State["Order yaşam döngüsü<br/><b>State</b>"]
+    State --> Event["OrderPlaced olayı"]
+    Event --> Observer["Stok · bildirim · analitik<br/><b>Observer</b>"]
+
+    classDef boundary fill:#e8f1ff,stroke:#2563eb,color:#102a43
+    classDef behavior fill:#fff4df,stroke:#d97706,color:#3f2a09
+    classDef event fill:#ecfdf3,stroke:#16803c,color:#12351f
+    class Facade,Adapter boundary
+    class Chain,Strategy,Command,State behavior
+    class Event,Observer event
+```
+
+Bu şekil bir sınıf sayısı hedefi vermez. Örneğin use case yalnızca senkron
+çalışıyor, kuyruğa alınmıyor ve geri alınmıyorsa `PlaceOrderCommand` ayrı bir
+sınıf olmak zorunda değildir. Pattern’in varlığını diyagram değil gereksinim
+haklı çıkarır.
+
+## Aynı isteğin çalışma zamanı izi
+
+```mermaid
+sequenceDiagram
+    actor Customer as Müşteri
+    participant Facade as CheckoutFacade
+    participant Chain as ValidationChain
+    participant Pricing as DeliveryStrategy
+    participant Cargo as LegacyCargoAdapter
+    participant Command as PlaceOrderCommand
+    participant Order as Order / State
+    participant Events as OrderPublisher
+
+    Customer->>Facade: placeOrder(request)
+    Facade->>Chain: validate(request)
+
+    alt Kontrol reddeder
+        Chain-->>Facade: REJECTED(reason)
+        Facade-->>Customer: anlamlı iş hatası
+    else Kontroller geçer
+        Chain-->>Facade: APPROVED
+        Facade->>Pricing: quote(shipment)
+        Pricing->>Cargo: quote(parcel)
+        Cargo-->>Pricing: normalize edilmiş fiyat ve süre
+        Pricing-->>Facade: DeliveryQuote
+        Facade->>Command: execute()
+        Command->>Order: confirm()
+        Order->>Order: Draft → Confirmed
+        Order->>Events: publish(OrderPlaced)
+        Events-->>Facade: publication accepted
+        Facade-->>Customer: OrderResult
+    end
+```
+
+Akışı okurken üç farklı ilişkiyi ayır:
+
+1. **Orkestrasyon:** `CheckoutFacade` adımların hangi sırada çağrıldığını bilir.
+2. **Politika:** Chain, Strategy ve State kendi kararlarını sahiplenir.
+3. **Entegrasyon:** Adapter dış sistemin modelini içerideki modele çevirir;
+   Observer ise sipariş sonucunu ikincil alıcılara dağıtır.
+
+Bu ayrım önemlidir. Bir facade’ın içinde yüzlerce iş kuralı oluşursa facade,
+kolay bir giriş noktası olmaktan çıkıp “god object” olur. Observer üzerinden
+yayınlanan her dinleyici ana transaction’ın zorunlu parçası yapılırsa gevşek
+bağlı görünen tasarım gerçekte ortak hata kaderine sahip olur.
+
+## Değişim baskısından pattern’e
+
+| Gözlenen baskı | Aday pattern | İzole edilen karar | Pattern eklemeden önce sor |
+|---|---|---|---|
+| Kargo sağlayıcısının modeli ve birimleri iç API’den farklı | Adapter | Dış model → iç model dönüşümü | Dönüşüm gerçekten tekrar ediyor mu, yoksa tek fonksiyon yeterli mi? |
+| Teslimat fiyatı standart/ekspres/mağazadan teslim algoritmasına göre değişiyor | Strategy | Seçilebilir fiyatlama algoritması | Algoritmalar aynı giriş/çıkış sözleşmesini taşıyor mu? |
+| Güvenlik ve iş kontrollerinin sırası ürünlere göre kuruluyor | Chain of Responsibility | Ardışık kontrol ve kısa devre politikası | Sabit üç koşul, açık bir metotta daha okunabilir mi? |
+| İstek kuyruklanacak, audit edilecek veya daha sonra çalıştırılacak | Command | Çağrı ile çalıştırılabilir eylem arasındaki zaman | Eylemi nesneleştirmenin somut bir yaşam döngüsü var mı? |
+| Aynı operasyon sipariş durumuna göre farklı davranıyor | State | Duruma bağlı davranış ve geçişler | Yalnız iki basit durum için enum/switch daha açık mı? |
+| Sipariş sonrası alıcılar birbirinden bağımsız eklenip çıkarılıyor | Observer | Olay üreticisi ile ikincil tepkiler | Teslimat, sıra ve hata semantiği tanımlı mı? |
+| İstemci alt sistem adımlarını bilmemeli | Facade | Use case’in dışarıya sunulan dar yüzeyi | Basitleştirme yapıyor mu, yoksa kuralları tek sınıfa mı yığıyor? |
+
+Tablo “baskı varsa kesin bu pattern’i kullan” demez. Adayı görünür kılar;
+son karar kodun boyutu, değişim sıklığı, ekip bilgisi ve operasyon gereksinimiyle
+verilir.
+
+## Pattern çorbasını önleyen refactoring döngüsü
+
+```mermaid
+flowchart TD
+    A[Somut değişiklik isteği] --> B[Mevcut davranışı karakterizasyon testiyle sabitle]
+    B --> C{İki veya daha fazla bağımsız varyasyon var mı?}
+    C -->|Hayır| D[Basit kodu koru]
+    C -->|Evet| E[Değişen kararın sınırını adlandır]
+    E --> F{Daha küçük bir fonksiyon veya veri tipi yeterli mi?}
+    F -->|Evet| G[Küçük refactoring uygula]
+    F -->|Hayır| H[En dar pattern rollerini çıkar]
+    H --> I[Başarı ve hata kontratlarını test et]
+    I --> J{Okuma ve değişiklik maliyeti azaldı mı?}
+    J -->|Evet| K[Pattern’i ve trade-off'u dokümante et]
+    J -->|Hayır| L[Soyutlamayı geri küçült]
+```
+
+Deneyimli ekiplerin önemli alışkanlığı, yalnız pattern ekleyebilmek değil;
+değişim baskısı ortadan kalktığında onu güvenle küçültebilmektir. Silinebilen
+bir soyutlama başarısızlık değil, bakım maliyetinin yeniden değerlendirilmesidir.
+
+## Birlikte kullanımda beş mühendislik kuralı
+
+1. **Concrete wiring composition root’ta kalır.** Pattern kullanmak, sistemde
+   hiçbir sınıfın concrete türleri bilmemesi demek değildir.
+2. **Hata semantiği tasarımın parçasıdır.** Chain’in neden durduğu, Observer’da
+   bir dinleyici çöktüğünde ne olduğu ve Command’in tekrar çalıştırılıp
+   çalıştırılamayacağı açık sözleşme ister.
+3. **Transaction sınırı diyagramda görünmeyen en önemli çizgidir.** State
+   değişimi ile event yayını arasında atomicity gerekiyorsa outbox gibi bir
+   teslimat tasarımı ayrıca gerekir; Observer bunu kendiliğinden çözmez.
+4. **Decorator ve Proxy sırası davranıştır.** Cache’in telemetry’nin içinde mi
+   dışında mı olduğu, cache hit’lerinin ölçülüp ölçülmeyeceğini değiştirir.
+   Wrapper sırasını composition testiyle sabitle.
+5. **Pattern adı acceptance criterion değildir.** “Strategy kullandık” yerine
+   “yeni fiyatlama algoritması mevcut algoritmaları değiştirmeden ekleniyor ve
+   aynı kontrat testinden geçiyor” denebilmelidir.
 
 # Testleri bir gereksinim dokümanı gibi okumak
 
@@ -460,7 +596,7 @@ Pattern Markdown’ları güncellendikten sonra birleşik kitabı üret:
 node scripts/validate-learning-content.mjs
 ```
 
-Node.js 22+, yerel Chrome/Chromium, internet bağlantısı ve macOS’taki
+Node.js 22+, npm/npx, yerel Chrome/Chromium, internet bağlantısı ve macOS’taki
 Swift/PDFKit araçlarıyla görsel PDF’i yeniden oluştur:
 
 ```bash

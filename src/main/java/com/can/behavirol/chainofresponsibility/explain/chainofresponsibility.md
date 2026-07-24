@@ -10,15 +10,15 @@
 | Niyet | Bir isteği, sırayla çalışan ve gerektiğinde akışı kesen handler nesnelerinden geçirmek |
 | Değişen eksen | Kontrollerin türü, sırası ve hangi koşulda zinciri durdurduğu |
 | Ana bedel | Akış dağıtık hale gelir; sonuç ve yan etkilerin izini sürmek zorlaşabilir |
-| Bu örnekte | Sipariş isteği brute-force, kimlik, temizlik, yetki, tekrar ve işleme adımlarından geçer |
+| Bu örnekte | Sipariş isteği giriş doğrulama, brute-force, kimlik, temizlik, yetki, tekrar ve işleme adımlarından geçer |
 | Hafıza ipucu | “Ben geçiremezsem burada durdurur, geçirebilirsem sıradakine veririm.” |
 
 ## Örnek haritası: temel → güçlendirilmiş → production
 
 | Katman | Bu repoda ne var? | Öğrettiği sınır |
 |---|---|---|
-| Temel örnek | `OrderRequestHandler`, `BaseOrderRequestHandler` ve altı concrete handler | İsteğin sırayla ilerlemesi ve herhangi bir handler’ın kısa devre yapması |
-| Güçlendirilmiş örnek | `OrderRequestOutcome` ile `OrderRequest#getOutcome()` / `getOutcomeMessage()` | Aynı `false` sonucunun yetki reddi mi yoksa duplicate mı olduğunun gözlenmesi |
+| Temel örnek | `OrderRequestHandler`, `BaseOrderRequestHandler` ve yedi concrete handler | İsteğin sırayla ilerlemesi ve herhangi bir handler’ın kısa devre yapması |
+| Güçlendirilmiş örnek | İlk sınırdaki `RequestValidationHandler` ile `OrderRequestOutcome` | Eksik alanın sonraki handler’da rastlantısal NPE olması yerine typed ret sonucuna dönüşmesi; aynı `false` değerindeki yetki ve duplicate nedenlerinin gözlenmesi |
 | Production sınırı | Typed sonuç dönüşü, idempotency key, güvenli kimlik sağlayıcısı, rate limiter ve bounded cache | Boolean ile iş sonucu, güvenlik ve tekrar politikasının tam modellenememesi |
 
 ## Akılda kalıcı analoji: havaalanı güvenlik hattı
@@ -70,6 +70,7 @@ Pattern iletişim yapısını düzenler; iş kurallarının doğruluğu yine gel
 |---|---|---|
 | Handler | `OrderRequestHandler` | `setNext` ve `handle` sözleşmesini tanımlar |
 | Base Handler | `BaseOrderRequestHandler` | Sonraki handler referansını ve `checkNext` akışını tutar |
+| Concrete Handler | `RequestValidationHandler` | Zorunlu alanları sınırda doğrular; eksik isteği typed sonuçla keser |
 | Concrete Handler | `BruteForceProtectionHandler` | IP blokluysa zinciri keser |
 | Concrete Handler | `AuthenticationHandler` | Kullanıcı/parola kontrolü yapar ve kullanıcıyı request’e yazar |
 | Concrete Handler | `DataSanitizationHandler` | Payload’dan `<` ve `>` karakterlerini silip trim eder |
@@ -95,6 +96,7 @@ classDiagram
         -next OrderRequestHandler
         #checkNext(request) boolean
     }
+    class RequestValidationHandler
     class BruteForceProtectionHandler
     class AuthenticationHandler
     class DataSanitizationHandler
@@ -115,6 +117,7 @@ classDiagram
         DUPLICATE
     }
     OrderRequestHandler <|.. BaseOrderRequestHandler
+    BaseOrderRequestHandler <|-- RequestValidationHandler
     BaseOrderRequestHandler <|-- BruteForceProtectionHandler
     BaseOrderRequestHandler <|-- AuthenticationHandler
     BaseOrderRequestHandler <|-- DataSanitizationHandler
@@ -129,12 +132,15 @@ classDiagram
 
 ```mermaid
 flowchart LR
-    R["OrderRequest<br/>PENDING"] --> B[Brute force]
+    R["OrderRequest<br/>PENDING"] --> V[Request validation]
+    V -->|alan eksik| X0["false<br/>REJECTED"]
+    V -->|geçerli| B[Brute force]
     B -->|bloklu| X1["false<br/>REJECTED"]
     B -->|uygun| A[Authentication]
     A -->|hatalı| X2["false<br/>REJECTED"]
     A -->|başarılı| S[Sanitization]
-    S --> Z[Authorization]
+    S -->|temizlik sonrası boş| X5["false<br/>REJECTED"]
+    S -->|geçerli| Z[Authorization]
     Z -->|yetkisiz| X3["false<br/>REJECTED"]
     Z -->|yetkili| C[Cache]
     C -->|imza var| X4["false<br/>DUPLICATE"]
@@ -146,25 +152,26 @@ flowchart LR
 
 ### 1. Normal kullanıcının sipariş oluşturması
 
-1. IP henüz bloklu değildir.
-2. `"can" / "1234"` doğrulanır.
-3. `authenticatedUser` request üzerine yazılır.
-4. `<script>...` payload’ındaki açı parantezleri silinir.
-5. `CREATE_ORDER` admin gerektirmez.
-6. İmza cache’de bulunmaz.
-7. İşlem mesajı yazılır ve zincir `true` döner.
-8. Cache başarılı imzayı saklar.
+1. Validation bütün zorunlu alanların mevcut olduğunu doğrular.
+2. IP henüz bloklu değildir.
+3. `"can" / "1234"` doğrulanır.
+4. `authenticatedUser` request üzerine yazılır.
+5. `<script>...` payload’ındaki açı parantezleri silinir.
+6. `CREATE_ORDER` admin gerektirmez.
+7. İmza cache’de bulunmaz.
+8. İşlem mesajı yazılır ve zincir `true` döner.
+9. Cache başarılı imzayı saklar.
 
 ### 2. Normal kullanıcının tüm siparişleri istemesi
 
-1. Brute-force ve authentication adımları geçilir.
+1. Validation, brute-force ve authentication adımları geçilir.
 2. Payload, authorization’dan önce mutate edilir.
 3. Kullanıcı admin olmadığı için authorization `false` döndürür.
 4. Cache ve order processing çalışmaz.
 
 ### 3. Aynı admin isteğinin ikinci kez gelmesi
 
-1. İkinci istek yine brute-force, authentication, sanitization ve authorization’dan geçer.
+1. İkinci istek yine validation, brute-force, authentication, sanitization ve authorization’dan geçer.
 2. Cache imzayı bulur.
 3. Order processing çağrılmaz.
 4. Mevcut API cache-hit için de `false` döndürür.
@@ -173,7 +180,11 @@ Bu son nokta önemlidir: örnek gerçek bir “sonuç cache’i” değil, tekra
 
 ## API, invariant ve sonuç semantiği
 
-- Zincirin kökü `buildChain` tarafından döndürülen ilk handler’dır.
+- Zincirin kökü `buildChain` tarafından döndürülen `RequestValidationHandler`dır.
+- Null request sonuç yazılabilecek context olmadığı için açık `IllegalArgumentException` üretir.
+- Null/blank username, password, IP veya payload ile null operation `REJECTED` olur; sonraki handler’lar çağrılmaz.
+- Validation ilk hatayı deterministik alan sırasıyla raporlar.
+- Başta dolu olup sanitization sonrasında boşalan payload `REJECTED` olur; authorization ve işleme adımlarına ilerlemez.
 - `setNext` verilen handler’ı döndürür; bu yüzden fluent bağlantı kurulabilir.
 - `checkNext`, sıradaki handler yoksa `true` döndürür.
 - Bir handler `false` döndürdüğünde kalan zincir çalışmaz.
@@ -182,6 +193,7 @@ Bu son nokta önemlidir: örnek gerçek bir “sonuç cache’i” değil, tekra
 - Cache imzası `username|operation|sanitizedPayload` biçimindedir.
 - İmza IP, parola veya ayrı bir idempotency key içermez.
 - Başarısız istekler cache’e yazılmaz.
+- Brute-force eşiği en az 1 olmalıdır; geçersiz configuration constructor’da reddedilir.
 - `boolean` yalnız “terminal işleme kabul edildi mi?” bilgisini taşır.
 - Authentication, authorization, blok ve cache-hit dönüşte aynı `false` değerinde birleşir.
 - Buna karşılık request üzerindeki `outcome`, reddi duplicate kısa devreden ayırır.
@@ -193,8 +205,9 @@ Production API’sinde sonucu mutable request’e yazmak yerine, handler’dan t
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
+| `RequestValidation` | Eksik alanın zincirin başında typed ret olması; null request ve geçersiz brute-force eşiğinin fail-fast davranışı |
 | `SuccessfulRequests` | Create başarısı, admin erişimi, payload mutation |
-| `RejectedRequests` | Yanlış parola, yetki reddi, deneme eşiği, başarılı login reset’i |
+| `RejectedRequests` | Yanlış parola, yetki reddi, deneme eşiği, başarılı login reset’i ve sanitization sonrası boş payload |
 | `CacheShortCircuit` | İlk çağrı/tekrar sonucu ve payload’a bağlı imza |
 | `OutcomeSemantics` | Başarı/reddetme/tekrar ayrımı ve processing handler’ın terminal olması |
 
@@ -207,8 +220,9 @@ Terminal davranış, yanlışlıkla bağlanan recording handler’ın çağrılm
 
 - Üçüncü hatalı giriş sayacı eşiğe getirir; brute-force reddi sonraki istekte görülür.
 - Başarılı giriş, aynı IP’deki bütün hata sayısını sıfırlar.
-- `maxFailedAttempts <= 0` her IP’yi bloklu kabul eder.
-- Null request veya null payload açık doğrulama yerine NPE üretebilir.
+- Validation yalnız zorunlu alan varlığını doğrular; uzunluk, IP biçimi ve payload şeması hâlâ kontrol edilmez.
+- Null request typed outcome’a yazılamadığı için exception politikasına gider.
+- Sanitization sonrası boşluk yeniden doğrulanır ve zincir bu adımda kesilir.
 - `setNext(null)` fluent kurulumun sonraki çağrısını bozabilir.
 - `HashMap` ve `HashSet` thread-safe değildir.
 - Düz metin parola karşılaştırması production için uygun değildir.

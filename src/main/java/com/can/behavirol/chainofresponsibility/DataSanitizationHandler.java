@@ -10,6 +10,13 @@ public class DataSanitizationHandler extends BaseOrderRequestHandler
                 .replace(">", "")
                 .trim();
         request.setPayload(sanitized);
+        if (sanitized.isBlank()) {
+            request.completeAs(
+                    OrderRequestOutcome.REJECTED,
+                    "Payload temizleme sonrasında boş olamaz."
+            );
+            return false;
+        }
         return checkNext(request);
     }
 }

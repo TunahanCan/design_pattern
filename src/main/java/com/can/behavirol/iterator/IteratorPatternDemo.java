@@ -1,5 +1,6 @@
 package com.can.behavirol.iterator;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +48,14 @@ public class IteratorPatternDemo {
                 "Acme"
         );
         spammer.send(acmeFriends, "Acme yaz buluşması");
+
+        Iterator<Profile> standardIterator = network
+                .createFriendsIterator(ali.id())
+                .asJavaIterator();
+        System.out.println(
+                "Standart Java Iterator ile ilk arkadaş: "
+                        + standardIterator.next().name()
+        );
         System.out.println();
     }
 }

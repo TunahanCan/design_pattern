@@ -52,6 +52,7 @@ public class ChainOfResponsibilityDemo
     static OrderRequestHandler buildChain(UserRepository userRepository,
                                           LoginAttemptService loginAttemptService,
                                           RequestCache cache) {
+        OrderRequestHandler validation = new RequestValidationHandler();
         OrderRequestHandler bruteForce = new BruteForceProtectionHandler(loginAttemptService);
         OrderRequestHandler authentication = new AuthenticationHandler(userRepository, loginAttemptService);
         OrderRequestHandler sanitization = new DataSanitizationHandler();
@@ -59,13 +60,14 @@ public class ChainOfResponsibilityDemo
         OrderRequestHandler cacheHandler = new CacheHandler(cache);
         OrderRequestHandler orderProcessing = new OrderProcessingHandler();
 
-        bruteForce
+        validation
+                .setNext(bruteForce)
                 .setNext(authentication)
                 .setNext(sanitization)
                 .setNext(authorization)
                 .setNext(cacheHandler)
                 .setNext(orderProcessing);
 
-        return bruteForce;
+        return validation;
     }
 }

@@ -1,11 +1,13 @@
 package com.can.behavirol.iterator;
 
+import java.util.Objects;
+
 public class Facebook implements SocialNetwork {
 
     private final SocialGraph socialGraph;
 
     public Facebook(SocialGraph socialGraph) {
-        this.socialGraph = socialGraph;
+        this.socialGraph = Objects.requireNonNull(socialGraph, "socialGraph cannot be null");
     }
 
     @Override

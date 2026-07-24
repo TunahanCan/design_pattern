@@ -34,14 +34,8 @@ public class VideoConverterFacade {
         String mixed = audioMixer.fix(converted);
 
         return new ConvertedFile(
-            changeExtension(file.getName(), destinationCodec.getType()),
+            file.replaceExtensionWith(destinationFormat),
             mixed
         );
-    }
-
-    private String changeExtension(String filename, String newExtension) {
-        int dotIndex = filename.lastIndexOf('.');
-        String baseName = dotIndex >= 0 ? filename.substring(0, dotIndex) : filename;
-        return baseName + "." + newExtension;
     }
 }

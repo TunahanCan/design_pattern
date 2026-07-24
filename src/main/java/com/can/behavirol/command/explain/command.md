@@ -190,14 +190,46 @@ Bu nedenle `AbstractEditorCommand` tek backup yerine `Deque<String>` kullanır:
 
 `MacroCommand` ise alt komutlardan `true` dönenleri kaydeder.
 Normal undo’da bu komutları ters sırada geri alır.
-Bir alt komut exception atarsa daha önce çalışan undo edilebilir alt komutların tamamını ters sırada telafi etmeyi dener.
-Asıl execute exception’ı primary kalır; rollback exception’ları çağrı sırasıyla ona suppressed olarak eklenir.
+Bir alt komut `RuntimeException` atarsa daha önce çalışan undo edilebilir alt
+komutların tamamını ters sırada telafi etmeyi dener.
+Asıl execute exception’ı primary kalır; rollback exception’ları çağrı sırasıyla
+ona suppressed olarak eklenir.
 
 Normal macro undo sırasında birden fazla alt komut hata verirse yine bütün undo’lar denenir.
 Ters sıradaki ilk undo hatası primary olur, sonraki undo hataları ona suppressed olarak eklenir.
 Bu deterministik politika hata bilgisini korur; fakat telafilerin iş açısından gerçekten başarılı olduğunu garanti etmez.
 
 Bu telafi davranışı veritabanı transaction’ı değildir: `false` dönen ama clipboard gibi başka state’i değiştiren bir komut otomatik geri alınmaz.
+
+```mermaid
+flowchart TD
+    N{Başka alt komut var mı?}
+    N -->|Evet| E[Sonraki alt komutu execute et]
+    N -->|Hayır| L{executedCommands boş mu?}
+    L -->|Evet| Q[false dön]
+    Q --> QH[Toolbar history push yapmaz]
+    L -->|Hayır| M["Macro executionHistory'ye invocation snapshot'ı push et"]
+    M --> Y[true dön]
+    Y --> H["Toolbar CommandHistory'ye macro'yu tek girdi olarak push eder"]
+    E --> T{Sonuç}
+    T -->|true| K[Undo edilebilirler listesine ekle]
+    T -->|false| N
+    K --> N
+    T -->|RuntimeException| P[Hatayı primary olarak koru]
+    P --> R{Telafi edilecek komut kaldı mı?}
+    R -->|Evet| C[Son kaydedilen komutu undo et]
+    C --> U{Undo hatası var mı?}
+    U -->|Evet| S[Primary hataya suppressed ekle]
+    U -->|Hayır| R
+    S --> R
+    R -->|Hayır| X[Orijinal primary hatayı yeniden fırlat]
+```
+
+`MacroCommand` özellikle `Error` yakalamaz.
+`OutOfMemoryError`, `StackOverflowError` veya VM seviyesindeki başka fatal
+durumlarda ek telafi kodu çalıştırmak güvenli olmayabilir.
+Bu nedenle örneğin best-effort telafi garantisi recoverable uygulama hatası olarak
+modellenen `RuntimeException` sınırında kalır.
 
 ## Test kontrat haritası
 
@@ -207,7 +239,7 @@ Bu telafi davranışı veritabanı transaction’ı değildir: `false` dönen am
 | `ClipboardCommands` | Copy tracking politikası, dolu ve blank paste |
 | `UndoHistory` | LIFO undo, farklı instance’larla çoklu undo, boş history |
 | `ReusableCommandHistory` | Aynı stateful command instance’ının iki invocation backup’ı |
-| `MacroCommands` | Tek history birimi, ters sıra undo, primary/suppressed hata ve tam telafi denemesi |
+| `MacroCommands` | Tek history birimi, ters sıra undo, `RuntimeException` primary/suppressed hata ve tam telafi denemesi |
 
 Core testlerde stdout yerine receiver state’i ve history boyutu gözlenir.
 
@@ -217,6 +249,7 @@ Core testlerde stdout yerine receiver state’i ve history boyutu gözlenir.
 - Aynı isimle ikinci kayıt ilk command’i sessizce değiştirir.
 - Tam metin backup’ı her komutta O(n) zaman ve bellek kullanır.
 - Macro undo hatasında bütün telafiler denense de receiver’lar kısmen geri alınmış kalabilir.
+- Macro `Error` sonrasında telafi garantisi vermez; fatal JVM koşullarında ek uygulama kodu çalıştırmaz.
 
 Production editörleri diff, operation log, immutable event veya Memento tabanlı snapshot kullanabilir.
 

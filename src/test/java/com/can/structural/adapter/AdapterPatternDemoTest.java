@@ -73,8 +73,8 @@ class AdapterPatternDemoTest {
         void shouldUseAdaptedSquarePegThroughRoundPegContract() {
             // Arrange
             RoundHole hole = new RoundHole(5);
-            RoundPeg smallSquareAsRoundPeg = new SquarePegAdapter(new SquarePeg(5));
-            RoundPeg largeSquareAsRoundPeg = new SquarePegAdapter(new SquarePeg(10));
+            RoundPegShape smallSquareAsRoundPeg = new SquarePegAdapter(new SquarePeg(5));
+            RoundPegShape largeSquareAsRoundPeg = new SquarePegAdapter(new SquarePeg(10));
 
             // Act
             boolean smallSquareFits = hole.fits(smallSquareAsRoundPeg);
@@ -188,7 +188,20 @@ class AdapterPatternDemoTest {
         void shouldRejectInvalidDimensionsAndDependencies() {
             assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> new RoundHole(0)),
+                () -> assertThrows(IllegalArgumentException.class, () -> new RoundPeg(0)),
                 () -> assertThrows(IllegalArgumentException.class, () -> new SquarePeg(-1)),
+                () -> assertThrows(
+                    NullPointerException.class,
+                    () -> new RoundHole(5).fits(null)
+                ),
+                () -> assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new RoundHole(5).fits(() -> -1)
+                ),
+                () -> assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new RoundHole(5).fits(() -> Double.NaN)
+                ),
                 () -> assertThrows(NullPointerException.class, () -> new SquarePegAdapter(null)),
                 () -> assertThrows(IllegalArgumentException.class, () -> new Parcel(" ", 100)),
                 () -> assertThrows(IllegalArgumentException.class, () -> new Parcel("34000", 0)),

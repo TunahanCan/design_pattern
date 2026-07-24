@@ -4,10 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -207,6 +212,133 @@ class IteratorPatternDemoTest {
                     () -> assertEquals("mehmet@globex.com", match.email()),
                     () -> assertFalse(iterator.hasMore())
             );
+        }
+
+        @Test
+        @DisplayName("şirket ölçütü trim edilir, blank ölçüt ise sınırda reddedilir")
+        void companyFilterNormalizesAndValidatesItsCriterion() {
+            // Arrange
+            Fixture fixture = Fixture.standard();
+            ProfileIterator trimmedFilter = new CompanyProfileIterator(
+                    fixture.network.createFriendsIterator(fixture.ali.id()),
+                    "  acme  "
+            );
+
+            // Act
+            List<String> recipients = new SocialSpammer().send(trimmedFilter, "buluşma");
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new CompanyProfileIterator(
+                            fixture.network.createFriendsIterator(fixture.ali.id()),
+                            "   "
+                    )
+            );
+
+            // Assert
+            assertAll(
+                    () -> assertEquals(
+                            List.of("ayse@acme.com", "zeynep@acme.com"),
+                            recipients
+                    ),
+                    () -> assertEquals("company cannot be blank", error.getMessage())
+            );
+        }
+    }
+
+    @Nested
+    @DisplayName("Custom iterator standart Java Iterator görünümüne uyarlandığında")
+    class StandardIteratorCompatibility {
+
+        @Test
+        @DisplayName("standart next bitişte null yerine NoSuchElementException üretir")
+        void standardAdapterUsesJavaExhaustionContract() {
+            // Arrange
+            Fixture fixture = Fixture.standard();
+            Iterator<Profile> iterator = fixture.network
+                    .createCoworkersIterator(fixture.ali.id())
+                    .asJavaIterator();
+
+            // Act
+            Profile first = iterator.next();
+            Profile second = iterator.next();
+            NoSuchElementException error = assertThrows(
+                    NoSuchElementException.class,
+                    iterator::next
+            );
+
+            // Assert
+            assertAll(
+                    () -> assertEquals("2", first.id()),
+                    () -> assertEquals("4", second.id()),
+                    () -> assertFalse(iterator.hasNext()),
+                    () -> assertEquals("No more profiles", error.getMessage())
+            );
+        }
+
+        @Test
+        @DisplayName("adapter yeni traversal açmaz ve delegate ile aynı cursor'ı tüketir")
+        void adapterSharesTheDelegateCursor() {
+            // Arrange
+            Fixture fixture = Fixture.standard();
+            ProfileIterator custom = fixture.network.createFriendsIterator(fixture.ali.id());
+            Iterator<Profile> standard = custom.asJavaIterator();
+
+            // Act
+            Profile consumedThroughStandardApi = standard.next();
+            Profile consumedThroughCustomApi = custom.getNext();
+
+            // Assert
+            assertAll(
+                    () -> assertEquals("2", consumedThroughStandardApi.id()),
+                    () -> assertEquals("3", consumedThroughCustomApi.id())
+            );
+        }
+    }
+
+    @Nested
+    @DisplayName("SocialGraph aggregate'i oluşturulduğunda")
+    class AggregateSnapshot {
+
+        @Test
+        @DisplayName("constructor girdilerinin snapshot'ı alınır ve sonraki dış mutation görünmez")
+        void graphTakesItsSnapshotAtConstructionTime() {
+            // Arrange
+            Profile ali = new Profile("1", "Ali", "ali@acme.com", "Acme");
+            Profile ayse = new Profile("2", "Ayşe", "ayse@acme.com", "Acme");
+            Profile mehmet = new Profile("3", "Mehmet", "mehmet@globex.com", "Globex");
+            Map<String, Profile> profiles = new HashMap<>();
+            profiles.put(ali.id(), ali);
+            profiles.put(ayse.id(), ayse);
+            List<String> friendIds = new ArrayList<>(List.of(ayse.id()));
+            Map<String, List<String>> friends = new HashMap<>();
+            friends.put(ali.id(), friendIds);
+            SocialGraph graph = new SocialGraph(profiles, friends, Map.of());
+            ProfileIterator iterator = new Facebook(graph).createFriendsIterator(ali.id());
+
+            // Act
+            profiles.put(mehmet.id(), mehmet);
+            friendIds.add(mehmet.id());
+            friends.put("unknown", List.of(mehmet.id()));
+            List<String> recipients = new SocialSpammer().send(iterator, "snapshot");
+
+            // Assert
+            assertEquals(List.of("ayse@acme.com"), recipients);
+        }
+
+        @Test
+        @DisplayName("null relation type ilk traversal'a kadar gizlenmeden constructor'da reddedilir")
+        void nullRelationTypeFailsFast() {
+            // Arrange
+            SocialGraph graph = new SocialGraph(Map.of(), Map.of(), Map.of());
+
+            // Act
+            NullPointerException error = assertThrows(
+                    NullPointerException.class,
+                    () -> new SocialGraphIterator(graph, "1", null)
+            );
+
+            // Assert
+            assertEquals("relationType cannot be null", error.getMessage());
         }
     }
 

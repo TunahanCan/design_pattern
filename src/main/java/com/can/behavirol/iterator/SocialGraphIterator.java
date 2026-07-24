@@ -1,6 +1,7 @@
 package com.can.behavirol.iterator;
 
 import java.util.List;
+import java.util.Objects;
 
 public class SocialGraphIterator implements ProfileIterator {
 
@@ -12,9 +13,9 @@ public class SocialGraphIterator implements ProfileIterator {
     private List<Profile> cache;
 
     public SocialGraphIterator(SocialGraph socialGraph, String profileId, RelationType relationType) {
-        this.socialGraph = socialGraph;
-        this.profileId = profileId;
-        this.relationType = relationType;
+        this.socialGraph = Objects.requireNonNull(socialGraph, "socialGraph cannot be null");
+        this.profileId = Objects.requireNonNull(profileId, "profileId cannot be null");
+        this.relationType = Objects.requireNonNull(relationType, "relationType cannot be null");
     }
 
     @Override
@@ -39,8 +40,9 @@ public class SocialGraphIterator implements ProfileIterator {
             return;
         }
 
-        cache = relationType == RelationType.FRIENDS
-                ? socialGraph.getFriendsOf(profileId)
-                : socialGraph.getCoworkersOf(profileId);
+        cache = switch (relationType) {
+            case FRIENDS -> socialGraph.getFriendsOf(profileId);
+            case COWORKERS -> socialGraph.getCoworkersOf(profileId);
+        };
     }
 }

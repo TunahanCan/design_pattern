@@ -15,9 +15,11 @@ public class RoundHole {
         return radius;
     }
 
-    public boolean fits(RoundPeg peg) {
+    public boolean fits(RoundPegShape peg) {
         Objects.requireNonNull(peg, "peg cannot be null");
-        return this.radius >= peg.getRadius();
+        double pegRadius = peg.getRadius();
+        requirePositiveFinite(pegRadius, "peg radius");
+        return this.radius >= pegRadius;
     }
 
     private static void requirePositiveFinite(double value, String fieldName) {

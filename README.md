@@ -6,10 +6,16 @@ Bu depo, 22 GoF tasarım desenini küçük ama çalışan Java örnekleriyle ö�
 - **Test:** JUnit 5, `@Nested` ve senaryo adlarıyla okunabilir davranış sözleşmeleri
 - **Doküman:** problem, çözüm, trade-off, diyagram, production notu ve alıştırmalar
 
+Kitabın giriş kısmı ayrıca desenleri tek tek ezberletmek yerine, kavramsal bir
+sipariş akışında Adapter, Facade, Chain, Strategy, Command, State ve Observer
+sınırlarının nasıl birlikte çalıştığını; hangi noktada gereksiz “pattern
+çorbası” oluştuğunu üç görsel üzerinden anlatır.
+
 ## Okumaya başla
 
 - [Birleşik Markdown kitap](BOOK.md)
 - [Baskıya hazır görsel PDF](docs/design-patterns-java.pdf)
+- [Yaratımsal desenler için çevrimdışı görsel karar panosu](src/main/java/com/can/creational/explain/creational-visual-guide.html)
 
 ## Çalıştır
 
@@ -75,7 +81,7 @@ node scripts/render-book.mjs
 ```
 
 PDF üretimi yerel Chrome/Chromium ve Mermaid 11 kullanır. `BOOK.md`, 22 ayrı `explain/*.md` bölümünden deterministik olarak oluşturulur.
-Render aracı Node.js 22+ gerektirir ve Mermaid/Markdown renderer sürümlerini çalıştırma sırasında indirir.
+Render aracı Node.js 22+ ile npm/npx gerektirir ve Mermaid/Markdown renderer sürümlerini çalıştırma sırasında indirir.
 Outline ve yapısal PDF denetimi için macOS üzerindeki Swift/PDFKit de gereklidir.
 İçerik validator'ı kanonik pattern envanterini, manifest/katalog/atlas sırasını
 ve Markdown fence yapısını denetler. Mermaid sözdiziminin gerçek parse/render

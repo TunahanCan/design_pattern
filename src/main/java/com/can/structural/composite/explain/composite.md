@@ -156,7 +156,7 @@ flowchart TD
 
 1. Ana kutu total'i kendi `75` paketleme maliyetiyle başlatır.
 2. Klavye `1200` döndürür; ara toplam `1275` olur.
-3. Aksesuar kutusuna aynı `getPrice()` çağrısı yapılır.
+3. Aksesuar kutusuna aynı `getPriceAmount()` çağrısı yapılır.
 4. Aksesuar kutusu `40 + 800 + 150 = 990` döndürür.
 5. Kök kutu `1275 + 990 = 2265` sonucuna ulaşır.
 

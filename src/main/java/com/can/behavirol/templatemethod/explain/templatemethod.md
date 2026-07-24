@@ -156,6 +156,7 @@ flowchart TD
 - Close da hata verirse farklı close hatası primary hataya `suppressed` olarak eklenir; close tam bir kez çağrılır.
 - İş gövdesi başarılı, yalnız close başarısızsa close hatası kendi kimliğiyle primary olur ve rapor dönmez.
 - Hook’lar opsiyoneldir.
+- Null/blank filename herhangi bir resource adımı başlamadan `IllegalArgumentException` ile reddedilir.
 - Filename yalnız log/açma/çıkarma adımlarına taşınır.
 - Extension doğrulaması yapılmaz.
 - Null raw data base `toUpperCase()` çağrısında NPE üretir.
@@ -177,16 +178,21 @@ Gövde başarılıysa close hatası doğrudan primary olur.
 
 ## Locale determinismi
 
-Base analiz `rawData.toUpperCase()` çağırır.
-Parametresiz uppercase JVM default locale’ine bağlıdır.
-Türkçe locale’de `i/İ` dönüşümü test çıktısını değiştirebilir.
+Base analiz `rawData.toUpperCase(Locale.ROOT)` çağırır.
+Bu seçim protokol/rapor metnini JVM’in default locale’inden bağımsız yapar.
+Test, default locale’i geçici olarak Türkçe yapıp `"birim fiyat"` girdisinin yine
+`"BIRIM FIYAT"` üretmesini doğrular.
 
-Makineden bağımsız metin protokolü gerekiyorsa `toUpperCase(Locale.ROOT)` tercih edilir.
+Bu, kullanıcıya gösterilen doğal dil metninin her zaman `Locale.ROOT` ile
+dönüştürülmesi gerektiği anlamına gelmez.
+Kullanıcı arayüzü metni kullanıcının locale’ini; makineden bağımsız anahtar ve
+protokol metni ise `Locale.ROOT` gibi sabit bir politika kullanmalıdır.
 
 ## Test kontrat haritası
 
 | `@Nested` grup | Korunan davranış |
 |---|---|
+| `InputBoundary` | Blank filename’in lifecycle başlamadan reddi ve locale-independent analiz |
 | `AlgorithmSkeleton` | Recording subclass ile tam yedi adımlı sıra ve veri akışı |
 | `PdfProcessing` | Default analyze/report davranışı |
 | `CsvProcessing` | Format özel override davranışı |
@@ -196,7 +202,7 @@ Cleanup testi stdout’a değil recording subclass’ın çağrı sırasına bak
 
 ## Edge case, security, concurrency ve performans
 
-- Null/blank filename doğrulanmaz.
+- Filename yalnız null/blank açısından doğrulanır; normalize edilmez ve gerçek path güvenliği sağlamaz.
 - Dosya extension’ı concrete miner ile eşleştirilmez.
 - Gerçek path traversal veya dosya izni kontrolü yoktur.
 - Stdout gerçek loglama/metric sistemi değildir.

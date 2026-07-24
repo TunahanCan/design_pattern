@@ -3,163 +3,1116 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Creational Pattern - Visual Guide</title>
+  <meta
+    name="description"
+    content="Factory Method, Abstract Factory, Builder, Prototype ve Singleton için görsel karar ve karşılaştırma rehberi."
+  />
+  <title>Yaratımsal Tasarım Desenleri — Görsel Rehber</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #111827;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --accent: #22d3ee;
-      --good: #34d399;
-      --warn: #fbbf24;
+      color-scheme: dark;
+      --page: #07111f;
+      --surface: #0d1b2d;
+      --surface-raised: #12243a;
+      --surface-soft: #172c45;
+      --text: #edf4ff;
+      --muted: #b8c6d9;
+      --line: #36506c;
+      --accent: #5eead4;
+      --accent-strong: #2dd4bf;
+      --accent-ink: #042f2e;
+      --blue: #7dd3fc;
+      --blue-ink: #082f49;
+      --good: #86efac;
+      --warn: #fde68a;
+      --danger: #fda4af;
+      --shadow: 0 18px 48px rgb(0 0 0 / 28%);
+      --radius: 18px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
       color: var(--text);
-      background: radial-gradient(circle at top, #1e293b, var(--bg));
-      line-height: 1.5;
+      background:
+        radial-gradient(circle at 10% 0%, rgb(20 184 166 / 15%), transparent 31rem),
+        radial-gradient(circle at 94% 12%, rgb(56 189 248 / 12%), transparent 28rem),
+        var(--page);
+      line-height: 1.6;
     }
 
-    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-    h1 { margin: 0 0 8px; }
-    .subtitle { color: var(--muted); margin-bottom: 18px; }
-
-    .legend {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-      margin-bottom: 18px;
+    a {
+      color: var(--blue);
+      text-underline-offset: 0.2em;
     }
-    .pill {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.12);
+
+    a:hover {
+      color: #bae6fd;
+    }
+
+    a:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--warn);
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+
+    code {
+      padding: 0.1rem 0.35rem;
+      border: 1px solid rgb(125 211 252 / 25%);
+      border-radius: 0.35rem;
+      color: #dbeafe;
+      background: rgb(2 6 23 / 65%);
+      font-size: 0.92em;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 20;
+      top: 0.75rem;
+      left: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 0.5rem;
+      color: #020617;
+      background: var(--warn);
+      font-weight: 800;
+      transform: translateY(-180%);
+      transition: transform 160ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+
+    header {
+      padding: 4.5rem 0 2.25rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.65rem;
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.16;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 4.7rem);
+      letter-spacing: -0.045em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.55rem, 3vw, 2.35rem);
+      letter-spacing: -0.025em;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.18rem;
+    }
+
+    .lead {
+      max-width: 780px;
+      margin: 1.2rem 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+    }
+
+    .hero-question {
+      display: inline-block;
+      margin-top: 1.4rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgb(94 234 212 / 38%);
       border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 14px;
+      color: var(--accent);
+      background: rgb(13 148 136 / 10%);
+      font-weight: 750;
     }
 
-    .grid {
+    nav {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      border-block: 1px solid rgb(184 198 217 / 16%);
+      background: rgb(7 17 31 / 92%);
+      backdrop-filter: blur(16px);
+    }
+
+    nav ul {
+      display: flex;
+      gap: 0.35rem;
+      margin: 0;
+      padding: 0.65rem 0;
+      overflow-x: auto;
+      list-style: none;
+      scrollbar-width: thin;
+    }
+
+    nav a {
+      display: block;
+      padding: 0.45rem 0.7rem;
+      border-radius: 0.55rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    nav a:hover {
+      color: var(--text);
+      background: var(--surface-soft);
+    }
+
+    main {
+      padding: 2.25rem 0 4rem;
+    }
+
+    section + section {
+      margin-top: 4.5rem;
+    }
+
+    .section-intro {
+      max-width: 760px;
+      margin: 0.7rem 0 1.5rem;
+      color: var(--muted);
+    }
+
+    .decision-tree {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
+      gap: 1rem;
+      padding: clamp(1rem, 3vw, 1.6rem);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgb(94 234 212 / 8%), transparent 46%),
+        var(--surface);
+      box-shadow: var(--shadow);
     }
 
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+    .decision-root {
+      width: min(100%, 520px);
+      margin-inline: auto;
+      padding: 1rem 1.2rem;
+      border: 2px solid var(--accent-strong);
+      border-radius: 1rem;
+      color: var(--accent-ink);
+      background: var(--accent);
+      text-align: center;
+      font-weight: 900;
     }
 
-    .card h2 { margin: 0 0 6px; font-size: 20px; }
+    .decision-connector {
+      height: 1.15rem;
+      border-left: 2px solid var(--line);
+      justify-self: center;
+    }
+
+    .decision-branches {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.75rem;
+      position: relative;
+    }
+
+    .decision-branches::before {
+      content: "";
+      position: absolute;
+      top: -1rem;
+      right: 9.5%;
+      left: 9.5%;
+      border-top: 2px solid var(--line);
+    }
+
+    .decision-node {
+      position: relative;
+      min-height: 11.5rem;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.9rem;
+      background: var(--surface-raised);
+    }
+
+    .decision-node::before {
+      content: "";
+      position: absolute;
+      top: -1rem;
+      left: 50%;
+      height: 1rem;
+      border-left: 2px solid var(--line);
+    }
+
+    .decision-node .question {
+      min-height: 3.4rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .decision-node strong {
+      display: block;
+      margin: 0.65rem 0 0.2rem;
+      color: var(--accent);
+      font-size: 1.08rem;
+    }
+
+    .decision-node small {
+      display: block;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .decision-warning {
+      margin: 0;
+      padding: 0.8rem 1rem;
+      border-left: 4px solid var(--warn);
+      color: #fef3c7;
+      background: rgb(120 53 15 / 20%);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+    }
+
+    th,
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgb(54 80 108 / 72%);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--accent);
+      background: #102238;
+      font-size: 0.84rem;
+      letter-spacing: 0.035em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tbody tr:hover {
+      background: rgb(94 234 212 / 5%);
+    }
+
+    td:first-child {
+      color: var(--text);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .patterns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .pattern-card {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(160deg, rgb(125 211 252 / 6%), transparent 45%),
+        var(--surface);
+      box-shadow: 0 12px 30px rgb(0 0 0 / 18%);
+    }
+
+    .pattern-card:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
     .tag {
       display: inline-block;
-      font-size: 12px;
-      color: #001018;
-      background: var(--accent);
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0.58rem;
       border-radius: 999px;
-      padding: 3px 8px;
-      margin-bottom: 8px;
-      font-weight: 700;
+      color: var(--accent-ink);
+      background: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
-    .row { margin: 6px 0; }
-    .title { color: var(--muted); font-size: 13px; }
-
-    pre {
-      margin: 8px 0 0;
-      padding: 10px;
-      border-radius: 10px;
-      background: #020617;
-      border: 1px solid rgba(255,255,255,0.08);
-      color: #cbd5e1;
-      overflow: auto;
-      font-size: 12px;
+    .card-link {
+      flex: 0 0 auto;
+      font-size: 0.86rem;
+      font-weight: 750;
     }
 
-    .good { color: var(--good); }
-    .warn { color: var(--warn); }
-    footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+    .intent {
+      margin: 0.65rem 0 1rem;
+      color: var(--muted);
+    }
+
+    .mini-diagram {
+      display: grid;
+      align-items: center;
+      min-width: 0;
+      max-width: 100%;
+      min-height: 5.5rem;
+      margin: 0 0 1rem;
+      padding: 0.9rem;
+      border: 1px solid rgb(125 211 252 / 18%);
+      border-radius: 0.75rem;
+      color: #dbeafe;
+      background: #050d19;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.65;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin-top: auto;
+    }
+
+    .signal {
+      padding: 0.8rem;
+      border-radius: 0.7rem;
+      background: var(--surface-raised);
+    }
+
+    .signal strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.83rem;
+    }
+
+    .signal.use strong {
+      color: var(--good);
+    }
+
+    .signal.avoid strong {
+      color: var(--danger);
+    }
+
+    .signal span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    details {
+      margin-top: 0.9rem;
+      border-top: 1px solid rgb(54 80 108 / 65%);
+    }
+
+    summary {
+      padding: 0.8rem 0 0;
+      color: var(--blue);
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    details p {
+      margin: 0.6rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .composition {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .composition-step {
+      position: relative;
+      padding: 0.9rem;
+      border-radius: 0.8rem;
+      background: var(--surface-raised);
+    }
+
+    .composition-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -1.25rem;
+      color: var(--accent);
+      font-size: 1.4rem;
+      font-weight: 900;
+      transform: translateY(-50%);
+    }
+
+    .composition-step b {
+      display: block;
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    .composition-step span {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .anti-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .anti-card {
+      padding: 1rem;
+      border: 1px solid rgb(253 164 175 / 28%);
+      border-radius: 0.9rem;
+      background: rgb(76 5 25 / 15%);
+    }
+
+    .anti-card h3 {
+      color: var(--danger);
+    }
+
+    .anti-card p {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .closing {
+      padding: 1.3rem;
+      border: 1px solid rgb(94 234 212 / 35%);
+      border-radius: var(--radius);
+      background: rgb(13 148 136 / 11%);
+    }
+
+    .closing strong {
+      color: var(--accent);
+    }
+
+    footer {
+      padding: 2rem 0 3rem;
+      border-top: 1px solid rgb(184 198 217 / 14%);
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 900px) {
+      .decision-branches {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .decision-branches::before,
+      .decision-node::before {
+        display: none;
+      }
+
+      .patterns,
+      .anti-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pattern-card:last-child {
+        grid-column: auto;
+      }
+
+      .composition {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .composition-step:not(:last-child)::after {
+        content: "↓";
+        top: auto;
+        right: 50%;
+        bottom: -1.4rem;
+        transform: translateX(50%);
+      }
+    }
+
+    @media (max-width: 560px) {
+      header {
+        padding-top: 3.2rem;
+      }
+
+      .decision-branches,
+      .signal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .decision-node {
+        min-height: auto;
+      }
+
+      .decision-node .question {
+        min-height: auto;
+      }
+
+      .card-header {
+        display: block;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .skip-link {
+        transition: none;
+      }
+    }
+
+    @media print {
+      :root {
+        color-scheme: light;
+        --page: #ffffff;
+        --surface: #ffffff;
+        --surface-raised: #f1f5f9;
+        --surface-soft: #e2e8f0;
+        --text: #0f172a;
+        --muted: #334155;
+        --line: #94a3b8;
+        --accent: #0f766e;
+        --accent-strong: #0f766e;
+        --accent-ink: #ffffff;
+        --blue: #075985;
+        --good: #166534;
+        --warn: #92400e;
+        --danger: #9f1239;
+        --shadow: none;
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      nav,
+      .skip-link {
+        display: none;
+      }
+
+      header {
+        padding-top: 1rem;
+      }
+
+      section + section {
+        margin-top: 2.2rem;
+      }
+
+      .pattern-card,
+      .table-wrap,
+      .decision-tree {
+        break-inside: avoid;
+      }
+
+      .mini-diagram {
+        color: #0f172a;
+        background: #f8fafc;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Creational Pattern - Hafıza Panosu</h1>
-    <p class="subtitle">Amacın: "Hızlıca hatırla, doğru pattern'i seç, kolay unutma".</p>
+  <a class="skip-link" href="#ana-icerik">Ana içeriğe geç</a>
 
-    <div class="legend">
-      <div class="pill">Singleton → <b>Tek instance</b></div>
-      <div class="pill">Factory Method → <b>Ürünü alt sınıf seçer</b></div>
-      <div class="pill">Abstract Factory → <b>Uyumlu ürün ailesi</b></div>
-      <div class="pill">Builder → <b>Adım adım kurulum</b></div>
-      <div class="pill">Prototype → <b>Kopyala & özelleştir</b></div>
+  <header class="container">
+    <p class="eyebrow">Design Pattern Lab · Yaratımsal Desenler</p>
+    <h1>Nesneyi üretmeden önce değişen şeyi bul.</h1>
+    <p class="lead">
+      Beş desen de nesne üretir; fakat aynı problemi çözmez. Bu pano, sınıf adına bakarak
+      değil değişim eksenine bakarak seçim yapmana yardım eder.
+    </p>
+    <p class="hero-question">Ana soru: “Üretimde hangi kararın değişmesini bekliyorum?”</p>
+  </header>
+
+  <nav aria-label="Sayfa bölümleri">
+    <div class="container">
+      <ul>
+        <li><a href="#karar-agaci">Karar ağacı</a></li>
+        <li><a href="#karsilastirma">Karşılaştırma</a></li>
+        <li><a href="#desenler">Desen kartları</a></li>
+        <li><a href="#birlikte-kullanim">Birlikte kullanım</a></li>
+        <li><a href="#yanlis-secimler">Yanlış seçimler</a></li>
+      </ul>
     </div>
+  </nav>
 
-    <section class="grid">
-      <article class="card">
-        <span class="tag">Singleton</span>
-        <h2>"Bina yöneticisi tek olur"</h2>
-        <div class="row"><div class="title">Ne zaman?</div> Global config, cache, registry.</div>
-        <div class="row good">✅ Güçlü taraf: Tek kaynak gerçeği.</div>
-        <div class="row warn">⚠️ Dikkat: Gizli global bağımlılık.</div>
-        <pre>Client A ─┐
-          ├─ getInstance() → AppConfig #1
-Client B ─┘</pre>
-      </article>
+  <main id="ana-icerik" class="container">
+    <section id="karar-agaci" aria-labelledby="karar-baslik">
+      <p class="eyebrow">01 · Teşhis</p>
+      <h2 id="karar-baslik">Karar ağacı</h2>
+      <p class="section-intro">
+        Okları ezberlemek yerine ilk değişim sinyalini ara. Birden fazla sinyal varsa desenler
+        birlikte de kullanılabilir.
+      </p>
 
-      <article class="card">
-        <span class="tag">Factory Method</span>
-        <h2>"Akış sabit, ürün değişken"</h2>
-        <div class="row"><div class="title">Ne zaman?</div> Kanal/tip bazlı üretim artıyorsa.</div>
-        <div class="row good">✅ Güçlü taraf: If-else şişmesini azaltır.</div>
-        <div class="row warn">⚠️ Dikkat: Sınıf sayısı artabilir.</div>
-        <pre>send(channel)
-  EMAIL → EmailCreator → EmailNotification
-  SMS   → SmsCreator   → SmsNotification</pre>
-      </article>
-
-      <article class="card">
-        <span class="tag">Abstract Factory</span>
-        <h2>"Aileyi birlikte üret"</h2>
-        <div class="row"><div class="title">Ne zaman?</div> Tema/platform uyumu şartsa.</div>
-        <div class="row good">✅ Güçlü taraf: Uyumlu kombinasyon garantisi.</div>
-        <div class="row warn">⚠️ Dikkat: Her tema için yeni factory gerekir.</div>
-        <pre>DARK theme
-  DarkFactory
-   ├─ DarkButton
-   └─ DarkCheckbox</pre>
-      </article>
-
-      <article class="card">
-        <span class="tag">Builder</span>
-        <h2>"Lego gibi adım adım"</h2>
-        <div class="row"><div class="title">Ne zaman?</div> Çok parametre + opsiyonel alan varsa.</div>
-        <div class="row good">✅ Güçlü taraf: Okunabilir ve güvenli kurulum.</div>
-        <div class="row warn">⚠️ Dikkat: Basit modelde fazla mühendislik olabilir.</div>
-        <pre>Report.builder("Q1")
-  .summary(...)
-  .author(...)
-  .build()</pre>
-      </article>
-
-      <article class="card">
-        <span class="tag">Prototype</span>
-        <h2>"Fotokopi + düzenle"</h2>
-        <div class="row"><div class="title">Ne zaman?</div> Oluşturma maliyeti yüksekse.</div>
-        <div class="row good">✅ Güçlü taraf: Hızlı çoğaltma.</div>
-        <div class="row warn">⚠️ Dikkat: Deep copy unutulursa bug üretir.</div>
-        <pre>template.copy()
-  → clone.personalize(...)
-  → clone.addSkill(...)</pre>
-      </article>
+      <div
+        class="decision-tree"
+        role="img"
+        aria-label="Değişen karar tek nesnenin yaşam döngüsüyse Singleton; alt sınıfın seçeceği ürünse Factory Method; uyumlu ürün setiyse Abstract Factory; tek karmaşık ürünün kurulum adımlarıysa Builder; hazır örnekten türetilecek başlangıç durumuysa Prototype seçilir."
+      >
+        <div class="decision-root">Üretimde asıl değişen karar nedir?</div>
+        <div class="decision-connector" aria-hidden="true"></div>
+        <div class="decision-branches">
+          <div class="decision-node">
+            <div class="question">Tek nesnenin kontrollü yaşam döngüsü mü?</div>
+            <strong>Singleton</strong>
+            <small>Önce DI container scope veya açık sahiplik daha iyi mi diye kontrol et.</small>
+          </div>
+          <div class="decision-node">
+            <div class="question">Ortak akıştaki tek ürün tipini alt sınıf mı seçiyor?</div>
+            <strong>Factory Method</strong>
+            <small>Değişen nokta, creator içindeki üretim hook’udur.</small>
+          </div>
+          <div class="decision-node">
+            <div class="question">Birlikte uyumlu kalması gereken ürün seti mi?</div>
+            <strong>Abstract Factory</strong>
+            <small>Varyant tek product değil, product ailesidir.</small>
+          </div>
+          <div class="decision-node">
+            <div class="question">Tek ürünün çok sayıda kurulum kararı mı?</div>
+            <strong>Builder</strong>
+            <small>Zorunlu ve opsiyonel parçalar isimli adımlarla toplanır.</small>
+          </div>
+          <div class="decision-node">
+            <div class="question">Hazır bir nesnenin durumu başlangıç noktası mı?</div>
+            <strong>Prototype</strong>
+            <small>Kopya derinliği ve mutable dalların sahipliği açıkça tasarlanır.</small>
+          </div>
+        </div>
+        <p class="decision-warning">
+          <strong>Dur işareti:</strong> Yalnızca <code>new</code> kelimesini saklamak için desen
+          ekliyorsan önce doğrudan constructor injection veya küçük bir factory fonksiyonunu dene.
+        </p>
+      </div>
     </section>
 
-    <footer>İpucu: Seçemiyorsan önce şu soruyu sor: "Ben tek obje mi istiyorum, adım adım kurulum mu, yoksa ürün ailesi mi?"</footer>
-  </div>
+    <section id="karsilastirma" aria-labelledby="karsilastirma-baslik">
+      <p class="eyebrow">02 · Aynı bakış açısı</p>
+      <h2 id="karsilastirma-baslik">Beş deseni tek tabloda karşılaştır</h2>
+      <p class="section-intro">
+        “Ne üretir?” tek başına yeterli değildir. Seçimi; değişim ekseni, korunan sabit ve
+        ödediğin tasarım bedeli birlikte belirler.
+      </p>
+
+      <div class="table-wrap" tabindex="0" aria-label="Yatay kaydırılabilir desen karşılaştırma tablosu">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Desen</th>
+              <th scope="col">Değişen eksen</th>
+              <th scope="col">Korunan şey</th>
+              <th scope="col">Repo örneği</th>
+              <th scope="col">Başlıca bedel</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Factory Method</td>
+              <td>Creator’ın ürettiği concrete product</td>
+              <td>Oluşturma sonrası ortak iş akışı</td>
+              <td>EMAIL / SMS / PUSH bildirimi</td>
+              <td>Product başına creator sınıfı</td>
+            </tr>
+            <tr>
+              <td>Abstract Factory</td>
+              <td>Birlikte değişen product ailesi</td>
+              <td>Client’ın abstract product API’si</td>
+              <td>LIGHT / DARK / HIGH_CONTRAST UI</td>
+              <td>Yeni product türünün bütün aileleri etkilemesi</td>
+            </tr>
+            <tr>
+              <td>Builder</td>
+              <td>Tek product’ın kurulum kararları</td>
+              <td><code>build()</code> sonrası immutable snapshot</td>
+              <td>Farklı içerikte raporlar</td>
+              <td>Mutable builder ve ek API yüzeyi</td>
+            </tr>
+            <tr>
+              <td>Prototype</td>
+              <td>Hazır template’ten türetilen state</td>
+              <td>Template’in değişmeden kalması</td>
+              <td>Aday profili şablonları</td>
+              <td>Deep/shallow copy politikasının bakımı</td>
+            </tr>
+            <tr>
+              <td>Singleton</td>
+              <td>Instance’ın ilk oluşturulma ve erişim zamanı</td>
+              <td>Classloader içindeki object identity</td>
+              <td>Uygulama konfigürasyonu</td>
+              <td>Global state, gizli bağımlılık ve test izolasyonu</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="desenler" aria-labelledby="desenler-baslik">
+      <p class="eyebrow">03 · Hafıza kartları</p>
+      <h2 id="desenler-baslik">Koddan role, rolden karara</h2>
+      <p class="section-intro">
+        Her kart repo kodundaki üretim noktasını, doğru kullanım sinyalini ve geri çekilme
+        işaretini birlikte gösterir.
+      </p>
+
+      <div class="patterns">
+        <article class="pattern-card">
+          <div class="card-header">
+            <div>
+              <span class="tag">Factory Method</span>
+              <h3>Akış sabit, doğacak ürün değişken</h3>
+            </div>
+            <a
+              class="card-link"
+              href="../factorymethod/explain/factorymethod.md"
+              aria-label="Factory Method ayrıntılı açıklamasını aç"
+            >Ayrıntı →</a>
+          </div>
+          <p class="intent">
+            Üst creator ortak akışı korur; <code>createNotification()</code> concrete product
+            seçimini alt creator’a bırakır.
+          </p>
+          <div class="mini-diagram" aria-label="Factory Method kısa yapı diyagramı">NotificationCreator.notifyUser()
+             │
+             └── createNotification()  ← değişim noktası
+                    ├── EmailNotification
+                    ├── SmsNotification
+                    └── PushNotification</div>
+          <div class="signal-grid">
+            <div class="signal use">
+              <strong>Kullan</strong>
+              <span>Üretim kararı ortak akış içinde genişleyen bir extension point ise.</span>
+            </div>
+            <div class="signal avoid">
+              <strong>Kullanma</strong>
+              <span>Tek seçim noktası küçük ve stabilse; bir switch daha açık olabilir.</span>
+            </div>
+          </div>
+          <details>
+            <summary>En sık karıştırılan nokta</summary>
+            <p>
+              Her <code>createX()</code> metodu Factory Method değildir. GoF anlamında üretim
+              noktası kalıtımla/polymorphism ile alt sınıfa bırakılır. Parametre alan tek bir
+              switch çoğunlukla Simple Factory’dir.
+            </p>
+          </details>
+        </article>
+
+        <article class="pattern-card">
+          <div class="card-header">
+            <div>
+              <span class="tag">Abstract Factory</span>
+              <h3>Tek parça değil, uyumlu aile üret</h3>
+            </div>
+            <a
+              class="card-link"
+              href="../abstractfactory/explain/abstractfactory.md"
+              aria-label="Abstract Factory ayrıntılı açıklamasını aç"
+            >Ayrıntı →</a>
+          </div>
+          <p class="intent">
+            <code>GuiFactory</code>, aynı temaya ait Button ve Checkbox’ı tek aile sözleşmesi
+            altında oluşturur.
+          </p>
+          <div class="mini-diagram" aria-label="Abstract Factory kısa yapı diyagramı">GuiFactory
+   ├── LightFactory ───── Button + Checkbox
+   ├── DarkFactory ────── Button + Checkbox
+   └── HighContrastFactory ─ Button + Checkbox</div>
+          <div class="signal-grid">
+            <div class="signal use">
+              <strong>Kullan</strong>
+              <span>Tema, vendor veya platform ürünleri birlikte değiştiriyorsa.</span>
+            </div>
+            <div class="signal avoid">
+              <strong>Kullanma</strong>
+              <span>Product’lar bağımsız değişiyor veya yalnız tek product türü varsa.</span>
+            </div>
+          </div>
+          <details>
+            <summary>En sık karıştırılan nokta</summary>
+            <p>
+              Factory ailesi uyumu görünür kılar ama bu repodaki Java tipleri yanlış
+              kombinasyonu matematiksel olarak kanıtlamaz. Tutarlılığı concrete factory kodu
+              ve contract testleri korur.
+            </p>
+          </details>
+        </article>
+
+        <article class="pattern-card">
+          <div class="card-header">
+            <div>
+              <span class="tag">Builder</span>
+              <h3>Hazırla, doğrula, sonra mühürle</h3>
+            </div>
+            <a
+              class="card-link"
+              href="../builder/explain/builder.md"
+              aria-label="Builder ayrıntılı açıklamasını aç"
+            >Ayrıntı →</a>
+          </div>
+          <p class="intent">
+            Zorunlu title ile başlayan <code>Report.Builder</code>, opsiyonel kararları isimli
+            adımlarda toplar ve immutable product üretir.
+          </p>
+          <div class="mini-diagram" aria-label="Builder kısa akış diyagramı">builder(title)
+   → summary(...)
+   → addSection(...)
+   → includeChart(true)
+   → build() ──→ immutable Report</div>
+          <div class="signal-grid">
+            <div class="signal use">
+              <strong>Kullan</strong>
+              <span>Çok opsiyon, default veya çapraz alan kuralı varsa.</span>
+            </div>
+            <div class="signal avoid">
+              <strong>Kullanma</strong>
+              <span>İki alanlı value object constructor veya record ile açıksa.</span>
+            </div>
+          </div>
+          <details>
+            <summary>En sık karıştırılan nokta</summary>
+            <p>
+              Fluent API bir yazım stilidir; Builder ise üretim sorumluluğudur. Her zincirlenen
+              setter Builder değildir. Builder mutable olabilir, nihai product’ın mutable olması
+              gerekmez.
+            </p>
+          </details>
+        </article>
+
+        <article class="pattern-card">
+          <div class="card-header">
+            <div>
+              <span class="tag">Prototype</span>
+              <h3>Template’i koru, çalışma kopyasını değiştir</h3>
+            </div>
+            <a
+              class="card-link"
+              href="../prototype/explain/prototype.md"
+              aria-label="Prototype ayrıntılı açıklamasını aç"
+            >Ayrıntı →</a>
+          </div>
+          <p class="intent">
+            <code>CandidateProfile#copy()</code>, hazır profilden bağımsız bir başlangıç üretir;
+            mutable Address ve liste container’ı paylaşılmaz.
+          </p>
+          <div class="mini-diagram" aria-label="Prototype kısa kopya diyagramı">Template ── copy() ──┬── Clone A → personalize()
+                       └── Clone B → relocateTo()
+
+Address T ≠ Address A ≠ Address B</div>
+          <div class="signal-grid">
+            <div class="signal use">
+              <strong>Kullan</strong>
+              <span>Runtime template veya pahalı/uzun ortak kurulum başlangıçsa.</span>
+            </div>
+            <div class="signal avoid">
+              <strong>Kullanma</strong>
+              <span>Copy sahipliği belirsiz ya da aynı immutable instance paylaşılabiliyorsa.</span>
+            </div>
+          </div>
+          <details>
+            <summary>En sık karıştırılan nokta</summary>
+            <p>
+              Yalnız üst nesnenin yeni olması bağımsız kopya demek değildir. Her mutable dal için
+              paylaşma, kopyalama veya yeniden bağlama kararı gerekir; “deep copy” domain’e göre
+              tanımlanır.
+            </p>
+          </details>
+        </article>
+
+        <article class="pattern-card">
+          <div class="card-header">
+            <div>
+              <span class="tag">Singleton</span>
+              <h3>“Tek” garantisinin kapsamını söyle</h3>
+            </div>
+            <a
+              class="card-link"
+              href="../singleton/explain/singleton.md"
+              aria-label="Singleton ayrıntılı açıklamasını aç"
+            >Ayrıntı →</a>
+          </div>
+          <p class="intent">
+            <code>AppConfig.getInstance()</code> thread-safe lazy identity sağlar; gerçek client
+            global erişimi içine gömmek yerine dar <code>ApiClientConfig</code> sözleşmesini alır.
+          </p>
+          <div class="mini-diagram" aria-label="Singleton kısa erişim diyagramı">Composition root ── AppConfig.getInstance() ──→ #1
+                                                    │
+                                                    └── inject
+                                                         ↓
+                                                     ApiClient</div>
+          <div class="signal-grid">
+            <div class="signal use">
+              <strong>Kullan</strong>
+              <span>Gerçekten kontrollü tek identity ve açık yaşam döngüsü gerekiyorsa.</span>
+            </div>
+            <div class="signal avoid">
+              <strong>Kullanma</strong>
+              <span>Yalnız “her yerden erişeyim” diyorsan; bu gizli bağımlılık üretir.</span>
+            </div>
+          </div>
+          <details>
+            <summary>En sık karıştırılan nokta</summary>
+            <p>
+              Bu garanti process, cluster veya bütün dünya için “tek” değildir; normalde
+              classloader kapsamındadır. Reflection, serialization ve birden çok classloader için
+              ayrıca politika gerekir. Çoğu uygulamada DI container singleton scope daha görünürdür.
+            </p>
+          </details>
+        </article>
+      </div>
+    </section>
+
+    <section id="birlikte-kullanim" aria-labelledby="birlikte-baslik">
+      <p class="eyebrow">04 · Kompozisyon</p>
+      <h2 id="birlikte-baslik">Desenler rakip olmak zorunda değil</h2>
+      <p class="section-intro">
+        Bir sistemde farklı üretim kararları farklı desenlere aittir. Aşağıdaki örnek olası bir
+        kampanya raporlama akışını gösterir; her kutu başka bir sorumluluğu çözer.
+      </p>
+
+      <div
+        class="composition"
+        role="img"
+        aria-label="Singleton konfigürasyonu sağlar, Abstract Factory tenant'a uyumlu servis ailesini seçer, Factory Method bildirim kanalını üretir, Builder raporu kurar, Prototype kampanya şablonunu kopyalar."
+      >
+        <div class="composition-step">
+          <b>Singleton / DI scope</b>
+          <span>Uygulama config yaşam döngüsü</span>
+        </div>
+        <div class="composition-step">
+          <b>Abstract Factory</b>
+          <span>Tenant’a uyumlu servis ailesi</span>
+        </div>
+        <div class="composition-step">
+          <b>Factory Method</b>
+          <span>Bildirim kanalı product’ı</span>
+        </div>
+        <div class="composition-step">
+          <b>Builder</b>
+          <span>Kampanya raporunun parçaları</span>
+        </div>
+        <div class="composition-step">
+          <b>Prototype</b>
+          <span>Hazır kampanya template’i</span>
+        </div>
+      </div>
+
+      <div class="closing">
+        <strong>Tasarım kuralı:</strong> Önce en basit açık çözümle başla. Tekrarlanan değişim
+        gerçekten görünür olduğunda, yalnız o değişim eksenini kapsayan deseni ekle. Desen sayısı
+        değil, değişikliğin kaç yere yayıldığı mimari kaliteyi ele verir.
+      </div>
+    </section>
+
+    <section id="yanlis-secimler" aria-labelledby="yanlis-baslik">
+      <p class="eyebrow">05 · Geri çekilme sinyalleri</p>
+      <h2 id="yanlis-baslik">Desen adına değil koda bak</h2>
+      <p class="section-intro">
+        Aşağıdaki belirtiler, desenin problemi çözmek yerine yalnızca katman eklediğini gösterir.
+      </p>
+
+      <div class="anti-grid">
+        <article class="anti-card">
+          <h3>Passthrough factory</h3>
+          <p>
+            Factory hiçbir seçim, politika veya yaşam döngüsü yönetmeden yalnız
+            <code>return new X()</code> diyorsa abstraction’ın değeri sorgulanmalıdır.
+          </p>
+        </article>
+        <article class="anti-card">
+          <h3>Builder ile geçersiz ürün</h3>
+          <p>
+            Bütün alanlar opsiyonel bırakılıp doğrulama yapılmıyorsa zincir okunaklı görünür ama
+            domain invariants hâlâ korunmaz.
+          </p>
+        </article>
+        <article class="anti-card">
+          <h3>Global servis locator</h3>
+          <p>
+            Her sınıf <code>getInstance()</code> çağırıyorsa bağımlılıklar imzada görünmez, test
+            sırası ve eşzamanlılık birbirine bağlanır.
+          </p>
+        </article>
+        <article class="anti-card">
+          <h3>Sahte deep copy</h3>
+          <p>
+            Yeni üst nesne aynı mutable listeyi taşıyorsa iki clone birbirini değiştirebilir; identity
+            farklı olsa da state bağımsız değildir.
+          </p>
+        </article>
+        <article class="anti-card">
+          <h3>Karışık product ailesi</h3>
+          <p>
+            Abstract Factory içinden farklı varyantlara ait product’lar dönüyorsa desenin temel
+            uyumluluk vaadi uygulama ve test düzeyinde bozulmuştur.
+          </p>
+        </article>
+        <article class="anti-card">
+          <h3>Pattern-first tasarım</h3>
+          <p>
+            Gereksinim ve değişim sinyali olmadan sınıf diyagramından başlamak, bugünkü küçük
+            problemi yarının varsayımsal esnekliği için karmaşıklaştırır.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      Bu rehber çevrimdışı çalışır; haricî font, script veya CDN kullanmaz. Ayrıntılı kart
+      bağlantıları, bu dosyaya göre repo-relative olan desen açıklamalarına gider.
+    </div>
+  </footer>
 </body>
 </html>

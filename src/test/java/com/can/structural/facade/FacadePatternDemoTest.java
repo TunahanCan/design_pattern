@@ -28,7 +28,39 @@ class FacadePatternDemoTest {
             // Assert
             assertAll(
                 () -> assertEquals("archive.final.OGG", name),
-                () -> assertEquals("ogg", extension)
+                () -> assertEquals("ogg", extension),
+                () -> assertEquals(
+                    "archive.final.mp4",
+                    videoFile.replaceExtensionWith(VideoFormat.MP4)
+                )
+            );
+        }
+
+        @Test
+        @DisplayName("Klasör noktası ve gizli dosya adı uzantı sanılmamalıdır")
+        void shouldOnlyReadAnExtensionFromTheFileNameSegment() {
+            // Arrange
+            VideoFile fileWithoutExtension = new VideoFile("archive.v1/clip");
+            VideoFile hiddenFile = new VideoFile(".ogg");
+            VideoFile trailingDot = new VideoFile("clip.");
+
+            // Act & Assert
+            assertAll(
+                () -> assertEquals("", fileWithoutExtension.getExtension()),
+                () -> assertEquals("", hiddenFile.getExtension()),
+                () -> assertEquals("", trailingDot.getExtension()),
+                () -> assertEquals(
+                    "archive.v1/clip.mp4",
+                    fileWithoutExtension.replaceExtensionWith(VideoFormat.MP4)
+                ),
+                () -> assertEquals(
+                    "clip.mp4",
+                    trailingDot.replaceExtensionWith(VideoFormat.MP4)
+                ),
+                () -> assertThrows(
+                    NullPointerException.class,
+                    () -> hiddenFile.replaceExtensionWith(null)
+                )
             );
         }
     }
@@ -148,6 +180,10 @@ class FacadePatternDemoTest {
                 () -> assertThrows(
                     IllegalArgumentException.class,
                     () -> converter.convert("clip.avi", "mp4")
+                ),
+                () -> assertThrows(
+                    IllegalArgumentException.class,
+                    () -> converter.convert(".ogg", "mp4")
                 ),
                 () -> assertThrows(
                     IllegalArgumentException.class,

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
@@ -15,6 +16,93 @@ import org.junit.jupiter.api.Test;
 
 @DisplayName("Chain of Responsibility — sipariş istek hattı")
 class ChainOfResponsibilityDemoTest {
+
+    @Nested
+    @DisplayName("İstek zincire ilk kez girdiğinde")
+    class RequestValidation {
+
+        @Test
+        @DisplayName("eksik payload authentication'dan önce typed ret sonucuna dönüşür")
+        void missingPayloadStopsBeforeAuthentication() {
+            // Arrange
+            OrderRequest request = new OrderRequest(
+                    "can",
+                    "1234",
+                    "10.0.0.30",
+                    OrderOperation.CREATE_ORDER,
+                    null
+            );
+
+            // Act
+            boolean accepted = createChain().handle(request);
+
+            // Assert
+            assertAll(
+                    () -> assertFalse(accepted),
+                    () -> assertEquals(OrderRequestOutcome.REJECTED, request.getOutcome()),
+                    () -> assertEquals(
+                            "Zorunlu istek alanı eksik: payload.",
+                            request.getOutcomeMessage()
+                    ),
+                    () -> assertNull(request.getAuthenticatedUser())
+            );
+        }
+
+        @Test
+        @DisplayName("eksik operation sonraki handler'larda NPE olmak yerine sınırda reddedilir")
+        void missingOperationIsRejectedAtTheBoundary() {
+            // Arrange
+            OrderRequest request = new OrderRequest(
+                    "can",
+                    "1234",
+                    "10.0.0.31",
+                    null,
+                    "Sipariş"
+            );
+
+            // Act
+            boolean accepted = createChain().handle(request);
+
+            // Assert
+            assertAll(
+                    () -> assertFalse(accepted),
+                    () -> assertEquals(OrderRequestOutcome.REJECTED, request.getOutcome()),
+                    () -> assertEquals(
+                            "Zorunlu istek alanı eksik: operation.",
+                            request.getOutcomeMessage()
+                    )
+            );
+        }
+
+        @Test
+        @DisplayName("sonuç yazılabilecek request nesnesi yoksa açık hata üretilir")
+        void nullRequestFailsFast() {
+            // Arrange
+            OrderRequestHandler chain = createChain();
+
+            // Act
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> chain.handle(null)
+            );
+
+            // Assert
+            assertEquals("request cannot be null", error.getMessage());
+        }
+
+        @Test
+        @DisplayName("geçersiz brute-force eşiği bütün IP'leri yanlışlıkla bloklamadan fail-fast olur")
+        void bruteForceThresholdMustBePositive() {
+            // Arrange & Act
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new LoginAttemptService(0)
+            );
+
+            // Assert
+            assertEquals("maxFailedAttempts must be positive", error.getMessage());
+        }
+    }
 
     @Nested
     @DisplayName("İstek bütün kontrolleri geçtiğinde")
@@ -168,6 +256,34 @@ class ChainOfResponsibilityDemoTest {
             assertAll(
                     () -> assertTrue(result),
                     () -> assertFalse(attempts.isBlocked(ipAddress))
+            );
+        }
+
+        @Test
+        @DisplayName("yalnız işaretlerden oluşan payload temizleme sonrası boşsa işlenmez")
+        void payloadThatBecomesBlankAfterSanitizationIsRejected() {
+            // Arrange
+            OrderRequest request = new OrderRequest(
+                    "can",
+                    "1234",
+                    "10.0.0.32",
+                    OrderOperation.CREATE_ORDER,
+                    "<>"
+            );
+
+            // Act
+            boolean accepted = createChain().handle(request);
+
+            // Assert
+            assertAll(
+                    () -> assertFalse(accepted),
+                    () -> assertEquals("", request.getPayload()),
+                    () -> assertEquals("can", request.getAuthenticatedUser().username()),
+                    () -> assertEquals(OrderRequestOutcome.REJECTED, request.getOutcome()),
+                    () -> assertEquals(
+                            "Payload temizleme sonrasında boş olamaz.",
+                            request.getOutcomeMessage()
+                    )
             );
         }
     }

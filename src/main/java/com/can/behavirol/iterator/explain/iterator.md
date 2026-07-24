@@ -1,7 +1,8 @@
 # Iterator — Yineleyici Deseni
 
-> Bu örnek custom bir iterator sözleşmesi kullanır.
-> Java’nın standart `Iterator` API’siyle aynı bitiş davranışına sahip değildir.
+> Temel örnek custom bir iterator sözleşmesi kullanır.
+> Geriye uyumlu `asJavaIterator()` adaptörü aynı traversal’ı standart Java
+> `Iterator` bitiş sözleşmesiyle de sunar.
 
 ## 30 saniyelik kart
 
@@ -18,8 +19,8 @@
 | Katman | Bu repoda ne var? | Öğrettiği sınır |
 |---|---|---|
 | Temel örnek | `SocialGraphIterator` ile friends/coworkers gezintisi | Koleksiyon yapısını client’tan saklama ve bağımsız cursor state’i |
-| Güçlendirilmiş örnek | `CompanyProfileIterator` | Var olan iterator’ı açmadan lazy filtreyle compose etme ve `hasMore()` için buffer tutma |
-| Production sınırı | Java `Iterator`/`Spliterator`, sayfalama, retry, snapshot/version politikası | Null sentinel ve process içi cache’in büyük/uzak veri kaynağına yetmemesi |
+| Güçlendirilmiş örnek | `CompanyProfileIterator`, `StandardProfileIteratorAdapter` ve immutable `SocialGraph` snapshot’ı | Lazy filtre composition’ı, custom API’yi standart kontrata uyarlama ve snapshot zamanını aggregate sınırında sabitleme |
+| Production sınırı | `Spliterator`, sayfalama, retry, snapshot/version politikası | Process içi tam cache’in büyük/uzak veri kaynağına ve backpressure’a yetmemesi |
 
 ## Akılda kalıcı analoji: müze sesli rehberi
 
@@ -68,6 +69,12 @@ Profile getNext();
 `Facebook`, istenen relation için doğru iterator’ı üreten aggregate/factory rolündedir.
 `SocialSpammer`, graph yapısını görmeden iterator üzerinden ilerler.
 
+Custom sözleşmeye bağlı olmayan Java kodu aynı nesne üzerinde
+`profileIterator.asJavaIterator()` çağırabilir.
+`StandardProfileIteratorAdapter`, `hasMore/getNext` çağrılarını
+`hasNext/next` sözleşmesine çevirir; traversal bitince null yerine
+`NoSuchElementException` üretir.
+
 ### Çözmediği şeyler
 
 Iterator tek başına:
@@ -85,9 +92,10 @@ Iterator tek başına:
 | Iterator | `ProfileIterator` | `hasMore` ve `getNext` sözleşmesi |
 | Concrete Iterator | `SocialGraphIterator` | Cursor, relation seçimi ve lazy cache |
 | Iterator decorator | `CompanyProfileIterator` | Delegate iterator’ı şirket adına göre lazy süzer |
+| Iterator adapter | `StandardProfileIteratorAdapter` | Custom null-sentinel sözleşmesini Java `Iterator` sözleşmesine çevirir |
 | Aggregate arayüzü | `SocialNetwork` | Friends/coworkers iterator factory’leri |
 | Concrete Aggregate | `Facebook` | `SocialGraphIterator` üretir |
-| Veri sahibi | `SocialGraph` | Profile ve relation map’lerini okur |
+| Veri sahibi | `SocialGraph` | Constructor girdilerinin immutable snapshot’ını tutar |
 | Element | `Profile` | Gezilen immutable record |
 | Relation seçimi | `RelationType` | `FRIENDS` veya `COWORKERS` |
 | Client | `SocialSpammer` | Iterator’dan email adreslerini tüketir |
@@ -101,6 +109,17 @@ classDiagram
         <<interface>>
         +hasMore() boolean
         +getNext() Profile
+        +asJavaIterator() Iterator~Profile~
+    }
+    class JavaIterator {
+        <<interface>>
+        +hasNext() boolean
+        +next() Profile
+    }
+    class StandardProfileIteratorAdapter {
+        -delegate ProfileIterator
+        +hasNext() boolean
+        +next() Profile
     }
     class SocialGraphIterator {
         -socialGraph SocialGraph
@@ -123,6 +142,8 @@ classDiagram
     }
     ProfileIterator <|.. SocialGraphIterator
     ProfileIterator <|.. CompanyProfileIterator
+    JavaIterator <|.. StandardProfileIteratorAdapter
+    StandardProfileIteratorAdapter o--> ProfileIterator : same cursor
     CompanyProfileIterator o--> ProfileIterator : lazy delegate
     SocialNetwork <|.. Facebook
     Facebook --> SocialGraphIterator
@@ -155,18 +176,44 @@ sequenceDiagram
     Filter-->>Client: buffered match döner ve buffer temizlenir
 ```
 
+## İki snapshot anı
+
+```mermaid
+flowchart LR
+    I["Mutable constructor girdileri<br/>profiles + relation listeleri"]
+    G["SocialGraph immutable snapshot'ı<br/>constructor anı"]
+    E["Dış map/list mutation'ı"]
+    T["SocialGraphIterator traversal cache'i<br/>ilk hasMore/getNext anı"]
+    C["Cursor ilerlemesi"]
+    I -->|deep defensive copy| G
+    I --> E
+    E -. graph sonucunu değiştirmez .-> G
+    G -->|relation ID → Profile dönüşümü| T
+    T --> C
+```
+
+İki katmanı ayırmak önemlidir:
+
+1. `SocialGraph`, aldığı map’leri ve iç relation listelerini constructor’da kopyalar.
+2. Her `SocialGraphIterator`, seçtiği relation’ın `List<Profile>` sonucunu ilk erişimde kendi cache’ine alır.
+
+Birinci katman aggregate’i dış mutation’dan korur.
+İkinci katman her traversal’a bağımsız cursor ve sabit bir gezi listesi verir.
+
 ## Kod execution trace
 
 1. Demo profile ve relation map’lerini oluşturur.
-2. `Facebook#createFriendsIterator("1")` yeni iterator üretir.
-3. Constructor graph’a henüz sorgu yapmaz.
-4. İlk `hasMore()` çağrısı `lazyInit()` metodunu tetikler.
-5. Graph ID listesini profile listesine dönüştürür.
-6. Bulunamayan profile ID’leri `filter` ile sessizce çıkarılır.
-7. Elde edilen `Stream.toList()` sonucu iterator cache’ine yazılır.
-8. `hasMore`, cursor cache boyutundan küçükse true döner.
-9. `getNext`, mevcut profile’ı alıp cursor’ı bir artırır.
-10. Bitişte `getNext()` null döner.
+2. `SocialGraph` bu map’leri ve iç listeleri defensive copy ile sabitler.
+3. `Facebook#createFriendsIterator("1")` yeni iterator üretir.
+4. Iterator constructor’ı graph’a henüz sorgu yapmaz.
+5. İlk `hasMore()` çağrısı `lazyInit()` metodunu tetikler.
+6. Exhaustive `switch`, `FRIENDS` relation’ını seçer.
+7. Graph ID listesini profile listesine dönüştürür.
+8. Bulunamayan profile ID’leri `filter` ile sessizce çıkarılır.
+9. Elde edilen `Stream.toList()` sonucu iterator cache’ine yazılır.
+10. `hasMore`, cursor cache boyutundan küçükse true döner.
+11. `getNext`, mevcut profile’ı alıp cursor’ı bir artırır.
+12. Custom API bitişte null döner; standart adapter aynı noktada `NoSuchElementException` üretir.
 
 Friends ve coworkers iterator’ları ayrı nesnelerdir.
 Bu yüzden cursor state’leri birbirini bozmaz.
@@ -182,27 +229,39 @@ Bu ifade thread-safe oldukları anlamına gelmez.
 - `SocialGraphIterator#getNext()` başarılı olduğunda cursor’ı tam bir artırır.
 - Bitişte `hasMore()` false, `getNext()` null döner.
 - Bu null sentinel, Java `Iterator#next()` sözleşmesinden farklıdır.
+- `asJavaIterator()` yeni iterator/cursor üretmez; mevcut delegate traversal’ını tüketir.
+- Adapter bitişte null değerini `NoSuchElementException` olarak çevirir.
 - Relation listesinin sırası sonuç sırasını belirler.
 - Duplicate ID duplicate profile üretebilir.
 - Bilinmeyen source profile boş relation gibi davranır.
 - Graph’ta bulunmayan relation ID’si sessizce filtrelenir.
 - Cache ilk erişimde oluşur ve daha sonra yenilenmez.
+- Null `socialGraph`, `profileId` ve `relationType` constructor’da fail-fast reddedilir.
+- Relation seçimi exhaustive `switch` ile yapılır; enum’a yeni değer eklemek compile-time güncelleme gerektirir.
 - `CompanyProfileIterator` şirket adını case-insensitive karşılaştırır.
+- Null/blank şirket filtresi constructor’da reddedilir, geçerli değer trim edilir.
 - Filtre iterator’ının buffer’ı en fazla bir `Profile` taşır.
 - Filtre iterator’ının ilk `hasMore()` çağrısı eşleşme ararken delegate cursor’ını ilerletebilir.
 - Eşleşme buffer’a girdikten sonraki tekrarlı `hasMore()` çağrıları delegate’i yeniden ilerletmez.
 
 ## Lazy cache ve mutation zamanı
 
-`SocialGraph` constructor girdilerini defensive copy yapmadan saklar.
-Bu nedenle dışarıdaki mutable map/list:
+`SocialGraph` constructor girdilerini shallow değil, relation listelerini de kapsayan
+defensive copy ile saklar.
+Constructor döndükten sonra caller’ın:
 
-- iterator oluşturulduktan sonra,
-- fakat ilk `hasMore/getNext` öncesinde
+- profile map’ine yeni profil eklemesi,
+- mevcut friend ID listesine eleman eklemesi,
+- relation map’ine yeni anahtar yazması
 
-değişirse yeni veri cache’e yansıyabilir.
-Cache oluştuktan sonraki değişiklikler aynı iterator’da görünmez.
-Bu davranış snapshot zamanının ilk erişim olduğunu gösterir.
+aggregate’in sonucunu değiştirmez.
+
+Iterator cache’i yine ilk `hasMore/getNext` sırasında oluşur; buradaki laziness
+dış mutation’ı görmek için değil, traversal maliyetini gerçekten kullanılacağı ana
+ertelemek içindir.
+İleride `SocialGraph`a kontrollü mutator veya uzak veri kaynağı eklenirse
+“aggregate version’ı mı, iterator oluşturma anı mı, ilk erişim mi?” kararı yeniden
+açıkça verilmelidir.
 
 ## Test kontrat haritası
 
@@ -211,24 +270,24 @@ Bu davranış snapshot zamanının ilk erişim olduğunu gösterir.
 | `RelationTraversal` | Friends sırası ve coworkers filtresi |
 | `CursorState` | Idempotent `hasMore`, ilerleme, bağımsız iterator, null bitiş |
 | `EmptyTraversal` | Bilinmeyen source ve dangling relation davranışı |
-| `IteratorComposition` | Lazy şirket filtresi ve buffered `hasMore` idempotency’si |
+| `IteratorComposition` | Lazy şirket filtresi, ölçüt normalizasyonu/validasyonu ve buffered `hasMore` idempotency’si |
+| `StandardIteratorCompatibility` | Java bitiş sözleşmesi ve adapter/delegate ortak cursor’ı |
+| `AggregateSnapshot` | Constructor-time deep snapshot ve null relation fail-fast davranışı |
 
 Testler client’ın graph map’lerine erişmesini gerektirmez.
 İki iterator interleaved ilerletilerek cursor isolation doğrudan gözlenir.
 
 ## Edge case, security, concurrency ve performans
 
-- Null `relationType`, mevcut ternary nedeniyle coworkers koluna düşer.
-- Enum’a yeni değer eklenirse o da sessizce coworkers gibi davranır.
-- `switch` ile exhaustive seçim daha güvenli olurdu.
-- Graph girdileri defensive copy değildir.
-- Iterator ve graph thread-safe değildir.
+- Custom API’nin null sentinel’i, sonuç domain’i ileride null profile’a izin verirse belirsizleşir; standart adapter bu yüzden daha güvenli sınırdır.
+- `SocialGraph` iç durumu immutable snapshot’tır; iterator cursor’ları ise thread-safe değildir.
+- Aynı custom iterator ile ondan üretilen adapter eşzamanlı tüketilmemelidir; aynı cursor’ı paylaşırlar.
 - Remote graph’ta lazy init ilk çağrıyı beklenmedik biçimde yavaşlatabilir.
 - `SocialGraphIterator` cache oluştuktan sonra `hasMore/getNext` için O(1) çalışır.
 - `CompanyProfileIterator#hasMore`, sıradaki eşleşmeye kadar k adayı tararsa O(k) çalışır; bütün traversal toplamda O(n)’dir.
 - `SocialSpammer` adı ve davranışı production ileti izinlerini modellemez.
 
-Production’da standart `Iterator`, `Iterable`, stream, cursor pagination veya reactive publisher seçenekleri değerlendirilmelidir.
+Production’da adapter’ın ötesinde `Iterable`, `Spliterator`, stream, cursor pagination veya reactive publisher seçenekleri değerlendirilmelidir.
 
 ## Ne zaman kullan?
 
@@ -281,10 +340,11 @@ Bir traversal’ın sıralama algoritması Strategy olabilir; gezinti state’i 
 İki friends iterator üret.
 Birini iki adım, diğerini bir adım ilerlet ve cursor’ların bağımsızlığını test et.
 
-### Seviye 2 — Tasarla
+### Seviye 2 — Standart API ile genişlet
 
-`ProfileIterator`ı Java `Iterator<Profile>` sözleşmesine uyarla.
-Bitişte null yerine `NoSuchElementException` bekleyen test yaz.
+`StandardProfileIteratorAdapter` için `forEachRemaining` kullanan bir client yaz.
+Adapter ve delegate’in aynı cursor’ı paylaştığını göster; ardından bağımsız traversal
+gereken kullanımda neden aggregate’den yeni iterator istenmesi gerektiğini açıkla.
 
 ### Seviye 3 — Ölçekle
 

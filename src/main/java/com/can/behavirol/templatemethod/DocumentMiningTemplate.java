@@ -1,8 +1,14 @@
 package com.can.behavirol.templatemethod;
 
+import java.util.Locale;
+
 public abstract class DocumentMiningTemplate {
 
     public final String process(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new IllegalArgumentException("fileName cannot be blank");
+        }
+
         openFile(fileName);
         Throwable primaryFailure = null;
         try {
@@ -34,7 +40,7 @@ public abstract class DocumentMiningTemplate {
     protected abstract String extractRawData(String fileName);
 
     protected String analyzeData(String rawData) {
-        return "Standart analiz => " + rawData.toUpperCase();
+        return "Standart analiz => " + rawData.toUpperCase(Locale.ROOT);
     }
 
     protected String createReport(String analyzedData) {

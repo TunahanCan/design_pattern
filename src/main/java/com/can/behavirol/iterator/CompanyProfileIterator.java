@@ -12,8 +12,11 @@ public class CompanyProfileIterator implements ProfileIterator {
     private Profile bufferedProfile;
 
     public CompanyProfileIterator(ProfileIterator delegate, String company) {
-        this.delegate = Objects.requireNonNull(delegate);
-        this.company = Objects.requireNonNull(company);
+        this.delegate = Objects.requireNonNull(delegate, "delegate cannot be null");
+        if (company == null || company.isBlank()) {
+            throw new IllegalArgumentException("company cannot be blank");
+        }
+        this.company = company.trim();
     }
 
     @Override

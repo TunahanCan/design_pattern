@@ -19,7 +19,7 @@
 
 | Katman | Repodaki karşılığı | Öğrettiği şey |
 |---|---|---|
-| Temel örnek | `RoundHole`, `RoundPeg`, `SquarePeg`, `SquarePegAdapter` | Uyumsuz tipi yarım köşegen hesabıyla target tipe uydurmak |
+| Temel örnek | `RoundPegShape`, `RoundHole`, `RoundPeg`, `SquarePeg`, `SquarePegAdapter` | Küçük bir Target interface'i üzerinden uyumsuz tipi yarım köşegen hesabıyla uydurmak |
 | Güçlendirilmiş örnek | `ShippingService`, `Parcel`, `DeliveryQuote`, `LegacyCargoApi`, `LegacyCargoAdapter` | Metot çağrısıyla birlikte gram→kilogram, kuruş→TL ve saat→gün semantiğini çevirmek |
 | Bilinçli production sınırı | Demo API'si yerel ve deterministiktir | Gerçek provider'da timeout/retry, kur, SLA, kimlik doğrulama ve hata eşleme ayrıca tasarlanır |
 
@@ -38,7 +38,7 @@ Yazılım Adapter'ı da tip, metot adı, DTO, veri formatı veya protokol uyumsu
 `RoundHole` yalnız şu kontratı kabul eder:
 
 ```java
-boolean fits(RoundPeg peg)
+boolean fits(RoundPegShape peg)
 ```
 
 `SquarePeg` ise radius değil yalnız width bilir. Kötü çözümler:
@@ -52,10 +52,20 @@ Yeni adaptee geldikçe target tüketicisi büyür ve dönüşüm mantığı dağ
 
 ## Çözüm ve çözümün sınırı
 
-`SquarePegAdapter`, target olan `RoundPeg` gibi davranır ve içeride `SquarePeg` tutar:
+`RoundHole` concrete bir çivi sınıfına değil, yalnız ihtiyaç duyduğu küçük Target
+kontratına bağımlıdır:
 
 ```java
-public class SquarePegAdapter extends RoundPeg {
+public interface RoundPegShape {
+    double getRadius();
+}
+```
+
+Hem doğal uyumlu `RoundPeg` hem adapter bu kontratı uygular. Adapter, adaptee'yi
+kalıtmak yerine içeride tutar:
+
+```java
+public class SquarePegAdapter implements RoundPegShape {
     private final SquarePeg squarePeg;
 
     @Override
@@ -74,7 +84,7 @@ gerekli radius = width × √2 / 2
 
 Adapter iki çeviri yapar:
 
-- **Tip:** `SquarePeg`, `RoundPeg` kontratından görünür.
+- **Tip:** `SquarePeg`, `RoundPegShape` kontratından görünür.
 - **Anlam:** width, karşılaştırılabilir radius değerine çevrilir.
 
 Sınırlar:
@@ -84,7 +94,27 @@ Sınırlar:
 - Hata/timeout politikasını otomatik çözmez.
 - Dönüşüm kayıplıysa hedef kontrat bunu ifade etmelidir.
 
-Bu klasik örnekte Target concrete sınıftır; adapter `super(0)` ile kullanılmayan üst sınıf state'i kurar. Production'da küçük bir Target interface'i bu yapay state'i kaldırabilir.
+Target'ın interface olması adapter'ın yapay bir `RoundPeg` state'i veya `super(0)`
+üretmesini engeller. Bu, Java'da çoğunlukla tercih edilen **object adapter**
+biçimidir: adaptee kompozisyonla sarılır. Class adapter biçimi kalıtım kullanır;
+tek kalıtım, `final` üçüncü parti sınıflar ve superclass constructor'ları nedeniyle
+daha sıkı bağlanır. Interface seçimi ise “her şeyi soyutla” kuralı değildir:
+`RoundHole` gerçekten birden fazla radius sağlayıcısıyla çalıştığı için burada
+değişim noktası somuttur.
+
+Bu refactoring’in uyumluluk bedeli bilinçlidir:
+
+- `fits(new RoundPeg(...))` gibi doğrudan kaynak kodu çağrıları çalışmaya devam eder.
+- `SquarePegAdapter` artık `RoundPeg` alt tipi değildir; adapter’ı concrete üst
+  sınıf değişkeninde tutan kaynak kodu yeniden yazılmalıdır.
+- Yapay adapter state’i kalktığı için `new RoundPeg(0)` da artık geçersizdir.
+- JVM metot descriptor'ı `fits(RoundPeg)` → `fits(RoundPegShape)` değiştiğinden
+  önceden derlenmiş binary client yeniden derlenmeden çalışmaz.
+
+Bu kod yayınlanmış bir kütüphane olsaydı eski overload/adapter bir deprecation
+dönemi boyunca delegate ettirilmeli veya bu değişiklik major sürümde
+yayınlanmalıydı. Eğitim reposu kaynak koddan birlikte derlendiği için burada
+daha temiz Target kontratı seçildi.
 
 Gerçekçi örnekte target artık açıkça bir interface'tir:
 
@@ -106,8 +136,9 @@ yalnız tip değil **ölçü birimi ve hassasiyet kontratı** da çevirdiğini g
 | Pattern rolü | Tip | Sorumluluk |
 |---|---|---|
 | Client / composition root | `AdapterPatternDemo` | Nesne graph'ını kurup örneği çalıştırır |
-| Target tüketicisi | `RoundHole` | Yalnız `RoundPeg` üzerinden uygunluk ölçer |
-| Target | `RoundPeg` | Client'ın bildiği radius tabanlı tip |
+| Target tüketicisi | `RoundHole` | Yalnız `RoundPegShape` üzerinden uygunluk ölçer |
+| Target | `RoundPegShape` | Client'ın ihtiyaç duyduğu radius kontratı |
+| Uyumlu concrete tip | `RoundPeg` | Target'ı doğal olarak uygular |
 | Adaptee | `SquarePeg` | Width tabanlı mevcut/uyumsuz tip |
 | Adapter | `SquarePegAdapter` | Adaptee'yi sarar ve width'i radius'a çevirir |
 | Gerçek target | `ShippingService` | Uygulamanın beklediği kargo fiyatlama kontratı |
@@ -123,7 +154,11 @@ Demo adapter'ın concrete tipini wiring için bilir; kazanç, `RoundHole` iş ma
 classDiagram
     class RoundHole {
         -double radius
-        +fits(RoundPeg) boolean
+        +fits(RoundPegShape) boolean
+    }
+    class RoundPegShape {
+        <<interface>>
+        +getRadius() double
     }
     class RoundPeg {
         -double radius
@@ -137,9 +172,10 @@ classDiagram
         -SquarePeg squarePeg
         +getRadius() double
     }
-    RoundPeg <|-- SquarePegAdapter : Target
+    RoundPegShape <|.. RoundPeg
+    RoundPegShape <|.. SquarePegAdapter : adapts to Target
     SquarePegAdapter *-- SquarePeg : wraps
-    RoundHole --> RoundPeg : only knows
+    RoundHole --> RoundPegShape : only knows
 ```
 
 ```mermaid
@@ -188,7 +224,7 @@ sequenceDiagram
 ### `SquarePegAdaptation`
 
 - Yarım köşegen formülünü floating-point toleransıyla test eder.
-- Adapter'ın `RoundPeg` referansından kullanılabildiğini gösterir.
+- Adapter'ın `RoundPegShape` referansından kullanılabildiğini gösterir.
 - Width `5` ve `10` ile olumlu/olumsuz yolu birlikte sınar.
 - `Double.MAX_VALUE` gibi geçerli büyük bir width'in ara çarpım yüzünden
   `Infinity`ye taşmadığını doğrular.
@@ -213,8 +249,11 @@ Arrange uyumsuz dünyaları kurar, Act target çağrısını yapar, Assert hem m
 
 ### Sayısal sınırlar
 
-`RoundHole` ve `SquarePeg` pozitif/finite değer ister; `RoundPeg`, adapter'ın
-`super(0)` ihtiyacı nedeniyle sıfıra izin verir. `Parcel` ağırlığı pozitif olmalıdır.
+`RoundHole`, `RoundPeg` ve `SquarePeg` pozitif/finite değer ister. `RoundPegShape`
+aynı semantik kontratı Javadoc’unda tanımlar; `RoundHole#fits` de üçüncü parti
+bir adapter negatif, sonsuz veya `NaN` radius döndürürse sınırda reddeder.
+Adapter artık concrete `RoundPeg`'den kalıtım almadığı için geçersiz bir
+`super(0)` istisnasına ihtiyaç yoktur. `Parcel` ağırlığı da pozitif olmalıdır.
 Bu doğrulamalar anlamsız geometriyi ve sessiz yanlış fiyatı erken keser.
 
 `double` yalnız kilogram oranı için legacy sınıra taşınır; uygulama tarafındaki para
@@ -298,9 +337,11 @@ Hepsi sarma kullanabilir. Seçimi sınıf diyagramı değil, **niyet** belirler.
 
 Radius `4` deliğe width `5`, `6`, `8` karelerin sığıp sığmadığını önce hesapla, sonra test et.
 
-### Seviye 2 — Target abstraction
+### Seviye 2 — İkinci adaptee
 
-Küçük bir `RoundPegLike` interface'i çıkar. `RoundPeg` ve adapter bunu uygulasın; `super(0)` ihtiyacının neden kalktığını açıkla.
+Yalnız diameter bilgisi veren bir `DiameterPeg` sınıfı yaz. Yeni bir adapter ile
+`RoundPegShape` kontratına çevir; `RoundHole` veya mevcut çivi sınıflarını
+değiştirmeden doğrudan ve adapte edilmiş çivileri aynı parametreli testte kullan.
 
 ### Seviye 3 — Production sınırı
 

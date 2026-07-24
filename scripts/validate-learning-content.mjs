@@ -165,6 +165,8 @@ const checkMermaidBlocks = (relativePath, blocks, { required = false } = {}) => 
       );
     }
   });
+
+  return mermaidBlocks;
 };
 
 for (const relativePath of chapterPaths) {
@@ -178,6 +180,9 @@ for (const relativePath of chapterPaths) {
   const lines = content.split(/\r?\n/);
   const h1Count = lines.filter((line) => /^# [^#]/.test(line)).length;
   const fencedBlocks = inspectMarkdownFences(relativePath, content);
+  const mermaidBlocks = checkMermaidBlocks(relativePath, fencedBlocks, {
+    required: true,
+  });
 
   if (h1Count !== 1) {
     errors.push(`${relativePath}: tam bir H1 bekleniyordu, bulunan ${h1Count}`);
@@ -185,7 +190,23 @@ for (const relativePath of chapterPaths) {
   if (lines.length < 140) {
     errors.push(`${relativePath}: içerik çok kısa (${lines.length} satır, alt sınır 140)`);
   }
-  checkMermaidBlocks(relativePath, fencedBlocks, { required: true });
+  if (mermaidBlocks.length < 2) {
+    errors.push(
+      `${relativePath}: yapı ve çalışma zamanı için en az 2 Mermaid diyagramı bekleniyor`,
+    );
+  }
+  if (!mermaidBlocks.some(({ content: diagram }) => /^\s*classDiagram\b/.test(diagram))) {
+    errors.push(`${relativePath}: pattern rollerini gösteren classDiagram yok`);
+  }
+  if (
+    !mermaidBlocks.some(({ content: diagram }) =>
+      /^\s*(?:sequenceDiagram|flowchart|graph|stateDiagram(?:-v2)?)\b/.test(diagram)
+    )
+  ) {
+    errors.push(
+      `${relativePath}: çalışma zamanı akışını gösteren sequence/flow/state diyagramı yok`,
+    );
+  }
   if (!/test/i.test(content)) {
     errors.push(`${relativePath}: test kontratlarını açıklayan bölüm yok`);
   }

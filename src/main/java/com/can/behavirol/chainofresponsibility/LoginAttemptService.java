@@ -8,6 +8,9 @@ public class LoginAttemptService {
     private final Map<String, Integer> failedAttemptsByIp = new HashMap<>();
 
     public LoginAttemptService(int maxFailedAttempts) {
+        if (maxFailedAttempts < 1) {
+            throw new IllegalArgumentException("maxFailedAttempts must be positive");
+        }
         this.maxFailedAttempts = maxFailedAttempts;
     }
 
